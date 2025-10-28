@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "891926026683",
+    "project_id": "zephyrlottery",
+    "storage_bucket": "zephyrlottery.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:891926026683:android:077483d74a9e7fef580c9e",
+        "android_client_info": {
+          "package_name": "com.example.zephyr_lottery"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBp_4R6ffWKrKrxqC7dmDRExrT_B-Vcp94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

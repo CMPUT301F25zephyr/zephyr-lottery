@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">zephyr_lottery</string>
+    <string name="test_pass">Password</string>
+    <string-array name="user_type_spinner_array">
+        <item>Entrant</item>
+        <item>Organizer</item>
+    </string-array>
+</resources>

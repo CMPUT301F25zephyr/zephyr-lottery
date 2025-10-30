@@ -102,7 +102,6 @@ public class LoginActivity extends AppCompatActivity {
 
             //get type of account from database
             DocumentReference docRef = accountsRef.document(email_text);
-            // String type = docRef.get();
 
             signIn(email_text, password_text, docRef);
         });
@@ -116,7 +115,7 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign up success
+                            //Sign up success
                             Log.d(TAG, "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
 
@@ -124,7 +123,8 @@ public class LoginActivity extends AppCompatActivity {
                                     Toast.LENGTH_SHORT).show();
 
                         } else {
-                            // If sign up fails, display a message to the user.
+                            //If sign up fails, display a message to the user.
+                            //NEED TO UPDATE THIS TO EXPLAIN WHY CREATING ACCOUNT DIDN'T WORK
                             Log.w(TAG, "createUserWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
@@ -141,16 +141,15 @@ public class LoginActivity extends AppCompatActivity {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
+                            //sign in success!
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
 
-                            //get type of this account from reference
+                            //get type of this account from the reference passed in
                             ref.get().addOnSuccessListener(documentSnapshot -> {
                                 String type = documentSnapshot.getString("type");
 
                                 //switch activity to next one depending on user type
-                                //NEED TO REPLACE PLACEHOLDER ACTIVITIES LATER
                                 Intent intent;
                                 if (type.equals("Organizer")){
                                     intent = new Intent(LoginActivity.this,HomeOrgActivity.class);
@@ -163,7 +162,7 @@ public class LoginActivity extends AppCompatActivity {
                             });
 
                         } else {
-                            // If sign in fails, display a message to the user.
+                            //if sign in fails, display a message to the user.
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();

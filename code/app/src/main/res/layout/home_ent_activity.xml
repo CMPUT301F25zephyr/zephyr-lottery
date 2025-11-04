@@ -6,14 +6,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.HomeEntActivity">
+
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textView_username"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#D9D9D9"
+        android:text="home screen for entrant"
+        android:padding="10dp"
+        android:textSize="34sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/entrant_events_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="home screen for entrant"
+        android:text="See Latest Events"
+        app:layout_constraintBottom_toTopOf="@+id/entrant_history_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_username" />
+
+    <Button
+        android:id="@+id/entrant_history_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="See History"
+        app:layout_constraintBottom_toTopOf="@+id/entrant_profile_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/entrant_events_button" />
+
+    <Button
+        android:id="@+id/entrant_profile_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/entrant_history_button" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

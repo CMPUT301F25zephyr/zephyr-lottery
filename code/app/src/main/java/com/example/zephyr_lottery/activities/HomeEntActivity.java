@@ -3,7 +3,6 @@ package com.example.zephyr_lottery.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
@@ -13,7 +12,6 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
-import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -47,7 +45,7 @@ public class HomeEntActivity extends AppCompatActivity {
 
         ref.get().addOnSuccessListener(documentSnapshot -> {
             String username = documentSnapshot.getString("username");
-            TextView text_home = findViewById(R.id.textView_username);
+            TextView text_home = findViewById(R.id.textView_latest_event);
             String temp_text = "Hello, " + username;
             text_home.setText(temp_text);
         });

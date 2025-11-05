@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 
 import androidx.activity.EdgeToEdge;
@@ -17,9 +16,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
-import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -62,7 +59,7 @@ public class EntEventsActivity extends AppCompatActivity {
             if (error != null) {
                 Log.e("Firestore", error.toString());
             }
-            if(value != null&& !value.isEmpty()){
+            if(value != null && !value.isEmpty()){
                 eventArrayList.clear();
                 for (QueryDocumentSnapshot snapshot : value){
                     String name = snapshot.getString("name");

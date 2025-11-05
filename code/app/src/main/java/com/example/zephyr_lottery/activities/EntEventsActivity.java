@@ -1,8 +1,11 @@
 package com.example.zephyr_lottery.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import androidx.activity.EdgeToEdge;
@@ -14,14 +17,18 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
+import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
 public class EntEventsActivity extends AppCompatActivity {
 
-    //private Button filter_latest_event_button; //not used yet. will implement soon
+    private Button filter_latest_event_button; //doesn't do anything yet
+    private Button back_latest_event_button;
     private ListView eventListView;
     private ArrayList<Event> eventArrayList;
     private ArrayAdapter<Event> eventArrayAdapter;
@@ -41,12 +48,43 @@ public class EntEventsActivity extends AppCompatActivity {
             return insets;
         });
 
-        //set the list view. not working yet
+        db = FirebaseFirestore.getInstance();
+        eventsRef = db.collection("events");
+
+        //set the list view to be the arraylist of events.
         eventListView = findViewById(R.id.ListView_latest_events);
         eventArrayList = new ArrayList<>();
-        //put stuff into arraylist here.
         eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
         eventListView.setAdapter(eventArrayAdapter);
+
+        //listener. updates array when created and when database changes.
+        eventsRef.addSnapshotListener((value, error) -> {
+            if (error != null) {
+                Log.e("Firestore", error.toString());
+            }
+            if(value != null&& !value.isEmpty()){
+                eventArrayList.clear();
+                for (QueryDocumentSnapshot snapshot : value){
+                    String name = snapshot.getString("name");
+                    String times = snapshot.getString("times");
+                    //add any future attributes for event here.
+
+                    eventArrayList.add(new Event(name,times));
+                }
+                eventArrayAdapter.notifyDataSetChanged();
+            }
+        });
+
+        //get email from intent
+        String user_email = getIntent().getStringExtra("USER_EMAIL");
+
+        //listener for button to return to homescreen.
+        back_latest_event_button = findViewById(R.id.button_latest_event_back);
+        back_latest_event_button.setOnClickListener(view -> {
+            Intent intent = new Intent(EntEventsActivity.this, HomeEntActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
+        });
 
     }
 }

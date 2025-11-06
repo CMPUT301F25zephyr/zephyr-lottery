@@ -7,7 +7,6 @@
     android:layout_height="match_parent"
     tools:context=".activities.HomeEntActivity">
 
-    <!-- Profile Button in Top Right -->
     <ImageButton
         android:id="@+id/btnProfile"
         android:layout_width="48dp"

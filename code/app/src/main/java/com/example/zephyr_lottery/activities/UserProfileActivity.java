@@ -1,10 +1,12 @@
 package com.example.zephyr_lottery.activities;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -14,11 +16,22 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
+import com.example.zephyr_lottery.UserProfile;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class UserProfileActivity extends AppCompatActivity {
+    // can be omitted later by creating a separate class for the firebase connection
+    private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
 
     private ImageButton btnBack;
-    private EditText etName, etEmail, etPhone;
+
+    // Name currently being the same object as username, will be changed later (or just change username to Name altogether)
+    private EditText etName, etPhone;
+
+    // Email currently a TextView, since it is being used as a login credential
+    private TextView etEmail;
     private Button btnSave;
 
     @Override
@@ -39,6 +52,31 @@ public class UserProfileActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.etPhone);
         btnSave = findViewById(R.id.btnSave);
 
+        mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
+
+        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+
+        db.collection("accounts")
+                .document(currentUserEmail)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    UserProfile profile = documentSnapshot.toObject(UserProfile.class);
+
+                    // Use the profile data
+                    String username = profile.getUsername();
+                    String email = profile.getEmail();
+                    String phone = profile.getPhone();
+
+                    etName.setText(username);
+                    etEmail.setText(email);
+
+                    if (phone != null) {
+                        etPhone.setText(phone);
+                    }
+
+                });
+
         // Back button functionality
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -51,9 +89,45 @@ public class UserProfileActivity extends AppCompatActivity {
         btnSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                return;
+                saveUserProfile();
             }
         });
     }
 
+    private void saveUserProfile() {
+        // Get the edited values
+        String newUsername = etName.getText().toString().trim();
+        String newPhone = etPhone.getText().toString().trim();
+        String email = etEmail.getText().toString(); // Email doesn't change
+
+        // Basic validation
+        if (newUsername.isEmpty()) {
+            etName.setError("Name is required");
+            etName.requestFocus();
+            return;
+        }
+
+        // Get current user email
+        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+
+        // Update only the fields that changed
+        db.collection("accounts")
+                .document(currentUserEmail)
+                .update(
+                        "username", newUsername,
+                        "phone", newPhone
+                )
+                .addOnSuccessListener(aVoid -> {
+                    Toast.makeText(UserProfileActivity.this,
+                            "Profile updated successfully!",
+                            Toast.LENGTH_SHORT).show();
+                    finish(); // Return to previous screen
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(UserProfileActivity.this,
+                            "Failed to update profile: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    Log.e("UserProfile", "Error updating profile", e);
+                });
+    }
 }

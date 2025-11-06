@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,22 +18,32 @@ import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class EntEventsActivity extends AppCompatActivity {
 
-    private Button filter_latest_event_button; //doesn't do anything yet
-    private Button back_latest_event_button;
-    private ListView eventListView;
-    private ArrayList<Event> eventArrayList;
-    private ArrayAdapter<Event> eventArrayAdapter;
+    private static final String TAG = "EntEventsActivity";
 
-    //databases
+    private Button joinLeaveButton;
+    private Button backButton;
+    private ListView eventListView;
+
+    private ArrayList<Event> eventList;
+    private ArrayList<String> eventIdList;
+    private ArrayAdapter<Event> eventAdapter;
+
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
+
+    private String userEmail;
+    private int selectedPosition = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,40 +59,145 @@ public class EntEventsActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
 
-        //set the list view to be the arraylist of events.
-        eventListView = findViewById(R.id.ListView_latest_events);
-        eventArrayList = new ArrayList<>();
-        eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
-        eventListView.setAdapter(eventArrayAdapter);
+        userEmail = getIntent().getStringExtra("USER_EMAIL");
 
-        //listener. updates array when created and when database changes.
+        eventListView = findViewById(R.id.ListView_latest_events);
+        eventList = new ArrayList<>();
+        eventIdList = new ArrayList<>();
+        eventAdapter = new EventArrayAdapter(this, eventList);
+        eventListView.setAdapter(eventAdapter);
+
+        eventListView.setOnItemClickListener((parent, view, position, id) -> {
+            selectedPosition = position;
+            updateJoinLeaveButtonLabel();
+        });
+
         eventsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
-                Log.e("Firestore", error.toString());
+                Log.e(TAG, "Firestore error", error);
+                return;
             }
-            if(value != null && !value.isEmpty()){
-                eventArrayList.clear();
-                for (QueryDocumentSnapshot snapshot : value){
+            if (value != null && !value.isEmpty()) {
+                eventList.clear();
+                eventIdList.clear();
+                for (QueryDocumentSnapshot snapshot : value) {
+                    String eventId = snapshot.getId();
                     String name = snapshot.getString("name");
                     String times = snapshot.getString("times");
-                    //add any future attributes for event here.
 
-                    eventArrayList.add(new Event(name,times));
+                    Event event = new Event(name, times);
+                    eventList.add(event);
+                    eventIdList.add(eventId);
                 }
-                eventArrayAdapter.notifyDataSetChanged();
+                eventAdapter.notifyDataSetChanged();
+                selectedPosition = -1;
+                joinLeaveButton.setEnabled(false);
+                joinLeaveButton.setText("Join Waiting List");
             }
         });
 
-        //get email from intent
-        String user_email = getIntent().getStringExtra("USER_EMAIL");
-
-        //listener for button to return to homescreen.
-        back_latest_event_button = findViewById(R.id.button_latest_event_back);
-        back_latest_event_button.setOnClickListener(view -> {
+        backButton = findViewById(R.id.button_latest_event_back);
+        backButton.setOnClickListener(view -> {
             Intent intent = new Intent(EntEventsActivity.this, HomeEntActivity.class);
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
 
+        joinLeaveButton = findViewById(R.id.button_latest_event_filter);
+        joinLeaveButton.setEnabled(false);
+        joinLeaveButton.setOnClickListener(view -> toggleJoinLeave());
+    }
+
+    private void updateJoinLeaveButtonLabel() {
+        if (selectedPosition < 0 || selectedPosition >= eventIdList.size()) {
+            joinLeaveButton.setText("Join Waiting List");
+            joinLeaveButton.setEnabled(false);
+            return;
+        }
+        joinLeaveButton.setEnabled(true);
+
+        String eventId = eventIdList.get(selectedPosition);
+        DocumentReference waitRef = eventsRef
+                .document(eventId)
+                .collection("waitingList")
+                .document(userEmail);
+
+        waitRef.get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        joinLeaveButton.setText("Leave Waiting List");
+                    } else {
+                        joinLeaveButton.setText("Join Waiting List");
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "check waiting list failed", e);
+                    joinLeaveButton.setText("Join Waiting List");
+                });
+    }
+
+    private void toggleJoinLeave() {
+        if (selectedPosition < 0 || selectedPosition >= eventIdList.size()) {
+            Toast.makeText(this, "Select an event first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        CharSequence label = joinLeaveButton.getText();
+        if (label != null && label.toString().startsWith("Join")) {
+            joinWaitingList();
+        } else {
+            leaveWaitingList();
+        }
+    }
+
+    // US 01.01.01
+    private void joinWaitingList() {
+        String eventId = eventIdList.get(selectedPosition);
+        Event selectedEvent = eventList.get(selectedPosition);
+
+        DocumentReference waitRef = eventsRef
+                .document(eventId)
+                .collection("waitingList")
+                .document(userEmail);
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("email", userEmail);
+        data.put("joinedAt", FieldValue.serverTimestamp());
+
+        waitRef.set(data)
+                .addOnSuccessListener(aVoid -> {
+                    selectedEvent.addEntrant(userEmail);  // update model
+                    eventAdapter.notifyDataSetChanged();
+                    Toast.makeText(this, "Joined waiting list", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Joined waiting list: " + eventId);
+                    updateJoinLeaveButtonLabel();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to join waiting list", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "join waiting list error", e);
+                });
+    }
+
+    // US 01.01.02
+    private void leaveWaitingList() {
+        String eventId = eventIdList.get(selectedPosition);
+        Event selectedEvent = eventList.get(selectedPosition);
+
+        DocumentReference waitRef = eventsRef
+                .document(eventId)
+                .collection("waitingList")
+                .document(userEmail);
+
+        waitRef.delete()
+                .addOnSuccessListener(aVoid -> {
+                    selectedEvent.removeEntrant(userEmail);  // update model
+                    eventAdapter.notifyDataSetChanged();
+                    Toast.makeText(this, "Left waiting list", Toast.LENGTH_SHORT).show();
+                    Log.d(TAG, "Left waiting list: " + eventId);
+                    updateJoinLeaveButtonLabel();
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to leave waiting list", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "leave waiting list error", e);
+                });
     }
 }

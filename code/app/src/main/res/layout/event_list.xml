@@ -1,30 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/event_list"
-    android:padding="10dp">
+    android:orientation="vertical"
+    android:padding="12dp">
 
     <TextView
-        android:id="@+id/text_event_name"
+        android:id="@+id/event_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Event Name"
-        android:textSize="30sp"
-        app:layout_constraintBottom_toTopOf="@+id/text_event_time"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:textStyle="bold"
+        android:textSize="18sp" />
 
     <TextView
-        android:id="@+id/text_event_time"
+        android:id="@+id/event_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Event Time"
-        android:textSize="20sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/text_event_name" />
+        android:textSize="14sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/event_entrant_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Entrants: -"
+        android:textSize="13sp"
+        android:textColor="#555555"
+        android:paddingTop="4dp" />
+
+</LinearLayout>

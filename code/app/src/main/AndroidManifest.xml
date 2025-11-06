@@ -33,6 +33,7 @@
             android:name=".activities.HomeEntActivity"
             android:exported="false">
         </activity>
+
         <activity
             android:name=".activities.EntEventsActivity"
             android:exported="false">

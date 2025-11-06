@@ -98,6 +98,10 @@ public class Event {
         entrants.remove(username);
     }
 
+    public int getEntrantsCount() {
+        return getEntrants().size();
+    }
+
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;

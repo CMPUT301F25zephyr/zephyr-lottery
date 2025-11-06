@@ -1,6 +1,8 @@
 package com.example.zephyr_lottery.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.widget.Button;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -23,5 +25,12 @@ public class LotteryInfoActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        Button backButton = findViewById(R.id.lottery_info_back_button);
+        backButton.setOnClickListener(v -> {
+            Intent intent = new Intent(LotteryInfoActivity.this, HomeEntActivity.class);
+            startActivity(intent);
+            finish(); // optional, so this screen closes
+        });
+
     }
 }

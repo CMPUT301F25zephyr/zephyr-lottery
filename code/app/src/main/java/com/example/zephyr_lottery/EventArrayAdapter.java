@@ -34,8 +34,9 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
         TextView event_name = view.findViewById(R.id.text_event_name);
         TextView event_time = view.findViewById(R.id.text_event_time);
 
+
         event_name.setText(event.getName());
-        event_time.setText(event.getTimes());
+        event_time.setText(event.getWeekdayString() + " at " + event.getTimes());
 
         return view;
     }

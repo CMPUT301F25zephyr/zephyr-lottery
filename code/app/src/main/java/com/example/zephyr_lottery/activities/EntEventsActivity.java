@@ -67,7 +67,23 @@ public class EntEventsActivity extends AppCompatActivity {
                     String organizer_email = snapshot.getString("organizer_email");
                     //add any future attributes for event here.
 
-                    eventArrayList.add(new Event(name,times,organizer_email));
+                    Event event = new Event(name, times, organizer_email);
+
+                    //add additional fields if they exist
+                    if (snapshot.contains("description")) {
+                        event.setDescription(snapshot.getString("description"));
+                    }
+                    if (snapshot.contains("price")) {
+                        event.setPrice(snapshot.getDouble("price").floatValue());
+                    }
+                    if (snapshot.contains("location")) {
+                        event.setLocation(snapshot.getString("location"));
+                    }
+                    if (snapshot.contains("weekday")) {
+                        event.setWeekday(snapshot.getLong("weekday").intValue());
+                    }
+
+                    eventArrayList.add(event);
                 }
                 eventArrayAdapter.notifyDataSetChanged();
             }

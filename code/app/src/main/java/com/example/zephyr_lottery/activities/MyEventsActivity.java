@@ -23,7 +23,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 
 public class MyEventsActivity extends AppCompatActivity {
-    private Button back_latest_event_button;
+    private Button back_my_event_button;
+    private Button add_event_my_event_button;
     private ListView myEventListView;
     private ArrayList<Event> myEventArrayList;
     private ArrayAdapter<Event> myEventArrayAdapter;
@@ -72,20 +73,43 @@ public class MyEventsActivity extends AppCompatActivity {
                             String times = snapshot.getString("times");
                             String orgEmail = snapshot.getString("organizer_email");
 
-                            myEventArrayList.add(new Event(name, times, orgEmail));
+                            Event event = new Event(name, times, orgEmail);
+
+                            //add additional fields (if they exist?)
+                            if (snapshot.contains("description")) {
+                                event.setDescription(snapshot.getString("description"));
+                            }
+                            if (snapshot.contains("price")) {
+                                event.setPrice(snapshot.getDouble("price").floatValue());
+                            }
+                            if (snapshot.contains("location")) {
+                                event.setLocation(snapshot.getString("location"));
+                            }
+                            if (snapshot.contains("weekday")) {
+                                event.setWeekday(snapshot.getLong("weekday").intValue());
+                            }
+
+                            myEventArrayList.add(event);
                         }
                         myEventArrayAdapter.notifyDataSetChanged();
                     }
                 });
 
         //listener for button to return to ORGNAIZER homescreen.
-        back_latest_event_button = findViewById(R.id.button_my_event_back);
-        back_latest_event_button.setOnClickListener(view -> {
+        back_my_event_button = findViewById(R.id.button_my_event_back);
+        back_my_event_button.setOnClickListener(view -> {
             Intent intent = new Intent(MyEventsActivity.this, HomeOrgActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
 
+        //add event button listener
+        add_event_my_event_button = findViewById(R.id.button_my_event_add_event);
+        add_event_my_event_button.setOnClickListener(view -> {
+            Intent intent = new Intent(MyEventsActivity.this, AddEventActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
+        });
 
 
 

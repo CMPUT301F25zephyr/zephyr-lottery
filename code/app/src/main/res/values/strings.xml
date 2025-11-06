@@ -1,8 +1,19 @@
 <resources>
     <string name="app_name">zephyr_lottery</string>
     <string name="test_pass">Password</string>
+
     <string-array name="user_type_spinner_array">
         <item>Entrant</item>
         <item>Organizer</item>
+    </string-array>
+
+    <string-array name="weekday_spinner_array">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
     </string-array>
 </resources>

@@ -6,20 +6,11 @@ import java.util.ArrayList;
 public class Organizer {
 
 
-    private ArrayList<Event> myEvents;
+    //private ArrayList<Event> myEvents;
     private UserProfile profile; //organzier's basic information. organizer has a profile?
 
     public Organizer(UserProfile profile){
         this.profile = profile;
-        this.myEvents = new ArrayList<Event>(); //initialize an empty array: no events yet
-    }
-
-    public ArrayList<Event> getMyEvents() {
-        return myEvents;
-    }
-
-    public void setMyEvents(ArrayList<Event> my_events) {
-        this.myEvents = my_events;
     }
 
     public UserProfile getProfile() {return profile;}

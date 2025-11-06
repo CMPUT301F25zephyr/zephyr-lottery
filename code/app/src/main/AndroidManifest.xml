@@ -40,6 +40,10 @@
             android:name=".activities.MyEventsActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".activities.AddEventActivity"
+            android:exported="false">
+        </activity>
     </application>
 
 </manifest>

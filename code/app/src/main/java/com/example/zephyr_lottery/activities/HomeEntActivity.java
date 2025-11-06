@@ -20,6 +20,8 @@ public class HomeEntActivity extends AppCompatActivity {
     private Button events_button;
     private Button profile_button;
     private Button history_button;
+    private Button lotteryInfoButton;
+
 
     //database variables
     private FirebaseFirestore db;
@@ -58,5 +60,11 @@ public class HomeEntActivity extends AppCompatActivity {
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
+        lotteryInfoButton = findViewById(R.id.entrant_lottery_info_button);
+        lotteryInfoButton.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeEntActivity.this, LotteryInfoActivity.class);
+            startActivity(intent);
+        });
+
     }
 }

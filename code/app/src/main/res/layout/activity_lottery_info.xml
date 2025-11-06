@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/lottery_info_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:id="@+id/lottery_info_scroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/lottery_info_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Lottery Selection Guidelines"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:paddingBottom="8dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_intro"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="This app uses a lottery system so that popular community events stay fair and accessible. You don&#39;t need to be the first to sign up — you just need to join the waiting list during the registration period."
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section1_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="How the lottery works"
+                android:textStyle="bold"
+                android:paddingBottom="4dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section1_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Each event has a registration window. During this time, anyone who is eligible can join the waiting list.\n\n• Joining earlier does not give a higher chance than joining later, as long as it is within the registration window.\n\n• After registration closes, the system randomly selects a number of entrants up to the event capacity.\n\n• Selected entrants receive an invitation to confirm their spot within a time limit set by the organizer.\n\n• If a selected entrant declines or does not respond in time, another entrant is randomly selected from the remaining waiting list."
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section2_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Eligibility and limits"
+                android:textStyle="bold"
+                android:paddingBottom="4dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section2_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• You must join the waiting list before the registration deadline shown on the event page.\n\n• Some events may have extra requirements, such as age limits or location restrictions, set by the organizer.\n\n• Typically, each profile or device can only hold one place on the waiting list per event.\n\n• Organizers may optionally limit the size of the waiting list to keep the lottery manageable."
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section3_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fairness and accessibility"
+                android:textStyle="bold"
+                android:paddingBottom="4dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section3_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• The lottery is designed so that you don&#39;t have to sit and refresh a page or compete to be first in line.\n\n• As long as you join the waiting list during the registration period, you have an equal chance of being selected as any other entrant.\n\n• If you are not selected in the first draw, you may still be chosen later if other entrants cancel or decline their invitations.\n\n• You can view your event history to see which events you joined and whether you were selected."
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section4_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Organizer control"
+                android:textStyle="bold"
+                android:paddingBottom="4dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_section4_body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="• Organizers define the event capacity and registration period.\n\n• Organizers trigger the lottery draw after registration closes and can monitor which entrants have confirmed or cancelled.\n\n• When someone cancels, the system can draw a replacement from the remaining waiting list.\n\n• Organizers do not control the order in which individual entrants are selected; this is handled automatically and randomly."
+                android:textSize="14sp"
+                android:paddingBottom="12dp" />
+
+            <TextView
+                android:id="@+id/lottery_info_footer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="These guidelines describe how the lottery normally works. Individual events may include extra notes or rules in their event description."
+                android:textSize="13sp"
+                android:paddingTop="8dp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

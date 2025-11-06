@@ -158,6 +158,9 @@ public class LoginActivity extends AppCompatActivity {
                                 } else { //(type == "Admin")
                                     intent = new Intent(LoginActivity.this,HomeAdmActivity.class);
                                 }
+
+                                //pass in the user's email
+                                intent.putExtra("USER_EMAIL", email);
                                 startActivity(intent);
                             });
 

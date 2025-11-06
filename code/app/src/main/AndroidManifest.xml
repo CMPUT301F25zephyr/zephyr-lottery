@@ -36,6 +36,10 @@
             android:name=".activities.EntEventsActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".activities.MyEventsActivity"
+            android:exported="false">
+        </activity>
     </application>
 
 </manifest>

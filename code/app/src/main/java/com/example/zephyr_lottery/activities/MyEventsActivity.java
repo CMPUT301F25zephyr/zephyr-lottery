@@ -22,23 +22,22 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
-public class EntEventsActivity extends AppCompatActivity {
-
-    private Button filter_latest_event_button; //doesn't do anything yet
+public class MyEventsActivity extends AppCompatActivity {
     private Button back_latest_event_button;
-    private ListView eventListView;
-    private ArrayList<Event> eventArrayList;
-    private ArrayAdapter<Event> eventArrayAdapter;
+    private ListView myEventListView;
+    private ArrayList<Event> myEventArrayList;
+    private ArrayAdapter<Event> myEventArrayAdapter;
 
     //databases
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.ent_events_activity);
+        setContentView(R.layout.my_events_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -49,40 +48,47 @@ public class EntEventsActivity extends AppCompatActivity {
         eventsRef = db.collection("events");
 
         //set the list view to be the arraylist of events.
-        eventListView = findViewById(R.id.ListView_latest_events);
-        eventArrayList = new ArrayList<>();
-        eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
-        eventListView.setAdapter(eventArrayAdapter);
-
-        //listener. updates array when created and when database changes.
-        eventsRef.addSnapshotListener((value, error) -> {
-            if (error != null) {
-                Log.e("Firestore", error.toString());
-            }
-            if(value != null && !value.isEmpty()){
-                eventArrayList.clear();
-                for (QueryDocumentSnapshot snapshot : value){
-                    String name = snapshot.getString("name");
-                    String times = snapshot.getString("times");
-                    String organizer_email = snapshot.getString("organizer_email");
-                    //add any future attributes for event here.
-
-                    eventArrayList.add(new Event(name,times,organizer_email));
-                }
-                eventArrayAdapter.notifyDataSetChanged();
-            }
-        });
+        myEventListView = findViewById(R.id.ListView_my_events);
+        myEventArrayList = new ArrayList<>();
+        myEventArrayAdapter = new EventArrayAdapter(this, myEventArrayList);
+        myEventListView.setAdapter(myEventArrayAdapter);
 
         //get email from intent
         String user_email = getIntent().getStringExtra("USER_EMAIL");
 
-        //listener for button to return to homescreen.
-        back_latest_event_button = findViewById(R.id.button_latest_event_back);
+        //listener. updates array when created and when database changes.
+        //only for events with this email as the organizer.
+        eventsRef
+                .whereEqualTo("organizer_email", user_email)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        Log.e("Firestore", error.toString());
+                        return;
+                    }
+                    if (value != null && !value.isEmpty()) {
+                        myEventArrayList.clear();
+                        for (QueryDocumentSnapshot snapshot : value) {
+                            String name = snapshot.getString("name");
+                            String times = snapshot.getString("times");
+                            String orgEmail = snapshot.getString("organizer_email");
+
+                            myEventArrayList.add(new Event(name, times, orgEmail));
+                        }
+                        myEventArrayAdapter.notifyDataSetChanged();
+                    }
+                });
+
+        //listener for button to return to ORGNAIZER homescreen.
+        back_latest_event_button = findViewById(R.id.button_my_event_back);
         back_latest_event_button.setOnClickListener(view -> {
-            Intent intent = new Intent(EntEventsActivity.this, HomeEntActivity.class);
+            Intent intent = new Intent(MyEventsActivity.this, HomeOrgActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
+
+
+
+
 
     }
 }

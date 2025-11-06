@@ -12,13 +12,23 @@ public class Event {
     private LocalDateTime lott_end_date; //lottery end date
     private String times; //string that shows when the actual event happens
     private Date date_created; //use to order the latest events screen
+    private String organizer_email; //the email of the organizer. used for finding organizer's events.
     //NEED TO ADD: arrayList of entrants.
 
-    public Event(String name, String times) {
+    public Event(String name, String times, String organizer_email) {
         this.name = name;
         this.times = times;
+        this.organizer_email = organizer_email;
         //add dates and times to constructor
         // -> when we implement organizers creating events
+    }
+
+    public String getOrganizer_email() {
+        return organizer_email;
+    }
+
+    public void setOrganizer_email(String organizer_email) {
+        this.organizer_email = organizer_email;
     }
 
     public String getName() {

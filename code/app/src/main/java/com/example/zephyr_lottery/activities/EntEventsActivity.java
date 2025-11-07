@@ -63,10 +63,27 @@ public class EntEventsActivity extends AppCompatActivity {
                 eventArrayList.clear();
                 for (QueryDocumentSnapshot snapshot : value){
                     String name = snapshot.getString("name");
-                    String times = snapshot.getString("times");
+                    String time = snapshot.getString("time");
+                    String organizer_email = snapshot.getString("organizer_email");
                     //add any future attributes for event here.
 
-                    eventArrayList.add(new Event(name,times));
+                    Event event = new Event(name, time, organizer_email);
+
+                    //add additional fields if they exist
+                    if (snapshot.contains("description")) {
+                        event.setDescription(snapshot.getString("description"));
+                    }
+                    if (snapshot.contains("price")) {
+                        event.setPrice(snapshot.getDouble("price").floatValue());
+                    }
+                    if (snapshot.contains("location")) {
+                        event.setLocation(snapshot.getString("location"));
+                    }
+                    if (snapshot.contains("weekday")) {
+                        event.setWeekday(snapshot.getLong("weekday").intValue());
+                    }
+
+                    eventArrayList.add(event);
                 }
                 eventArrayAdapter.notifyDataSetChanged();
             }

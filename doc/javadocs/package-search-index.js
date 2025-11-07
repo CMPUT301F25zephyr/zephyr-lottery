@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"com.example.zephyr_lottery"},{"l":"com.example.zephyr_lottery.models"},{"l":"com.example.zephyr_lottery.repositories"},{"l":"com.example.zephyr_lottery.utils"}];updateSearchResults();

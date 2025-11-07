@@ -78,6 +78,8 @@ public class AddEventActivity extends AppCompatActivity {
             String event_price = ((EditText) findViewById(R.id.add_event_price)).getText().toString();
             String event_location = ((EditText) findViewById(R.id.add_event_location)).getText().toString();
             String event_description = ((EditText) findViewById(R.id.add_event_description)).getText().toString();
+            String event_period = ((EditText) findViewById(R.id.add_event_period)).getText().toString();
+
 
             //reject if fields left empty or price is not a float.
             if (event_name.isEmpty()||event_time.isEmpty()||event_price.isEmpty()||
@@ -96,6 +98,7 @@ public class AddEventActivity extends AppCompatActivity {
                 event.setPrice(Float.parseFloat(event_price));
                 event.setDescription(event_description);
                 event.setLocation(event_location);
+                event.setPeriod(event_period);
 
                 //add to database. get hashcode after adding all fields so that it is consistent
                 DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));

@@ -16,6 +16,8 @@ public class Event {
     //number that corresponds to weekday the event happens on. 0-6 for monday-sunday
     private int weekday;
 
+    private String period; // event period
+
     //for now unused attributes
     private Date date_created; //use to order the latest events screen
     private LocalDateTime lott_start_date; //lottery start date
@@ -104,6 +106,14 @@ public class Event {
 
     public void setTime(String time) {
         this.time = time;
+    }
+
+    public String getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(String period) {
+        this.period = period;
     }
 
     public String getLocation() {

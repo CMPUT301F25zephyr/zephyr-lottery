@@ -35,6 +35,7 @@ public class AddEventActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.add_event_activity);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -85,41 +86,41 @@ public class AddEventActivity extends AppCompatActivity {
 
             if (event_name.isEmpty() || event_time.isEmpty() || event_price.isEmpty() ||
                     event_location.isEmpty() || event_description.isEmpty()) {
-                Toast.makeText(AddEventActivity.this, "Incomplete Information.",
-                        Toast.LENGTH_SHORT).show();
-
-            } else if (!validFloat(event_price)) {
-                Toast.makeText(AddEventActivity.this, "Price must be a number.",
-                        Toast.LENGTH_SHORT).show();
-
-            } else {
-                Event event = new Event(event_name, event_time, user_email);
-                event.setWeekdayString(event_weekday);
-                event.setPrice(Float.parseFloat(event_price));
-                event.setDescription(event_description);
-                event.setLocation(event_location);
-                event.setPeriod(event_period);
-                event.setLimit(event_limit);
-                event.setEntrants(new ArrayList<>());
-
-                int sampleSize = 0;
-                if (!event_sample_size.isEmpty()) {
-                    try {
-                        sampleSize = Integer.parseInt(event_sample_size);
-                        if (sampleSize < 0) sampleSize = 0;
-                    } catch (NumberFormatException e) {
-                        sampleSize = 0;
-                    }
-                }
-                event.setSampleSize(sampleSize);
-
-                DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));
-                docRef.set(event);
-
-                Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
-                intent.putExtra("USER_EMAIL", user_email);
-                startActivity(intent);
+                Toast.makeText(AddEventActivity.this, "Incomplete Information.", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            if (!validFloat(event_price)) {
+                Toast.makeText(AddEventActivity.this, "Price must be a number.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Event event = new Event(event_name, event_time, user_email);
+            event.setWeekdayString(event_weekday);
+            event.setPrice(Float.parseFloat(event_price));
+            event.setDescription(event_description);
+            event.setLocation(event_location);
+            event.setPeriod(event_period);
+            event.setLimit(event_limit);
+            event.setEntrants(new ArrayList<>());
+
+            int sampleSize = 0;
+            if (!event_sample_size.isEmpty()) {
+                try {
+                    sampleSize = Integer.parseInt(event_sample_size);
+                    if (sampleSize < 0) sampleSize = 0;
+                } catch (NumberFormatException e) {
+                    sampleSize = 0;
+                }
+            }
+            event.setSampleSize(sampleSize);
+
+            DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));
+            docRef.set(event);
+
+            Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
         });
     }
 

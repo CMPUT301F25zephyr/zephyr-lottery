@@ -133,11 +133,7 @@ public class Event {
     }
 
     public void setSampleSize(int sampleSize) {
-        if (sampleSize < 0) {
-            this.sampleSize = 0;
-        } else {
-            this.sampleSize = sampleSize;
-        }
+        this.sampleSize = Math.max(sampleSize, 0);
     }
 
     public ArrayList<String> getEntrants() {

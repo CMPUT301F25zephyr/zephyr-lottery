@@ -63,11 +63,11 @@ public class EntEventsActivity extends AppCompatActivity {
                 eventArrayList.clear();
                 for (QueryDocumentSnapshot snapshot : value){
                     String name = snapshot.getString("name");
-                    String times = snapshot.getString("times");
+                    String time = snapshot.getString("time");
                     String organizer_email = snapshot.getString("organizer_email");
                     //add any future attributes for event here.
 
-                    Event event = new Event(name, times, organizer_email);
+                    Event event = new Event(name, time, organizer_email);
 
                     //add additional fields if they exist
                     if (snapshot.contains("description")) {

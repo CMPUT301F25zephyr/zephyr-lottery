@@ -50,7 +50,6 @@ public class HomeEntActivity extends AppCompatActivity {
             text_home.setText(temp_text);
         });
 
-
         //switch to latest events activity
         events_button = findViewById(R.id.entrant_events_button);
         events_button.setOnClickListener(view -> {

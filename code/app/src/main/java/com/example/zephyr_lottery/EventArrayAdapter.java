@@ -36,7 +36,7 @@ public class EventArrayAdapter extends ArrayAdapter<Event> {
 
 
         event_name.setText(event.getName());
-        event_time.setText(event.getWeekdayString() + " at " + event.getTimes());
+        event_time.setText(event.getWeekdayString() + " at " + event.getTime());
 
         return view;
     }

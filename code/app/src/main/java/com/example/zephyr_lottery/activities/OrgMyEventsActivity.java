@@ -3,6 +3,8 @@ package com.example.zephyr_lottery.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -22,7 +24,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
-public class MyEventsActivity extends AppCompatActivity {
+public class OrgMyEventsActivity extends AppCompatActivity {
     private Button back_my_event_button;
     private Button add_event_my_event_button;
     private ListView myEventListView;
@@ -38,7 +40,7 @@ public class MyEventsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.my_events_activity);
+        setContentView(R.layout.org_my_events_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -70,10 +72,10 @@ public class MyEventsActivity extends AppCompatActivity {
                         myEventArrayList.clear();
                         for (QueryDocumentSnapshot snapshot : value) {
                             String name = snapshot.getString("name");
-                            String times = snapshot.getString("times");
+                            String time = snapshot.getString("time");
                             String orgEmail = snapshot.getString("organizer_email");
 
-                            Event event = new Event(name, times, orgEmail);
+                            Event event = new Event(name, time, orgEmail);
 
                             //add additional fields (if they exist?)
                             if (snapshot.contains("description")) {
@@ -98,7 +100,7 @@ public class MyEventsActivity extends AppCompatActivity {
         //listener for button to return to ORGNAIZER homescreen.
         back_my_event_button = findViewById(R.id.button_my_event_back);
         back_my_event_button.setOnClickListener(view -> {
-            Intent intent = new Intent(MyEventsActivity.this, HomeOrgActivity.class);
+            Intent intent = new Intent(OrgMyEventsActivity.this, HomeOrgActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
@@ -106,12 +108,23 @@ public class MyEventsActivity extends AppCompatActivity {
         //add event button listener
         add_event_my_event_button = findViewById(R.id.button_my_event_add_event);
         add_event_my_event_button.setOnClickListener(view -> {
-            Intent intent = new Intent(MyEventsActivity.this, AddEventActivity.class);
+            Intent intent = new Intent(OrgMyEventsActivity.this, AddEventActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
 
 
+        //listener for events in the list. switches to event details activity, pass in the event clicked.
+        myEventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Event event_clicked = (Event) myEventListView.getItemAtPosition(position);
+                Intent intent = new Intent(OrgMyEventsActivity.this, OrgMyEventDetailsActivity.class);
+                intent.putExtra("USER_EMAIL", user_email);
+                intent.putExtra("EVENT_CLICKED_CODE", event_clicked.hashCode());
+                startActivity(intent);
+            }
+        });
 
 
     }

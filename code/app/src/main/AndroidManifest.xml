@@ -37,11 +37,19 @@
             android:exported="false">
         </activity>
         <activity
-            android:name=".activities.MyEventsActivity"
+            android:name=".activities.OrgMyEventsActivity"
             android:exported="false">
         </activity>
         <activity
             android:name=".activities.AddEventActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.OrgMyEventDetailsActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.QRCodeActivity"
             android:exported="false">
         </activity>
     </application>

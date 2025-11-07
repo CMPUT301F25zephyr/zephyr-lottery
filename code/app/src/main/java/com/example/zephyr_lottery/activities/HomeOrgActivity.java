@@ -51,7 +51,7 @@ public class HomeOrgActivity extends AppCompatActivity {
         //switch to my events activity
         my_events_button = findViewById(R.id.button_my_events);
         my_events_button.setOnClickListener(view -> {
-            Intent intent = new Intent(HomeOrgActivity.this, MyEventsActivity.class);
+            Intent intent = new Intent(HomeOrgActivity.this, OrgMyEventsActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });

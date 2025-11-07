@@ -16,7 +16,6 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
-import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -64,7 +63,7 @@ public class AddEventActivity extends AppCompatActivity {
         //listener for button to return to my events.
         back_add_event_button = findViewById(R.id.button_back_add_event);
         back_add_event_button.setOnClickListener(view -> {
-            Intent intent = new Intent(AddEventActivity.this, MyEventsActivity.class);
+            Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
@@ -93,17 +92,17 @@ public class AddEventActivity extends AppCompatActivity {
             }else { //if successful, add to database of events.
                 //get info from all the fields.
                 Event event = new Event(event_name, event_time, user_email);
-                DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));
                 event.setWeekdayString(event_weekday);
                 event.setPrice(Float.parseFloat(event_price));
                 event.setDescription(event_description);
                 event.setLocation(event_location);
 
-                //add to database.
+                //add to database. get hashcode after adding all fields so that it is consistent
+                DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));
                 docRef.set(event);
 
                 //return to my events screen
-                Intent intent = new Intent(AddEventActivity.this, MyEventsActivity.class);
+                Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
                 intent.putExtra("USER_EMAIL", user_email);
                 startActivity(intent);
             }

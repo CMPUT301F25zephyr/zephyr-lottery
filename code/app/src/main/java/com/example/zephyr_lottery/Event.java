@@ -59,14 +59,6 @@ public class Event {
         this.name = name;
     }
 
-    public String getTimes() {
-        return time;
-    }
-
-    public void setTimes(String times) {
-        this.time = times;
-    }
-
     public int getWeekday() {
         return weekday;
     }

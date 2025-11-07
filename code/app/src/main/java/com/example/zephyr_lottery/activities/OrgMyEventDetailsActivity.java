@@ -11,14 +11,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.zephyr_lottery.R;
+import com.example.zephyr_lottery.adapters.ParticipantAdapter;
+import com.example.zephyr_lottery.models.Participant;
 import com.example.zephyr_lottery.repositories.EventRepository;
+
+import java.util.List;
 
 public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
     private Button button_generateQR;
     private Button button_notifySelected;
+    private RecyclerView recyclerInvited;
 
     private EventRepository repo;
     private String user_email;
@@ -65,5 +72,16 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     .setNegativeButton("Cancel", null)
                     .show();
         });
+
+        // RecyclerView for invited entrants
+        recyclerInvited = findViewById(R.id.recycler_invited_entrants);
+        recyclerInvited.setLayoutManager(new LinearLayoutManager(this));
+
+        repo.getInvitedEntrants(String.valueOf(event_code),
+                invitedList -> {
+                    ParticipantAdapter adapter = new ParticipantAdapter(invitedList);
+                    recyclerInvited.setAdapter(adapter);
+                },
+                e -> Toast.makeText(this, "Failed to load invited entrants", Toast.LENGTH_SHORT).show());
     }
 }

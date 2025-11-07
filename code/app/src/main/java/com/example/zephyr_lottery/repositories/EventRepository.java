@@ -156,4 +156,24 @@ public class EventRepository {
     private void sendNotificationToUser(String userId, String message) {
         Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
     }
+
+    // Get all invited entrants for an event
+    public void getInvitedEntrants(String eventId,
+                                   Consumer<List<Participant>> onSuccess,
+                                   Consumer<Exception> onError) {
+        CollectionReference participantsRef = db.collection("events")
+                .document(eventId)
+                .collection("participants");
+
+        participantsRef.whereEqualTo("status", "invited")
+                .get()
+                .addOnSuccessListener(query -> {
+                    List<Participant> invitedList = query.toObjects(Participant.class);
+                    if (onSuccess != null) onSuccess.accept(invitedList);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to fetch invited entrants", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
 }

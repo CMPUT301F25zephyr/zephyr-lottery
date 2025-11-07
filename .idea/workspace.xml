@@ -4,8 +4,14 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="feat: Notify selected entrants&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen.&#10;&#10;When clicked, this button triggers a notification to all participants who have been selected for the event.&#10;&#10;Includes repository logic and a new instrumented test for this feature.">
+    <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="feat: Add &quot;Notify Selected Entrants&quot; button&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen UI. Includes minor layout updates and comment additions for clarity.">
+      <change afterPath="$PROJECT_DIR$/code/app/src/androidTest/java/com/example/zephyr_lottery/OrgMyEventDetailsActivityTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/adapters/ParticipantAdapter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/code/app/src/main/res/layout/item_participant.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/OrgMyEventDetailsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/OrgMyEventDetailsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/repositories/EventRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/repositories/EventRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/app/src/main/res/layout/org_my_event_details_activity.xml" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/res/layout/org_my_event_details_activity.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,7 +25,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="US02.07.01_sendnotificationtowaitinglistentrants" />
+        <entry key="$PROJECT_DIR$" value="US02.07.02_sendnotificationstoselectedentrants" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -68,7 +74,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "US02.07.02__sendnotificationstoselectedentrants",
+    "git-widget-placeholder": "US02.06.01__viewchosenentrants",
     "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "editor.preferences.tabs"
   }
@@ -129,7 +135,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762542583842</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="feat: Add &quot;Notify Selected Entrants&quot; button&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen UI. Includes minor layout updates and comment additions for clarity.">
+      <option name="closed" value="true" />
+      <created>1762547805863</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1762547805863</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -150,6 +164,7 @@
     <MESSAGE value="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity." />
     <MESSAGE value="Added `EventRepositoryNotifyTest` for `notifyAllWaitingList`" />
     <MESSAGE value="feat: Notify selected entrants&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen.&#10;&#10;When clicked, this button triggers a notification to all participants who have been selected for the event.&#10;&#10;Includes repository logic and a new instrumented test for this feature." />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: Notify selected entrants&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen.&#10;&#10;When clicked, this button triggers a notification to all participants who have been selected for the event.&#10;&#10;Includes repository logic and a new instrumented test for this feature." />
+    <MESSAGE value="feat: Add &quot;Notify Selected Entrants&quot; button&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen UI. Includes minor layout updates and comment additions for clarity." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: Add &quot;Notify Selected Entrants&quot; button&#10;&#10;Adds a &quot;Notify Selected Entrants&quot; button to the event details screen UI. Includes minor layout updates and comment additions for clarity." />
   </component>
 </project>

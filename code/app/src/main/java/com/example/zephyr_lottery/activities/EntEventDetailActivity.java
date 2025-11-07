@@ -29,6 +29,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
 
     private Button back_event_details_button;
     private Button register_button;
+    private Button leave_button;
 
     private TextView title;
     private TextView closingDate;
@@ -65,6 +66,10 @@ public class EntEventDetailActivity extends AppCompatActivity {
         entrantNumbers = findViewById(R.id.textView_currententrants);
         lotteryWinners = findViewById(R.id.textView_lotterywinners);
 
+        register_button = findViewById(R.id.button_register);
+        leave_button = findViewById(R.id.button_leave_waitlist);
+        back_event_details_button = findViewById(R.id.button_event_details_back);
+
         String user_email = getIntent().getStringExtra("USER_EMAIL");
         if (user_email == null || user_email.isEmpty()) {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -80,52 +85,10 @@ public class EntEventDetailActivity extends AppCompatActivity {
         eventsRef = db.collection("events");
         docRef = eventsRef.document(eventHash);
 
-        docRef.get().addOnSuccessListener(currentEvent -> {
-            if (currentEvent.exists()) {
-                title.setText(currentEvent.getString("name"));
+        loadEventDetails();
 
-                closingDate.setText("");
-                startEnd.setText("");
-
-                String weekdayString = currentEvent.getString("weekdayString");
-                String timeString = currentEvent.getString("time");
-                StringBuilder dayTimeText = new StringBuilder();
-                if (weekdayString != null) {
-                    dayTimeText.append(weekdayString).append(" ");
-                }
-                if (timeString != null) {
-                    dayTimeText.append(timeString);
-                }
-                dayTime.setText(dayTimeText.toString());
-
-                location.setText(currentEvent.getString("location"));
-
-                Object priceObj = currentEvent.get("price");
-                if (priceObj != null) {
-                    price.setText("$" + priceObj.toString());
-                } else {
-                    price.setText("$0");
-                }
-
-                description.setText(currentEvent.getString("description"));
-
-                List<String> entrants = (List<String>) currentEvent.get("entrants");
-                int entrantCount = entrants != null ? entrants.size() : 0;
-
-                Long limitLong = currentEvent.getLong("limit");
-                String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
-                entrantNumbers.setText("Current Entrants: " + entrantCount + "/" + limitDisplay + " slots");
-
-                Long sampleSizeLong = currentEvent.getLong("sampleSize");
-                int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
-                lotteryWinners.setText("Lottery Winners: " + sampleSize);
-            } else {
-                Log.e("Firestore", "Event not found.");
-            }
-        });
-
-        register_button = findViewById(R.id.button_register);
         String finalUserEmail = currentUserEmail;
+
         register_button.setOnClickListener(view -> {
             if (finalUserEmail == null || finalUserEmail.isEmpty()) {
                 Toast.makeText(
@@ -157,7 +120,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                 if (entrantsList.contains(finalUserEmail)) {
                     Toast.makeText(
                             EntEventDetailActivity.this,
-                            "You have already registered for this event.",
+                            "You are already on the waiting list.",
                             Toast.LENGTH_LONG
                     ).show();
                     return;
@@ -166,7 +129,6 @@ public class EntEventDetailActivity extends AppCompatActivity {
                 Long limitLong = currentEvent.getLong("limit");
                 boolean hasLimit = limitLong != null;
                 int limitValue = hasLimit ? limitLong.intValue() : Integer.MAX_VALUE;
-
                 if (hasLimit && entrantsList.size() >= limitValue) {
                     Toast.makeText(
                             EntEventDetailActivity.this,
@@ -183,10 +145,9 @@ public class EntEventDetailActivity extends AppCompatActivity {
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(
                                     EntEventDetailActivity.this,
-                                    "Successfully registered!",
+                                    "Joined waiting list.",
                                     Toast.LENGTH_LONG
                             ).show();
-
                             int newCount = currentSize + 1;
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
@@ -196,19 +157,129 @@ public class EntEventDetailActivity extends AppCompatActivity {
                             Log.e("EntEventDetail", "Error adding entrant", e);
                             Toast.makeText(
                                     EntEventDetailActivity.this,
-                                    "Failed to register. Please try again.",
+                                    "Failed to join. Please try again.",
                                     Toast.LENGTH_LONG
                             ).show();
                         });
             });
         });
 
-        back_event_details_button = findViewById(R.id.button_event_details_back);
+        leave_button.setOnClickListener(view -> {
+            if (finalUserEmail == null || finalUserEmail.isEmpty()) {
+                Toast.makeText(
+                        EntEventDetailActivity.this,
+                        "Unable to determine your account. Please sign in again.",
+                        Toast.LENGTH_LONG
+                ).show();
+                return;
+            }
+
+            docRef.get().addOnSuccessListener(currentEvent -> {
+                if (!currentEvent.exists()) {
+                    Toast.makeText(
+                            EntEventDetailActivity.this,
+                            "Event not found.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+                    return;
+                }
+
+                List<String> entrantsList = (List<String>) currentEvent.get("entrants");
+                if (entrantsList == null) {
+                    entrantsList = new ArrayList<>();
+                } else {
+                    entrantsList = new ArrayList<>(entrantsList);
+                    entrantsList.remove(null);
+                }
+
+                if (!entrantsList.contains(finalUserEmail)) {
+                    Toast.makeText(
+                            EntEventDetailActivity.this,
+                            "You are not on the waiting list.",
+                            Toast.LENGTH_LONG
+                    ).show();
+                    return;
+                }
+
+                Long limitLong = currentEvent.getLong("limit");
+                String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
+                int currentSize = entrantsList.size();
+
+                docRef.update("entrants", FieldValue.arrayRemove(finalUserEmail))
+                        .addOnSuccessListener(aVoid -> {
+                            Toast.makeText(
+                                    EntEventDetailActivity.this,
+                                    "You have left the waiting list.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                            int newCount = Math.max(0, currentSize - 1);
+                            entrantNumbers.setText(
+                                    "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
+                            );
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e("EntEventDetail", "Error removing entrant", e);
+                            Toast.makeText(
+                                    EntEventDetailActivity.this,
+                                    "Failed to leave. Please try again.",
+                                    Toast.LENGTH_LONG
+                            ).show();
+                        });
+            });
+        });
+
         String finalUserEmailForBack = currentUserEmail;
         back_event_details_button.setOnClickListener(view -> {
             Intent intent = new Intent(EntEventDetailActivity.this, EntEventsActivity.class);
             intent.putExtra("USER_EMAIL", finalUserEmailForBack);
             startActivity(intent);
+        });
+    }
+
+    private void loadEventDetails() {
+        docRef.get().addOnSuccessListener(currentEvent -> {
+            if (!currentEvent.exists()) {
+                Log.e("Firestore", "Event not found.");
+                return;
+            }
+
+            title.setText(currentEvent.getString("name"));
+
+            closingDate.setText("");
+            startEnd.setText("");
+
+            String weekdayString = currentEvent.getString("weekdayString");
+            String timeString = currentEvent.getString("time");
+            StringBuilder dayTimeText = new StringBuilder();
+            if (weekdayString != null) {
+                dayTimeText.append(weekdayString).append(" ");
+            }
+            if (timeString != null) {
+                dayTimeText.append(timeString);
+            }
+            dayTime.setText(dayTimeText.toString());
+
+            location.setText(currentEvent.getString("location"));
+
+            Object priceObj = currentEvent.get("price");
+            if (priceObj != null) {
+                price.setText("$" + priceObj.toString());
+            } else {
+                price.setText("$0");
+            }
+
+            description.setText(currentEvent.getString("description"));
+
+            List<String> entrants = (List<String>) currentEvent.get("entrants");
+            int entrantCount = entrants != null ? entrants.size() : 0;
+
+            Long limitLong = currentEvent.getLong("limit");
+            String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
+            entrantNumbers.setText("Current Entrants: " + entrantCount + "/" + limitDisplay + " slots");
+
+            Long sampleSizeLong = currentEvent.getLong("sampleSize");
+            int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
+            lotteryWinners.setText("Lottery Winners: " + sampleSize);
         });
     }
 }

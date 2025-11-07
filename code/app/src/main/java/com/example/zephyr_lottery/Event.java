@@ -30,6 +30,7 @@ public class Event {
         this.time = time;
         this.organizer_email = organizer_email;
         this.entrants = new ArrayList<>();
+
     }
 
     @Override

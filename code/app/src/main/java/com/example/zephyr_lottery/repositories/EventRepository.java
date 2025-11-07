@@ -71,7 +71,7 @@ public class EventRepository {
                         return;
                     }
                     DocumentSnapshot next = docs.get(0);
-                    String nextUserId = next.getId(); // waitingList docId == userId (recommended)
+                    String nextUserId = next.getId(); // waitingList docId == userId
 
                     WriteBatch batch = db.batch();
 
@@ -119,5 +119,41 @@ public class EventRepository {
             String status = (snap != null && snap.exists()) ? snap.getString("status") : null;
             if (onStatus != null) onStatus.accept(status);
         });
+    }
+
+    // NEW: Notify all selected entrants (US02.07.02)
+    public void notifyAllSelectedEntrants(String eventId,
+                                          Runnable onSuccess,
+                                          Consumer<Exception> onError) {
+        CollectionReference participantsRef = db.collection("events")
+                .document(eventId)
+                .collection("participants");
+
+        participantsRef.whereEqualTo("status", "accepted") // filter by accepted/selected
+                .get()
+                .addOnSuccessListener(query -> {
+                    if (query.isEmpty()) {
+                        Log.d("EventRepo", "No selected entrants to notify");
+                        if (onSuccess != null) onSuccess.run();
+                        return;
+                    }
+
+                    for (DocumentSnapshot doc : query) {
+                        String userId = doc.getId();
+                        sendNotificationToUser(userId,
+                                "Congratulations! You have been selected for event " + eventId);
+                    }
+
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to fetch selected entrants", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
+
+    // Placeholder for actual FCM integration
+    private void sendNotificationToUser(String userId, String message) {
+        Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
     }
 }

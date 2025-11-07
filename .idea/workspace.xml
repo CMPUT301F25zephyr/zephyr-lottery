@@ -4,8 +4,12 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity.">
+    <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="Added `EventRepositoryNotifyTest` for `notifyAllWaitingList`">
+      <change afterPath="$PROJECT_DIR$/code/app/src/androidTest/java/com/example/zephyr_lottery/EventRepositoryNotifySelectedTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/OrgMyEventDetailsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/OrgMyEventDetailsActivity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/repositories/EventRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/repositories/EventRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/code/app/src/main/res/layout/org_my_event_details_activity.xml" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/res/layout/org_my_event_details_activity.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,7 +23,7 @@
   <component name="Git.Settings">
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="main" />
+        <entry key="$PROJECT_DIR$" value="US02.07.01_sendnotificationtowaitinglistentrants" />
       </map>
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -38,12 +42,12 @@
     &quot;author&quot;: &quot;Dangpham1&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:CMPUT301F25zephyr/zephyr-lottery.git",
-    "accountId": "01db8ef0-68c8-478c-8639-631f2b9a6808"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:CMPUT301F25zephyr/zephyr-lottery.git&quot;,
+    &quot;accountId&quot;: &quot;01db8ef0-68c8-478c-8639-631f2b9a6808&quot;
   }
-}]]></component>
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="ProjectErrors" />
   </component>
@@ -51,6 +55,9 @@
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="357MKfmmWNQU0ccRszCHbgwDwes" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -65,7 +72,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "US01.05.02__eventinvitationacceptreject",
+    "git-widget-placeholder": "US02.07.02__sendnotificationstoselectedentrants",
     "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "editor.preferences.tabs"
   }
@@ -110,7 +117,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762535909574</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Added `EventRepositoryNotifyTest` for `notifyAllWaitingList`">
+      <option name="closed" value="true" />
+      <created>1762541046880</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1762541046881</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -129,6 +144,7 @@
     <MESSAGE value="QR scan and join event logic" />
     <MESSAGE value="QR scan" />
     <MESSAGE value="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity." />
-    <option name="LAST_COMMIT_MESSAGE" value="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity." />
+    <MESSAGE value="Added `EventRepositoryNotifyTest` for `notifyAllWaitingList`" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added `EventRepositoryNotifyTest` for `notifyAllWaitingList`" />
   </component>
 </project>

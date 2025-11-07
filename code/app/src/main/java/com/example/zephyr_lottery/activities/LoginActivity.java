@@ -19,6 +19,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
+import com.example.zephyr_lottery.utils.FCMTokenManager;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
@@ -166,6 +167,7 @@ public class LoginActivity extends AppCompatActivity {
                                 Intent intent;
                                 if (type.equals("Organizer")){
                                     intent = new Intent(LoginActivity.this,HomeOrgActivity.class);
+                                    FCMTokenManager.initializeFCMToken();
                                 } else if (type.equals("Entrant")) {
                                     intent = new Intent(LoginActivity.this,HomeEntActivity.class);
                                 } else { //(type == "Admin")

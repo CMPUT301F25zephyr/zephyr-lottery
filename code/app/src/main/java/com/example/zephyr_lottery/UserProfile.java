@@ -8,6 +8,7 @@ public class UserProfile {
     private String type;
     private String phone;
     private Boolean receivingNotis;
+    private String fcmToken;
 
     // empty constructor for firebase
     public UserProfile() {
@@ -45,5 +46,12 @@ public class UserProfile {
     public String getEmail() {return email;}
     public String getType() {return type;}
     public String getPhone() {return phone;}
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
 }
 

@@ -120,4 +120,39 @@ public class EventRepository {
             if (onStatus != null) onStatus.accept(status);
         });
     }
+
+    public void notifyAllWaitingList(String eventId,
+                                     Runnable onSuccess,
+                                     Consumer<Exception> onError) {
+        CollectionReference waitingRef = db.collection("events")
+                .document(eventId)
+                .collection("waitingList");
+
+        waitingRef.get()
+                .addOnSuccessListener(query -> {
+                    if (query.isEmpty()) {
+                        Log.d("EventRepo", "No waiting list entrants to notify");
+                        if (onSuccess != null) onSuccess.run();
+                        return;
+                    }
+
+                    for (DocumentSnapshot doc : query) {
+                        String userId = doc.getId();
+                        // TODO: Replace with actual FCM push notification logic
+                        sendNotificationToUser(userId,
+                                "Update from event " + eventId + ": please check your status.");
+                    }
+
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to fetch waiting list", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
+
+    // Placeholder for actual FCM integration
+    private void sendNotificationToUser(String userId, String message) {
+        Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
+    }
 }

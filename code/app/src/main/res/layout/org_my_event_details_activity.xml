@@ -7,31 +7,49 @@
     android:layout_height="match_parent"
     tools:context=".activities.OrgMyEventDetailsActivity">
 
+    <!-- Header -->
     <TextView
         android:id="@+id/textView_orgEventDetails"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="#D9D9D9"
         android:padding="10dp"
         android:text="Event Details"
         android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
+    <!-- Placeholder for event info -->
     <TextView
         android:id="@+id/text_placeholder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="placeholder"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/textView_orgEventDetails"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView_orgEventDetails" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- Notify All button -->
+    <Button
+        android:id="@+id/button_notify_all"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Notify All Waiting List"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/button_generate_qr"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHorizontalWeight="1" />
+
+    <!-- Generate QR button -->
     <Button
         android:id="@+id/button_generate_qr"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Generate QR"
+        app:layout_constraintStart_toEndOf="@id/button_notify_all"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintHorizontalWeight="1" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

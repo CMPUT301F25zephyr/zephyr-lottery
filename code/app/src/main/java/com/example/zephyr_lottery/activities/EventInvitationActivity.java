@@ -2,6 +2,7 @@ package com.example.zephyr_lottery.activities;
 
 import android.os.Bundle;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
@@ -9,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.repositories.EventRepository;
-import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class EventInvitationActivity extends AppCompatActivity {
 
@@ -20,7 +21,7 @@ public class EventInvitationActivity extends AppCompatActivity {
     private Button btnAccept;
     private Button btnDecline;
 
-    private ListenerRegistration statusListener;
+    private TextView textEventTitle, textEventTime, textEventLocation, textEventPrice, textEventDescription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,9 +33,33 @@ public class EventInvitationActivity extends AppCompatActivity {
         eventId = getIntent().getStringExtra("EVENT_ID");
         userId = getIntent().getStringExtra("USER_ID");
 
+        // Bind views
+        textEventTitle = findViewById(R.id.text_event_title);
+        textEventTime = findViewById(R.id.text_event_time);
+        textEventLocation = findViewById(R.id.text_event_location);
+        textEventPrice = findViewById(R.id.text_event_price);
+        textEventDescription = findViewById(R.id.text_event_description);
+
         btnAccept = findViewById(R.id.btnAccept);
         btnDecline = findViewById(R.id.btnDecline);
 
+        // Fetch event details
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("events").document(eventId).get()
+                .addOnSuccessListener(snapshot -> {
+                    if (snapshot.exists()) {
+                        textEventTitle.setText(snapshot.getString("name"));
+                        textEventTime.setText(snapshot.getString("time"));
+                        textEventLocation.setText(snapshot.getString("location"));
+                        textEventPrice.setText("Price: $" + snapshot.getDouble("price"));
+                        textEventDescription.setText(snapshot.getString("description"));
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    textEventTitle.setText("Event details unavailable");
+                });
+
+        // Accept button
         btnAccept.setOnClickListener(v ->
                 new AlertDialog.Builder(this)
                         .setTitle("Accept invitation?")
@@ -47,6 +72,7 @@ public class EventInvitationActivity extends AppCompatActivity {
                         .show()
         );
 
+        // Decline button
         btnDecline.setOnClickListener(v ->
                 new AlertDialog.Builder(this)
                         .setTitle("Decline invitation?")
@@ -58,26 +84,5 @@ public class EventInvitationActivity extends AppCompatActivity {
                         .setNegativeButton("Cancel", null)
                         .show()
         );
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        statusListener = repo.listenToParticipantStatus(eventId, userId, status -> {
-            boolean invited = "invited".equals(status);
-            btnAccept.setEnabled(invited);
-            btnDecline.setEnabled(invited);
-
-            if ("accepted".equals(status) || "declined".equals(status) || status == null) {
-                btnAccept.setEnabled(false);
-                btnDecline.setEnabled(false);
-            }
-        });
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-        if (statusListener != null) statusListener.remove();
     }
 }

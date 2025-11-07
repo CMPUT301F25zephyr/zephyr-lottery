@@ -3,6 +3,9 @@ package com.example.zephyr_lottery.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Adapter;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -91,6 +94,18 @@ public class EntEventsActivity extends AppCompatActivity {
 
         //get email from intent
         String user_email = getIntent().getStringExtra("USER_EMAIL");
+
+        // Send to event details when clicked
+        eventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Event e = eventArrayList.get(position);
+                Intent intent = new Intent(EntEventsActivity.this, EntEventDetailActivity.class);
+                intent.putExtra("USER_EMAIL", user_email);
+                intent.putExtra("EVENT", String.valueOf(e.hashCode()));
+                startActivity(intent);
+            }
+        });
 
         //listener for button to return to homescreen.
         back_latest_event_button = findViewById(R.id.button_latest_event_back);

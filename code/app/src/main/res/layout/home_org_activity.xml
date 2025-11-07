@@ -9,13 +9,34 @@
 
     <!-- DO NOT MERGE PLS -->
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textView_orgHome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#D9D9D9"
+        android:text="home screen for organizer"
+        android:padding="10dp"
+        android:textSize="34sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button_my_events"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="home screen for organizer"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:text="See Your Events"
+        app:layout_constraintBottom_toTopOf="@+id/button_edit_profile_org"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/button_edit_profile_org"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Edit Profile"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_my_events" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,47 +5,55 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.HomeEntActivity">
+    tools:context=".activities.EntEventsActivity">
 
     <TextView
         android:id="@+id/textView_latest_event"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#D9D9D9"
-        android:text="home screen for entrant"
+        android:text="Latest Events"
         android:padding="10dp"
         android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/entrant_events_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="See Latest Events"
-        app:layout_constraintBottom_toTopOf="@+id/entrant_history_button"
+    <View
+        android:id="@+id/rectangle_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentTop="true"
+        android:background="#D9D9D9"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_latest_event_filter"
+        tools:layout_editor_absoluteX="0dp" />
+
+    <ListView
+        android:id="@+id/ListView_latest_events"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/button_latest_event_filter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_latest_event" />
 
     <Button
-        android:id="@+id/entrant_history_button"
+        android:id="@+id/button_latest_event_filter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="See History"
-        app:layout_constraintBottom_toTopOf="@+id/entrant_profile_button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/entrant_events_button" />
-
-    <Button
-        android:id="@+id/entrant_profile_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Button"
+        android:padding="10dp"
+        android:text="Filter Events"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/entrant_history_button" />
+        app:layout_constraintStart_toEndOf="@+id/button_latest_event_back" />
 
+    <Button
+        android:id="@+id/button_latest_event_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button_latest_event_filter"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,37 +16,53 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
             android:name=".activities.HomeOrgActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:exported="false">
         </activity>
         <activity
             android:name=".activities.HomeAdmActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:exported="false">
         </activity>
         <activity
             android:name=".activities.HomeEntActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.EntEventsActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.AdmProfilesActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.OrgMyEventsActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.AddEventActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.OrgMyEventDetailsActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.QRCodeActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.EntEventDetailActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.AdmEventsActivity"
+            android:exported="false">
         </activity>
         <activity
             android:name=".activities.UserProfileActivity"

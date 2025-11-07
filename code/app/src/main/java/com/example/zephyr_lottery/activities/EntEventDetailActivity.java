@@ -5,19 +5,21 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
-import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
 
 public class EntEventDetailActivity extends AppCompatActivity {
     private Button back_event_details_button;
@@ -65,7 +67,6 @@ public class EntEventDetailActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
         docRef = eventsRef.document(eventHash);
-        Log.e("hi", "hi");
         docRef.get().addOnSuccessListener(currentEvent -> {
            if (currentEvent.exists()) {
                // Start modifying text values
@@ -83,6 +84,11 @@ public class EntEventDetailActivity extends AppCompatActivity {
                price.setText(priceText);
                description.setText(currentEvent.getString("description"));
                String entrantNumbersText = "Current Entrants: ";
+               ArrayList<String> entrants = (ArrayList<String>) currentEvent.get("entrants");
+               assert entrants != null;
+               entrantNumbersText += String.valueOf(entrants.size());
+               entrantNumbersText += "/";
+               entrantNumbers.setText(entrantNumbersText);
                // Placeholder for obtaining entrant numbers and limits
                String lotteryWinnersText = "Lottery Winners: ";
                // Placeholder for obtaining number of winners
@@ -90,6 +96,39 @@ public class EntEventDetailActivity extends AppCompatActivity {
            else {
                Log.e("Firestore", "Event not found.");
            }
+        });
+
+        //listener for register button.
+        register_button = findViewById(R.id.button_register);
+        register_button.setOnClickListener(view -> {
+            docRef.get().addOnSuccessListener(currentEvent -> {
+               if (currentEvent.exists()) {
+                   // Retrieve array and add email
+                   ArrayList<String> entrants = (ArrayList<String>) currentEvent.get("entrants");
+                   assert entrants != null;
+                   // Check if user has already signed up first
+                   boolean userFound = false;
+                   for (int i = 0; i < entrants.size(); i++) {
+                       if (entrants.get(i).equals(user_email)) {
+                           userFound = true;
+                       }
+                   }
+                   if (userFound) {
+                       // User must have already registered previously
+                       Toast rejection = Toast.makeText(this, "You have already registered for this event.", Toast.LENGTH_LONG);
+                       rejection.show();
+                   }
+                   else {
+                       // Placeholder to check against maximum event entrants
+
+                       // Add user to event entrants list
+                       entrants.add(user_email);
+                       docRef.update("entrants", FieldValue.arrayUnion(user_email));
+                       Toast confirmation = Toast.makeText(this, "Successfully registered!", Toast.LENGTH_LONG);
+                       confirmation.show();
+                   }
+               }
+            });
         });
 
         //listener for button to return to homescreen.

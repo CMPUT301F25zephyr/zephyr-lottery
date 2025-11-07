@@ -1,6 +1,9 @@
 package com.example.zephyr_lottery.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageButton;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -11,6 +14,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.R;
 
 public class HomeOrgActivity extends AppCompatActivity {
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -22,8 +26,11 @@ public class HomeOrgActivity extends AppCompatActivity {
             return insets;
         });
 
-
-
+        ImageButton btnProfile = findViewById(R.id.btnProfile1);
+        btnProfile.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeOrgActivity.this, UserProfileActivity.class);
+            startActivity(intent);
+        });
 
     }
 }

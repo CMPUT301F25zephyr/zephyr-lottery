@@ -14,7 +14,6 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.R;
 
 public class HomeEntActivity extends AppCompatActivity {
-    private View btnProfile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

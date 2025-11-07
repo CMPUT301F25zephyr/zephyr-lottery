@@ -99,7 +99,7 @@ public class UserProfileActivity extends AppCompatActivity {
         // Get the edited values
         String newUsername = etName.getText().toString().trim();
         String newPhone = ValidationUtil.sanitize(etPhone.getText().toString());
-        String email = etEmail.getText().toString(); // Email doesn't change
+        // String email = etEmail.getText().toString(); // Email doesn't change
 
         // Basic validation
         if (newUsername.isEmpty()) {

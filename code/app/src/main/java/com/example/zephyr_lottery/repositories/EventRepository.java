@@ -27,7 +27,7 @@ public class EventRepository {
     // Accept invitation
     public void acceptInvitation(String eventId, String userId,
                                  Runnable onSuccess, Consumer<Exception> onError) {
-        updateParticipantStatus(eventId, userId, "accepted")
+        updateParticipantStatus(eventId, userId, "CONFIRMED")
                 .addOnSuccessListener(v -> {
                     Log.d("EventRepo", "Accepted invitation");
                     if (onSuccess != null) onSuccess.run();
@@ -41,7 +41,7 @@ public class EventRepository {
     // Decline invitation, then invite next from waiting list
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
-        updateParticipantStatus(eventId, userId, "declined")
+        updateParticipantStatus(eventId, userId, "CANCELLED")
                 .addOnSuccessListener(v -> {
                     Log.d("EventRepo", "Declined invitation");
                     inviteNextFromWaitingList(eventId, onSuccess, onError);
@@ -81,7 +81,7 @@ public class EventRepository {
                             .document(nextUserId);
 
                     Participant invited = new Participant(
-                            nextUserId, "invited", Timestamp.now(), Timestamp.now()
+                            nextUserId, "SELECTED", Timestamp.now(), Timestamp.now()
                     );
 
                     batch.set(participantRef, invited, SetOptions.merge());

@@ -84,6 +84,9 @@ public class EntEventsActivity extends AppCompatActivity {
                     if (snapshot.contains("weekday")) {
                         event.setWeekday(snapshot.getLong("weekday").intValue());
                     }
+                    if (snapshot.contains("period")) {
+                        event.setPeriod(snapshot.getString("period"));
+                    }
 
                     eventArrayList.add(event);
                 }

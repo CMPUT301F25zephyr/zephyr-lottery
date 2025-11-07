@@ -8,7 +8,7 @@
     tools:context=".activities.HomeOrgActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textView_admin_home"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#D9D9D9"

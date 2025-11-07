@@ -85,7 +85,7 @@ public class LoginTest {
         Thread.sleep(3000);
 
         //check that we are signed into an entrant account
-        onView(withId(R.id.entrant_events_button)).check(matches(isDisplayed()));
+        onView(withId(R.id.tvEntrantGreeting)).check(matches(isDisplayed()));
     }
 }
 

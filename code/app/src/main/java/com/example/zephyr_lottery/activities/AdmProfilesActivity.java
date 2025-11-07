@@ -15,7 +15,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
-import com.example.zephyr_lottery.utils.ProfileArrayAdapter;
+import com.example.zephyr_lottery.ProfileArrayAdapter;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;

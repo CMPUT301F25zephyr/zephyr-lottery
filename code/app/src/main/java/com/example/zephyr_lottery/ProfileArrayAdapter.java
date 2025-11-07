@@ -1,4 +1,4 @@
-package com.example.zephyr_lottery.utils;
+package com.example.zephyr_lottery;
 
 import android.content.Context;
 import android.view.LayoutInflater;

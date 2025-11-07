@@ -7,6 +7,8 @@ public class UserProfile {
     private String email;
     private String type;
     private String phone;
+    private Boolean receivingNotis;
+    private String fcmToken;
 
     // empty constructor for firebase
     public UserProfile() {
@@ -16,6 +18,7 @@ public class UserProfile {
         this.username = username;
         this.email = email;
         this.type = type;
+        this.receivingNotis = false;
     }
 
     public UserProfile(String username, String email, String type, String phone) {
@@ -23,6 +26,19 @@ public class UserProfile {
         this.email = email;
         this.type = type;
         this.phone = phone;
+        this.receivingNotis = false;
+    }
+
+    public UserProfile(String username, String email, String type, String phone, Boolean receivingNotis) {
+        this.username = username;
+        this.email = email;
+        this.type = type;
+        this.phone = phone;
+        this.receivingNotis = receivingNotis;
+    }
+
+    public Boolean getReceivingNotis() {
+        return receivingNotis;
     }
 
     public String getUsername() {return username;}
@@ -30,5 +46,12 @@ public class UserProfile {
     public String getEmail() {return email;}
     public String getType() {return type;}
     public String getPhone() {return phone;}
+    public String getFcmToken() {
+        return fcmToken;
+    }
+
+    public void setFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
 }
 

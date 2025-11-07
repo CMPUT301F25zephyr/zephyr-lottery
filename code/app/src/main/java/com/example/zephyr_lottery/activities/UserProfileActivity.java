@@ -84,9 +84,15 @@ public class UserProfileActivity extends AppCompatActivity {
                         etPhone.setText(phone);
                     }
 
-                    // TODO: Load notification preference from Firebase
-                    // For now, defaulting to false
-                    cbReceiveNotifications.setChecked(false);
+                    Boolean receivingNotis = profile.getReceivingNotis();
+
+                    // Load notification preference from Firebase
+                    // Default to false if not set
+                    if (receivingNotis != null) {
+                        cbReceiveNotifications.setChecked(receivingNotis);
+                    } else {
+                        cbReceiveNotifications.setChecked(false);
+                    }
                 });
 
         // Back button functionality
@@ -173,8 +179,8 @@ public class UserProfileActivity extends AppCompatActivity {
                 .document(currentUserEmail)
                 .update(
                         "username", newUsername,
-                        "phone", newPhone
-                        // TODO: Add "receiveNotifications", receiveNotifications when field is added to UserProfile model
+                        "phone", newPhone,
+                        "receivingNotis", receiveNotifications
                 )
                 .addOnSuccessListener(aVoid -> {
                     Toast.makeText(UserProfileActivity.this,

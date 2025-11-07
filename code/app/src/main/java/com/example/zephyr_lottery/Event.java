@@ -5,6 +5,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
+/**
+ * This class stores all of the details of an event from the database
+ */
 public class Event {
     private String name;
     private String description;
@@ -24,7 +27,16 @@ public class Event {
     public Event() {
         entrants = new ArrayList<>();
     }
-
+    
+    /**
+     * Creates a new event with a name, time, and email
+     * @param name
+     *  Name of the event
+     * @param time
+     *  The scheduled time of the event every week
+     * @param organizer_email
+     *  The email of the organizer
+     */
     public Event(String name, String time, String organizer_email) {
         this.name = name;
         this.time = time;
@@ -55,26 +67,56 @@ public class Event {
                 date_created, organizer_email, lott_start_date, lott_end_date);
     }
 
+    /**
+     * Obtains the email of the organizer
+     * @return
+     * Returns the email as a String
+     */
     public String getOrganizer_email() {
         return organizer_email;
     }
 
+    /**
+     * Sets the organizer email for the event
+     * @param organizer_email
+     * The email to set as the organizer of the event
+     */
     public void setOrganizer_email(String organizer_email) {
         this.organizer_email = organizer_email;
     }
 
+    /**
+     * Obtains the name of the event
+     * @return
+     * Returns the name as a String
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Changes the name of the event
+     * @param name
+     * The new name of the event
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Obtains the recurring weekday integer on which this event is held
+     * @return
+     * Returns the weekday as an Integer
+     */
     public int getWeekday() {
         return weekday;
     }
 
+    /**
+     * Obtains the recurring weekday on which this event is held
+     * @return
+     * Returns the weekday as a String
+     */
     public String getWeekdayString() {
         String[] weekdaysStr = {
                 "Monday", "Tuesday", "Wednesday",
@@ -83,7 +125,12 @@ public class Event {
         if (weekday < 0 || weekday >= weekdaysStr.length) return "";
         return weekdaysStr[this.weekday];
     }
-
+    
+    /**
+     * Changes the weekday string on which this event is held
+     * @param weekday_str
+     * The new weekday string
+     */
     public void setWeekdayString(String weekdayStr) {
         String[] weekdaysStr = {
                 "Monday", "Tuesday", "Wednesday",
@@ -98,30 +145,65 @@ public class Event {
         this.weekday = 0;
     }
 
+    /**
+     * Changes the weekday integer on which this event is held
+     * @param weekday
+     * The new weekday integer
+     */
     public void setWeekday(int weekday) {
         this.weekday = weekday;
     }
 
+    /**
+     * Obtains the current price of the event
+     * @return
+     * The price as a float
+     */
     public float getPrice() {
         return price;
     }
 
+    /**
+     * Changes the price of the event
+     * @param price
+     * The new price of the event
+     */
     public void setPrice(float price) {
         this.price = price;
     }
 
+    /**
+     * Obtains the description of the event
+     * @return
+     * The description, as a String
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Changes the description of the event
+     * @param description
+     * The new description of the event
+     */
     public void setDescription(String description) {
         this.description = description;
     }
 
+    /**
+     * Obtains the recurring time at which this event takes place
+     * @return
+     * The time, as a String
+     */
     public String getTime() {
         return time;
     }
 
+    /**
+     * Changes the recurring time at which this event takes place
+     * @param time
+     * The new time of the event
+     */
     public void setTime(String time) {
         this.time = time;
     }
@@ -130,23 +212,43 @@ public class Event {
     public String getTimes() {
         return time;
     }
-
+    
     public void setTimes(String time) {
         this.time = time;
     }
-
+    
+    /**
+     * Obtain the period over which the event runs
+     * @return
+     * The period, as a String
+     */
     public String getPeriod() {
         return period;
     }
 
+    /**
+     * Change the period over which the event runs
+     * @param period
+     * The new period over which the event runs
+     */
     public void setPeriod(String period) {
         this.period = period;
     }
 
+    /**
+     * Obtain the location of the event
+     * @return
+     * The location of the event, as a String
+     */
     public String getLocation() {
         return location;
     }
 
+    /**
+     * Change the location of the event
+     * @param location
+     * The new location of the event
+     */
     public void setLocation(String location) {
         this.location = location;
     }
@@ -174,11 +276,21 @@ public class Event {
     public void setLott_end_date(LocalDateTime lott_end_date) {
         this.lott_end_date = lott_end_date;
     }
-
+    
+    /**
+     * Obtain the number of users to be drawn from the lottery
+     * @return
+     * The number of users, as an int
+     */
     public int getSampleSize() {
         return sampleSize;
     }
 
+    /**
+     * Change the number of users to be drawn from the lottery
+     * @param sampleSize
+     * The new number of users to be drawn from the lottery
+     */
     public void setSampleSize(int sampleSize) {
         if (sampleSize < 0) {
             this.sampleSize = 0;
@@ -187,6 +299,11 @@ public class Event {
         }
     }
 
+    /**
+     * Obtain the entrants signed up for the lottery
+     * @return
+     * The entrants signed up for the lottery, as an ArrayList of Strings
+     */
     public ArrayList<String> getEntrants() {
         if (entrants == null) {
             entrants = new ArrayList<>();
@@ -194,14 +311,29 @@ public class Event {
         return entrants;
     }
 
+    /**
+     * Set a new list of entrants to be signed up for the lottery
+     * @param entrants
+     * The new list of entrants
+     */
     public void setEntrants(ArrayList<String> entrants) {
         this.entrants = entrants != null ? entrants : new ArrayList<>();
     }
 
+    /**
+     * Obtain the maximum number of entrants allowed to sign up for the lottery
+     * @return
+     * The maximum number of entrants, as an int
+     */
     public int getLimit() {
         return limit;
     }
 
+    /**
+     * Change the maximum number of entrants allowed to sign up for the lottery
+     * @param limit
+     * The new maximum number of entrants
+     */
     public void setLimit(int limit) {
         this.limit = limit;
     }

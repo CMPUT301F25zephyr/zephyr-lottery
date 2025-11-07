@@ -10,21 +10,42 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.example.zephyr_lottery.R;
-import com.example.zephyr_lottery.UserProfile;
-
 import java.util.ArrayList;
 
+/**
+ * This class manages an ArrayList of UserProfiles into a ListView format
+ */
 public class ProfileArrayAdapter extends ArrayAdapter<UserProfile> {
     private ArrayList<UserProfile> profiles;
     private Context context;
 
+    /**
+     * Creates a new ProfileArrayAdapter
+     * @param context
+     * The current context
+     * @param profiles
+     * The list of profiles to convert
+     */
     public ProfileArrayAdapter(Context context, ArrayList<UserProfile> profiles){
         super(context, 0, profiles);
         this.profiles = profiles;
         this.context = context;
     }
 
+    /**
+     * Places a profile into a profile_list.xml view
+     * @param position The position of the item within the adapter's data set of the item whose view
+     *        we want.
+     * @param convertView The old view to reuse, if possible. Note: You should check that this view
+     *        is non-null and of an appropriate type before using. If it is not possible to convert
+     *        this view to display the correct data, this method can create a new view.
+     *        Heterogeneous lists can specify their number of view types, so that this View is
+     *        always of the right type (see {@link #getViewTypeCount()} and
+     *        {@link #getItemViewType(int)}).
+     * @param parent The parent that this view will eventually be attached to
+     * @return
+     * Returns the reformatted profile at that position
+     */
     @NonNull
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent){
         View view = convertView;

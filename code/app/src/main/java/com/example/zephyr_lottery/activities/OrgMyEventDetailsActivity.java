@@ -59,5 +59,12 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        //listener for button to go to back.
+        button_generateQR = findViewById(R.id.button_org_event_details_back);
+        button_generateQR.setOnClickListener(view -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventsActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
+        });
     }
 }

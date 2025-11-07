@@ -36,7 +36,7 @@ public class HomeEntActivity extends AppCompatActivity {
             return insets;
         });
 
-        textViewGreeting = findViewById(R.id.tvGreeting);
+        textViewGreeting = findViewById(R.id.tvEntrantGreeting);
         viewEventsButton = findViewById(R.id.btnLatestEvents);
         viewHistoryButton = findViewById(R.id.btnHistory);
         editProfileButton = findViewById(R.id.btnEditProfile);

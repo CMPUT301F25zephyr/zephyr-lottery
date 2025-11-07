@@ -52,6 +52,8 @@
             android:name=".activities.QRCodeActivity"
             android:exported="false">
         </activity>
+        <activity android:name=".activities.EventInvitationActivity" />
+        <!-- existing activities -->
     </application>
 
 </manifest>

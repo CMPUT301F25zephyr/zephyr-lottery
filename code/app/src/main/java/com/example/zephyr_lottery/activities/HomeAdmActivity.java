@@ -50,9 +50,13 @@ public class HomeAdmActivity extends AppCompatActivity {
             text_home.setText(temp_text);
         });
 
-        // Space to add button to go to events activity
-
-
+        //switch to browse events activity
+        events_button = findViewById(R.id.admin_events_button);
+        events_button.setOnClickListener(view -> {
+            Intent intent = new Intent(HomeAdmActivity.this, AdmEventsActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
+        });
 
         // Switch to browse profiles activity
         profile_button = findViewById(R.id.admin_profiles_button);

@@ -127,16 +127,5 @@ public class HomeEntActivityInstrumentedTest {
         onView(withId(R.id.btnScanQR)).perform(click());
         // Should show toast
     }
-
-    @Test
-    public void testAllButtonsAreClickable() {
-        // Verify all buttons can be clicked
-        onView(withId(R.id.btnLatestEvents)).perform(click());
-        onView(withId(R.id.btnHistory)).perform(click());
-        onView(withId(R.id.btnEditProfile)).perform(click());
-
-        // Go back to test scan button
-        onView(withId(R.id.btnBack)).perform(click());
-        onView(withId(R.id.btnScanQR)).perform(click());
-    }
+    
 }

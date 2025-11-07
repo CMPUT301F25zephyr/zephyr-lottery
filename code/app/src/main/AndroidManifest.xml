@@ -56,6 +56,10 @@
             android:name=".activities.QRCodeActivity"
             android:exported="false">
         </activity>
+        <activity 
+            android:name=".activities.EventInvitationActivity" 
+            android:exported="false">
+        </activity>
         <activity
             android:name=".activities.EntEventDetailActivity"
             android:exported="false">

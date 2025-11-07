@@ -20,12 +20,13 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
+
 public class AddEventActivity extends AppCompatActivity {
 
     private Button save_event_button;
     private Button back_add_event_button;
 
-    //database
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
 
@@ -40,27 +41,20 @@ public class AddEventActivity extends AppCompatActivity {
             return insets;
         });
 
-        //set spinner contents (dropdown menu)
-        Spinner spinner = (Spinner) findViewById(R.id.weekday_spinner);
-        //create ArrayAdapter from string array
+        Spinner spinner = findViewById(R.id.weekday_spinner);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
                 this,
                 R.array.weekday_spinner_array,
                 android.R.layout.simple_spinner_item
         );
-        //pick the default layout for spinner
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        //apply adapter
         spinner.setAdapter(adapter);
 
-        //get email from intent
         String user_email = getIntent().getStringExtra("USER_EMAIL");
 
-        //get the database collection reference
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
 
-        //listener for button to return to my events.
         back_add_event_button = findViewById(R.id.button_back_add_event);
         back_add_event_button.setOnClickListener(view -> {
             Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
@@ -68,20 +62,27 @@ public class AddEventActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        //save event button listener here!
         save_event_button = findViewById(R.id.button_save_event_add_event);
         save_event_button.setOnClickListener(view -> {
-            //get information from create event fields
             String event_name = ((EditText) findViewById(R.id.add_event_name)).getText().toString();
             String event_time = ((EditText) findViewById(R.id.add_event_times)).getText().toString();
             String event_weekday = spinner.getSelectedItem().toString();
             String event_price = ((EditText) findViewById(R.id.add_event_price)).getText().toString();
             String event_location = ((EditText) findViewById(R.id.add_event_location)).getText().toString();
             String event_description = ((EditText) findViewById(R.id.add_event_description)).getText().toString();
-            // NEW: sample size input (optional)
             String event_sample_size = ((EditText) findViewById(R.id.add_event_sample_size)).getText().toString();
+            String event_period = ((EditText) findViewById(R.id.add_event_period)).getText().toString();
 
-            //reject if fields left empty or price is not a float.
+            int event_limit = 0;
+            String limitText = ((EditText) findViewById(R.id.add_event_ent_limit)).getText().toString();
+            if (!limitText.isEmpty()) {
+                try {
+                    event_limit = Integer.parseInt(limitText);
+                } catch (NumberFormatException e) {
+                    event_limit = 0;
+                }
+            }
+
             if (event_name.isEmpty() || event_time.isEmpty() || event_price.isEmpty() ||
                     event_location.isEmpty() || event_description.isEmpty()) {
                 Toast.makeText(AddEventActivity.this, "Incomplete Information.",
@@ -91,15 +92,16 @@ public class AddEventActivity extends AppCompatActivity {
                 Toast.makeText(AddEventActivity.this, "Price must be a number.",
                         Toast.LENGTH_SHORT).show();
 
-            } else { //if successful, add to database of events.
-                //get info from all the fields.
+            } else {
                 Event event = new Event(event_name, event_time, user_email);
                 event.setWeekdayString(event_weekday);
                 event.setPrice(Float.parseFloat(event_price));
                 event.setDescription(event_description);
                 event.setLocation(event_location);
+                event.setPeriod(event_period);
+                event.setLimit(event_limit);
+                event.setEntrants(new ArrayList<>());
 
-                // parse sample size (optional, default 0)
                 int sampleSize = 0;
                 if (!event_sample_size.isEmpty()) {
                     try {
@@ -111,11 +113,9 @@ public class AddEventActivity extends AppCompatActivity {
                 }
                 event.setSampleSize(sampleSize);
 
-                //add to database. get hashcode after adding all fields so that it is consistent
                 DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));
                 docRef.set(event);
 
-                //return to my events screen
                 Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
                 intent.putExtra("USER_EMAIL", user_email);
                 startActivity(intent);
@@ -123,7 +123,6 @@ public class AddEventActivity extends AppCompatActivity {
         });
     }
 
-    //helper function for checking price. may put into separate file later.
     private boolean validFloat(String value) {
         try {
             Float.parseFloat(value);

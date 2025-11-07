@@ -56,7 +56,7 @@ public class AddEventActivityInstrumentedTest {
         try (ActivityScenario<AddEventActivity> scenario = ActivityScenario.launch(intent)) {
 
             scenario.onActivity(activity -> {
-               
+
                 ((EditText) activity.findViewById(R.id.add_event_name)).setText("JUnit Test Event");
                 ((EditText) activity.findViewById(R.id.add_event_times)).setText("6pm");
                 ((EditText) activity.findViewById(R.id.add_event_location)).setText("Community Hall");

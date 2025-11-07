@@ -8,7 +8,7 @@
     tools:context=".activities.HomeAdmActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textView_admin_home"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#D9D9D9"
@@ -17,4 +17,34 @@
         android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/admin_events_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Browse Events"
+        app:layout_constraintBottom_toTopOf="@+id/admin_profiles_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_admin_home" />
+
+    <Button
+        android:id="@+id/admin_profiles_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Browse Profiles"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_admin_home" />
+
+    <Button
+        android:id="@+id/admin_images_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Browse Images"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/admin_profiles_button" />
 </androidx.constraintlayout.widget.ConstraintLayout>

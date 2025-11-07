@@ -37,6 +37,10 @@
             android:exported="false">
         </activity>
         <activity
+            android:name=".activities.AdmProfilesActivity"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".activities.OrgMyEventsActivity"
             android:exported="false">
         </activity>

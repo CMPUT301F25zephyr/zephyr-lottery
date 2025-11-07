@@ -57,5 +57,4 @@ dependencies {
 
     implementation("com.google.firebase:firebase-messaging:23.4.0")
     implementation("com.google.firebase:firebase-firestore:24.10.1")
-    implementation(files("C:\\Users\\joshs\\AppData\\Local\\Android\\Sdk\\platforms\\android-36\\android.jar"))
 }

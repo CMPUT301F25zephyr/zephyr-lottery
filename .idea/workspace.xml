@@ -6,11 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="test: Add event invitation test&#10;&#10;Adds an AndroidJUnit4 test to verify that accepting an event invitation updates the participant's status to &quot;accepted&quot; in Firestore.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/EventInvitationActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/EventInvitationActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/OrgMyEventDetailsActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/activities/OrgMyEventDetailsActivity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/repositories/EventRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/java/com/example/zephyr_lottery/repositories/EventRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/app/src/main/res/layout/activity_event_invitation.xml" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/res/layout/activity_event_invitation.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/code/app/src/main/res/layout/org_my_event_details_activity.xml" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/res/layout/org_my_event_details_activity.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,12 +38,12 @@
     &quot;author&quot;: &quot;Dangpham1&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "git@github.com:CMPUT301F25zephyr/zephyr-lottery.git",
-    "accountId": "01db8ef0-68c8-478c-8639-631f2b9a6808"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;git@github.com:CMPUT301F25zephyr/zephyr-lottery.git&quot;,
+    &quot;accountId&quot;: &quot;01db8ef0-68c8-478c-8639-631f2b9a6808&quot;
   }
-}]]></component>
+}</component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="ProjectErrors" />
   </component>
@@ -63,21 +58,21 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
-    "RunOnceActivity.cidr.known.project.marker": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "cf.first.check.clang-format": "false",
-    "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "US01.05.02__eventinvitationacceptreject",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "editor.preferences.tabs"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;US01.05.02__eventinvitationacceptreject&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.tabs&quot;
   }
-}]]></component>
+}</component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="" />

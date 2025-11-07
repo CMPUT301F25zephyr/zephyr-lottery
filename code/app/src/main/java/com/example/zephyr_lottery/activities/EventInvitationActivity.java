@@ -30,8 +30,15 @@ public class EventInvitationActivity extends AppCompatActivity {
 
         repo = new EventRepository();
 
+        // get extras safely
         eventId = getIntent().getStringExtra("EVENT_ID");
         userId = getIntent().getStringExtra("USER_ID");
+
+        if (eventId == null || userId == null) {
+            Toast.makeText(this, "Error: missing event/user ID", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         // Bind views
         textEventTitle = findViewById(R.id.text_event_title);
@@ -51,8 +58,11 @@ public class EventInvitationActivity extends AppCompatActivity {
                         textEventTitle.setText(snapshot.getString("name"));
                         textEventTime.setText(snapshot.getString("time"));
                         textEventLocation.setText(snapshot.getString("location"));
-                        textEventPrice.setText("Price: $" + snapshot.getDouble("price"));
+                        Double price = snapshot.getDouble("price");
+                        textEventPrice.setText(price != null ? "Price: $" + price : "Price: N/A");
                         textEventDescription.setText(snapshot.getString("description"));
+                    } else {
+                        textEventTitle.setText("Event not found");
                     }
                 })
                 .addOnFailureListener(e -> {

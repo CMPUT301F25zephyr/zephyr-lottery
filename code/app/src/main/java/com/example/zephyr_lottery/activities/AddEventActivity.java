@@ -78,9 +78,11 @@ public class AddEventActivity extends AppCompatActivity {
             String event_price = ((EditText) findViewById(R.id.add_event_price)).getText().toString();
             String event_location = ((EditText) findViewById(R.id.add_event_location)).getText().toString();
             String event_description = ((EditText) findViewById(R.id.add_event_description)).getText().toString();
+            // NEW: sample size input (optional)
+            String event_sample_size = ((EditText) findViewById(R.id.add_event_sample_size)).getText().toString();
 
             //reject if fields left empty or price is not a float.
-            if (event_name.isEmpty()||event_time.isEmpty()||event_price.isEmpty()||
+            if (event_name.isEmpty() || event_time.isEmpty() || event_price.isEmpty() ||
                     event_location.isEmpty() || event_description.isEmpty()) {
                 Toast.makeText(AddEventActivity.this, "Incomplete Information.",
                         Toast.LENGTH_SHORT).show();
@@ -89,13 +91,25 @@ public class AddEventActivity extends AppCompatActivity {
                 Toast.makeText(AddEventActivity.this, "Price must be a number.",
                         Toast.LENGTH_SHORT).show();
 
-            }else { //if successful, add to database of events.
+            } else { //if successful, add to database of events.
                 //get info from all the fields.
                 Event event = new Event(event_name, event_time, user_email);
                 event.setWeekdayString(event_weekday);
                 event.setPrice(Float.parseFloat(event_price));
                 event.setDescription(event_description);
                 event.setLocation(event_location);
+
+                // parse sample size (optional, default 0)
+                int sampleSize = 0;
+                if (!event_sample_size.isEmpty()) {
+                    try {
+                        sampleSize = Integer.parseInt(event_sample_size);
+                        if (sampleSize < 0) sampleSize = 0;
+                    } catch (NumberFormatException e) {
+                        sampleSize = 0;
+                    }
+                }
+                event.setSampleSize(sampleSize);
 
                 //add to database. get hashcode after adding all fields so that it is consistent
                 DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));

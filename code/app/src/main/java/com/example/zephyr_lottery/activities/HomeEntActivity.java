@@ -65,6 +65,9 @@ public class HomeEntActivity extends AppCompatActivity {
 
         viewHistoryButton.setOnClickListener(v -> {
             // TODO: add view history view
+            Intent intent = new Intent(HomeEntActivity.this, EntEventHistoryActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
         });
 
         viewEventsButton.setOnClickListener(v -> {

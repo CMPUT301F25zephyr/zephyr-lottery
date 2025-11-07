@@ -3,9 +3,6 @@ package com.example.zephyr_lottery.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Adapter;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -25,9 +22,8 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
-public class EntEventsActivity extends AppCompatActivity {
-    private Button filter_latest_event_button; //doesn't do anything yet
-    private Button back_latest_event_button;
+public class AdmEventsActivity extends AppCompatActivity {
+    private Button back_adm_event_button;
     private ListView eventListView;
     private ArrayList<Event> eventArrayList;
     private ArrayAdapter<Event> eventArrayAdapter;
@@ -40,7 +36,7 @@ public class EntEventsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.ent_events_activity);
+        setContentView(R.layout.adm_events_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -51,12 +47,13 @@ public class EntEventsActivity extends AppCompatActivity {
         eventsRef = db.collection("events");
 
         //set the list view to be the arraylist of events.
-        eventListView = findViewById(R.id.ListView_latest_events);
+        eventListView = findViewById(R.id.ListView_adm_events);
         eventArrayList = new ArrayList<>();
         eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
         eventListView.setAdapter(eventArrayAdapter);
 
         //listener. updates array when created and when database changes.
+        //i'll make this a separate class probably over reading week since we use the same code multiple times.
         eventsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("Firestore", error.toString());
@@ -84,9 +81,6 @@ public class EntEventsActivity extends AppCompatActivity {
                     if (snapshot.contains("weekday")) {
                         event.setWeekday(snapshot.getLong("weekday").intValue());
                     }
-                    if (snapshot.contains("period")) {
-                        event.setPeriod(snapshot.getString("period"));
-                    }
 
                     eventArrayList.add(event);
                 }
@@ -97,24 +91,13 @@ public class EntEventsActivity extends AppCompatActivity {
         //get email from intent
         String user_email = getIntent().getStringExtra("USER_EMAIL");
 
-        // Send to event details when clicked
-        eventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Event e = eventArrayList.get(position);
-                Intent intent = new Intent(EntEventsActivity.this, EntEventDetailActivity.class);
-                intent.putExtra("USER_EMAIL", user_email);
-                intent.putExtra("EVENT", String.valueOf(e.hashCode()));
-                startActivity(intent);
-            }
-        });
-
         //listener for button to return to homescreen.
-        back_latest_event_button = findViewById(R.id.button_latest_event_back);
-        back_latest_event_button.setOnClickListener(view -> {
-            Intent intent = new Intent(EntEventsActivity.this, HomeEntActivity.class);
+        back_adm_event_button = findViewById(R.id.button_adm_event_back);
+        back_adm_event_button.setOnClickListener(view -> {
+            Intent intent = new Intent(AdmEventsActivity.this, HomeAdmActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
+
     }
 }

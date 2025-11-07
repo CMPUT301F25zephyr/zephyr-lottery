@@ -35,7 +35,7 @@ public class HomeEntActivity extends AppCompatActivity {
             return insets;
         });
 
-        textViewGreeting = findViewById(R.id.tvGreeting);
+        textViewGreeting = findViewById(R.id.tvEntrantGreeting);
         viewEventsButton = findViewById(R.id.btnLatestEvents);
         viewHistoryButton = findViewById(R.id.btnHistory);
         editProfileButton = findViewById(R.id.btnEditProfile);
@@ -54,10 +54,16 @@ public class HomeEntActivity extends AppCompatActivity {
 
         viewHistoryButton.setOnClickListener(v -> {
             // TODO: add view history view
+            Toast.makeText(this, "History clicked", Toast.LENGTH_SHORT).show();
+            // Intent intent = new Intent(HomeEntActivity.this, HistoryActivity.class);
+            // startActivity(intent);
         });
 
         viewEventsButton.setOnClickListener(v -> {
-            // TODO: add view events view
+            // TODO: Navigate to Latest Events Activity
+            Toast.makeText(this, "Latest Events clicked", Toast.LENGTH_SHORT).show();
+            // Intent intent = new Intent(HomeEntActivity.this, LatestEventsActivity.class);
+            // startActivity(intent);
         });
 
         scanQRButton.setOnClickListener(v -> {

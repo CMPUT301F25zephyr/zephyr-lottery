@@ -57,34 +57,36 @@ public class EntEventsActivity extends AppCompatActivity {
         //listener. updates array when created and when database changes.
         eventsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
-                Log.e("EntEventsActivity", "Firestore listen error: " + error.toString());
-                return;
+                Log.e("Firestore", error.toString());
             }
             if(value != null && !value.isEmpty()){
                 eventArrayList.clear();
                 for (QueryDocumentSnapshot snapshot : value){
-                    // map to Event model
-                    Event ev = snapshot.toObject(Event.class);
-                    if (ev == null) continue;
-                    // store Firestore document id for later lookup
-                    ev.setId(snapshot.getId());
-                    eventArrayList.add(ev);
+                    String name = snapshot.getString("name");
+                    String time = snapshot.getString("time");
+                    String organizer_email = snapshot.getString("organizer_email");
+                    //add any future attributes for event here.
+
+                    Event event = new Event(name, time, organizer_email);
+
+                    //add additional fields if they exist
+                    if (snapshot.contains("description")) {
+                        event.setDescription(snapshot.getString("description"));
+                    }
+                    if (snapshot.contains("price")) {
+                        event.setPrice(snapshot.getDouble("price").floatValue());
+                    }
+                    if (snapshot.contains("location")) {
+                        event.setLocation(snapshot.getString("location"));
+                    }
+                    if (snapshot.contains("weekday")) {
+                        event.setWeekday(snapshot.getLong("weekday").intValue());
+                    }
+
+                    eventArrayList.add(event);
                 }
                 eventArrayAdapter.notifyDataSetChanged();
             }
-        });
-
-        // item click: open EventDetailActivity with event id
-        eventListView.setOnItemClickListener((AdapterView<?> parent, android.view.View view, int position, long id) -> {
-            if (position < 0 || position >= eventArrayList.size()) return;
-            Event selected = eventArrayList.get(position);
-            if (selected == null || selected.getId() == null) {
-                Toast.makeText(this, "Unable to open event details", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            Intent i = new Intent(EntEventsActivity.this, com.example.zephyr_lottery.activities.EventDetailActivity.class);
-            i.putExtra("EVENT_ID", selected.getId());
-            startActivity(i);
         });
 
         //get email from intent
@@ -96,10 +98,7 @@ public class EntEventsActivity extends AppCompatActivity {
             Intent intent = new Intent(EntEventsActivity.this, HomeEntActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
-            finish();
         });
 
-        // (optional) wire filter button if you add filtering later
-        filterLatestEventButton = findViewById(R.id.button_latest_event_filter);
     }
 }

@@ -5,37 +5,33 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".activities.HomeOrgActivity">
+    tools:context=".activities.OrgMyEventDetailsActivity">
 
     <TextView
-        android:id="@+id/textView_orgHome"
+        android:id="@+id/textView_orgEventDetails"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#D9D9D9"
-        android:text="home screen for organizer"
         android:padding="10dp"
+        android:text="Event Details"
         android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/button_my_events"
+    <TextView
+        android:id="@+id/text_placeholder"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="See Your Events"
-        app:layout_constraintBottom_toTopOf="@+id/button_edit_profile_org"
+        android:text="placeholder"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView_orgEventDetails" />
 
     <Button
-        android:id="@+id/button_edit_profile_org"
+        android:id="@+id/button_generate_qr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Edit Profile"
+        android:text="Generate QR"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button_my_events" />
-
+        app:layout_constraintEnd_toEndOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

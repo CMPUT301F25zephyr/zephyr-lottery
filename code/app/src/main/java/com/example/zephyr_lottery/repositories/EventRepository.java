@@ -29,7 +29,7 @@ public class EventRepository {
                                  Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "accepted")
                 .addOnSuccessListener(v -> {
-                    Log.d("EventRepo", "Accepted invitation");
+                    Log.d("EventRepo", "Accepted invitation for user " + userId);
                     if (onSuccess != null) onSuccess.run();
                 })
                 .addOnFailureListener(e -> {
@@ -43,7 +43,7 @@ public class EventRepository {
                                   Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "declined")
                 .addOnSuccessListener(v -> {
-                    Log.d("EventRepo", "Declined invitation");
+                    Log.d("EventRepo", "Declined invitation for user " + userId);
                     inviteNextFromWaitingList(eventId, onSuccess, onError);
                 })
                 .addOnFailureListener(e -> {
@@ -66,12 +66,12 @@ public class EventRepository {
                 .addOnSuccessListener(query -> {
                     List<DocumentSnapshot> docs = query.getDocuments();
                     if (docs.isEmpty()) {
-                        Log.d("EventRepo", "No waiting list entrants");
+                        Log.d("EventRepo", "No waiting list entrants for event " + eventId);
                         if (onSuccess != null) onSuccess.run();
                         return;
                     }
                     DocumentSnapshot next = docs.get(0);
-                    String nextUserId = next.getId(); // waitingList docId == userId
+                    String nextUserId = next.getId();
 
                     WriteBatch batch = db.batch();
 
@@ -121,7 +121,7 @@ public class EventRepository {
         });
     }
 
-    // NEW: Notify all selected entrants (US02.07.02)
+    // Notify all selected entrants (US02.07.02)
     public void notifyAllSelectedEntrants(String eventId,
                                           Runnable onSuccess,
                                           Consumer<Exception> onError) {
@@ -129,11 +129,11 @@ public class EventRepository {
                 .document(eventId)
                 .collection("participants");
 
-        participantsRef.whereEqualTo("status", "accepted") // filter by accepted/selected
+        participantsRef.whereEqualTo("status", "accepted")
                 .get()
                 .addOnSuccessListener(query -> {
                     if (query.isEmpty()) {
-                        Log.d("EventRepo", "No selected entrants to notify");
+                        Log.d("EventRepo", "No selected entrants to notify for event " + eventId);
                         if (onSuccess != null) onSuccess.run();
                         return;
                     }

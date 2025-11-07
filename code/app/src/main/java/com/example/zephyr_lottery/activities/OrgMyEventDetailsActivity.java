@@ -21,8 +21,8 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button button_notifySelected;
 
     private EventRepository repo;
-    private String user_email;
-    private int event_code;
+    private String userEmail;
+    private String eventId; // use String consistently
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,15 +39,21 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         repo = new EventRepository();
 
         // get extras from intent
-        user_email = getIntent().getStringExtra("USER_EMAIL");
-        event_code = getIntent().getIntExtra("EVENT_CLICKED_CODE", -1);
+        userEmail = getIntent().getStringExtra("USER_EMAIL");
+        eventId = getIntent().getStringExtra("EVENT_ID");
+
+        if (eventId == null) {
+            Toast.makeText(this, "Error: missing event ID", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         // Generate QR button
         button_generateQR = findViewById(R.id.button_generate_qr);
         button_generateQR.setOnClickListener(view -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeActivity.class);
-            intent.putExtra("USER_EMAIL", user_email);
-            intent.putExtra("EVENT_CLICKED_CODE", event_code);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_ID", eventId);
             startActivity(intent);
         });
 
@@ -58,7 +64,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     .setTitle("Notify selected entrants?")
                     .setMessage("This will send a notification to all selected entrants.")
                     .setPositiveButton("Notify", (d, w) -> {
-                        repo.notifyAllSelectedEntrants(String.valueOf(event_code),
+                        repo.notifyAllSelectedEntrants(eventId,
                                 () -> Toast.makeText(this, "Notifications sent", Toast.LENGTH_SHORT).show(),
                                 e -> Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                     })

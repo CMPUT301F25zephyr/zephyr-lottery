@@ -52,6 +52,10 @@
             android:name=".activities.QRCodeActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".activities.OrgMyEventEntrantsActivity"
+            android:exported="false">
+        </activity>
     </application>
 
 </manifest>

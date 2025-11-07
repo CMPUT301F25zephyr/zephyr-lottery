@@ -20,6 +20,8 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
+
 public class AddEventActivity extends AppCompatActivity {
 
     private Button save_event_button;
@@ -99,6 +101,9 @@ public class AddEventActivity extends AppCompatActivity {
                 event.setDescription(event_description);
                 event.setLocation(event_location);
                 event.setPeriod(event_period);
+                ArrayList<String> entrants = new ArrayList<>();
+                event.setEntrants(entrants);
+
 
                 //add to database. get hashcode after adding all fields so that it is consistent
                 DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));

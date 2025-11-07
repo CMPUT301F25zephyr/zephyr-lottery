@@ -1,6 +1,8 @@
 package com.example.zephyr_lottery;
 
+import java.lang.reflect.Array;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
@@ -17,6 +19,8 @@ public class Event {
     private int weekday;
 
     private String period; // event period
+
+    private ArrayList<String> entrants;
 
     //for now unused attributes
     private Date date_created; //use to order the latest events screen
@@ -122,5 +126,13 @@ public class Event {
 
     public void setLocation(String location) {
         this.location = location;
+    }
+
+    public ArrayList<String> getEntrants() {
+        return entrants;
+    }
+
+    public void setEntrants(ArrayList<String> entrants) {
+        this.entrants = entrants;
     }
 }

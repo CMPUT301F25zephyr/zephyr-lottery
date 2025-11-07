@@ -6,10 +6,16 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessaging;
 
+/**
+ * This class manages FCM tokens for access to Firestore.
+ */
 public class FCMTokenManager {
 
     private static final String TAG = "FCMTokenManager";
 
+    /**
+     * Creates an FCM token and saves it to Firestore
+     */
     public static void initializeFCMToken() {
         FirebaseMessaging.getInstance().getToken()
                 .addOnCompleteListener(task -> {
@@ -23,6 +29,10 @@ public class FCMTokenManager {
                 });
     }
 
+    /**
+     * Saves an FCM token to Firestore
+     * @param token
+     */
     private static void saveTokenToFirestore(String token) {
         FirebaseAuth auth = FirebaseAuth.getInstance();
         FirebaseFirestore db = FirebaseFirestore.getInstance();

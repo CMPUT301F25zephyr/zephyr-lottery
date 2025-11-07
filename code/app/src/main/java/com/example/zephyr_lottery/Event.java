@@ -128,7 +128,7 @@ public class Event {
     
     /**
      * Changes the weekday string on which this event is held
-     * @param weekday_str
+     * @param weekdayStr
      * The new weekday string
      */
     public void setWeekdayString(String weekdayStr) {
@@ -209,10 +209,21 @@ public class Event {
     }
 
     // compatibility if some old code calls getTimes()/setTimes()
+
+    /**
+     * (compatibility) Obtains the recurring time at which this event takes place
+     * @return
+     * The time, as a String
+     */
     public String getTimes() {
         return time;
     }
-    
+
+    /**
+     * (compatibility) Changes the recurring tim at which this event takes place
+     * @param time
+     * The new time of the event
+     */
     public void setTimes(String time) {
         this.time = time;
     }
@@ -253,26 +264,56 @@ public class Event {
         this.location = location;
     }
 
+    /**
+     * Obtain the date that the event was created
+     * @return
+     * The date the event was created, as a Date
+     */
     public Date getDate_created() {
         return date_created;
     }
 
+    /**
+     * Set the date that the event was created
+     * @param date_created
+     * The date that the event is created
+     */
     public void setDate_created(Date date_created) {
         this.date_created = date_created;
     }
 
+    /**
+     * Obtain the starting date for the lottery
+     * @return
+     * The starting date for the lottery
+     */
     public LocalDateTime getLott_start_date() {
         return lott_start_date;
     }
 
+    /**
+     * Set the starting date for the lottery
+     * @param lott_start_date
+     * The new starting date for the lottery
+     */
     public void setLott_start_date(LocalDateTime lott_start_date) {
         this.lott_start_date = lott_start_date;
     }
 
+    /**
+     * Obtain the date at which the lottery will be drawn for the event
+     * @return
+     * The date at which the lottery will be drawn
+     */
     public LocalDateTime getLott_end_date() {
         return lott_end_date;
     }
 
+    /**
+     * Set the date at which the lottery will be drawn for the event
+     * @param lott_end_date
+     * The date at which the lottery will be drawn
+     */
     public void setLott_end_date(LocalDateTime lott_end_date) {
         this.lott_end_date = lott_end_date;
     }

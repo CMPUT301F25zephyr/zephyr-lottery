@@ -23,6 +23,7 @@ public class HomeEntActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
+    private String userEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +58,9 @@ public class HomeEntActivity extends AppCompatActivity {
         });
 
         viewEventsButton.setOnClickListener(v -> {
-            // TODO: add view events view
+            Intent intent = new Intent(HomeEntActivity.this, EntEventsActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
         });
 
         scanQRButton.setOnClickListener(v -> {
@@ -87,6 +90,7 @@ public class HomeEntActivity extends AppCompatActivity {
                     if (profile != null) {
                         // Use the profile data
                         String username = profile.getUsername();
+                        String userEmail = profile.getEmail();
                         textViewGreeting.setText("Greetings, " + username);
                     } else {
                         textViewGreeting.setText("Hello, User");
@@ -97,5 +101,6 @@ public class HomeEntActivity extends AppCompatActivity {
                     textViewGreeting.setText("Hello, User");
                     Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show();
                 });
+
     }
 }

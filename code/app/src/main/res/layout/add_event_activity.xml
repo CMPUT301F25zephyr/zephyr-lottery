@@ -160,15 +160,6 @@
     </com.google.android.material.textfield.TextInputLayout>
 
     <EditText
-        android:id="@+id/add_event_period"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:hint="Example period: 2 days"
-        app:layout_constraintBottom_toTopOf="@+id/add_event_description"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/add_event_price" />
-
-    <EditText
         android:id="@+id/add_event_price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -180,6 +171,36 @@
 
     <androidx.constraintlayout.widget.Guideline android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Entrant limit"
+        app:layout_constraintBottom_toBottomOf="@+id/add_event_ent_limit"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/add_event_ent_limit" />
+
+    <EditText
+        android:id="@+id/add_event_ent_limit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="28dp"
+        android:ems="10"
+        android:inputType="number"
+        app:layout_constraintBottom_toTopOf="@+id/add_event_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/add_event_period" />
+
+    <EditText
+        android:id="@+id/add_event_period"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:hint="Example period: 2 days"
+        app:layout_constraintBottom_toTopOf="@+id/add_event_ent_limit"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/add_event_price" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

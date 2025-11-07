@@ -22,6 +22,8 @@ public class Event {
 
     private ArrayList<String> entrants;
 
+    private int limit;
+
     //for now unused attributes
     private Date date_created; //use to order the latest events screen
     private LocalDateTime lott_start_date; //lottery start date
@@ -134,5 +136,13 @@ public class Event {
 
     public void setEntrants(ArrayList<String> entrants) {
         this.entrants = entrants;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
     }
 }

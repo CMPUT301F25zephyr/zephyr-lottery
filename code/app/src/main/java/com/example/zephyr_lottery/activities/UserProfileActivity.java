@@ -17,6 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
+import com.example.zephyr_lottery.utils.ValidationUtil;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -97,13 +98,21 @@ public class UserProfileActivity extends AppCompatActivity {
     private void saveUserProfile() {
         // Get the edited values
         String newUsername = etName.getText().toString().trim();
-        String newPhone = etPhone.getText().toString().trim();
+        String newPhone = ValidationUtil.sanitize(etPhone.getText().toString());
         String email = etEmail.getText().toString(); // Email doesn't change
 
         // Basic validation
         if (newUsername.isEmpty()) {
             etName.setError("Name is required");
             etName.requestFocus();
+            return;
+        }
+
+        // Validate phone
+        String phoneError = ValidationUtil.getPhoneError(newPhone);
+        if (phoneError != null) {
+            etPhone.setError(phoneError);
+            etPhone.requestFocus();
             return;
         }
 

@@ -2,7 +2,9 @@ package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.ListView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -10,7 +12,14 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.zephyr_lottery.Event;
+import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
 
 public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
@@ -37,6 +46,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         button_generateQR = findViewById(R.id.button_generate_qr);
         button_generateQR.setOnClickListener(view -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("EVENT_CLICKED_CODE", event_code);
+            startActivity(intent);
+        });
+
+        Button button_entrants = findViewById(R.id.button_entrants);
+        button_entrants.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             intent.putExtra("EVENT_CLICKED_CODE", event_code);
             startActivity(intent);

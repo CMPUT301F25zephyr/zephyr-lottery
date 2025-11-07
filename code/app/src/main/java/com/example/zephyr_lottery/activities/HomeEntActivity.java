@@ -25,11 +25,5 @@ public class HomeEntActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-
-        ImageButton btnProfile = findViewById(R.id.btnProfile);
-        btnProfile.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeEntActivity.this, UserProfileActivity.class);
-            startActivity(intent);
-        });
     }
 }

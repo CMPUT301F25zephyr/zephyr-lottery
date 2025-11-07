@@ -14,7 +14,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.R;
 
 public class HomeAdmActivity extends AppCompatActivity {
-
+    // whoever is approving this PR, don't merge this file and its .xml
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -24,12 +24,6 @@ public class HomeAdmActivity extends AppCompatActivity {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
-        });
-
-        ImageButton btnProfile = findViewById(R.id.btnProfile2);
-        btnProfile.setOnClickListener(v -> {
-            Intent intent = new Intent(HomeAdmActivity.this, UserProfileActivity.class);
-            startActivity(intent);
         });
 
     }

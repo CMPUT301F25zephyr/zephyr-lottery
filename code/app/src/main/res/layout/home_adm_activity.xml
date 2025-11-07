@@ -7,6 +7,7 @@
     android:layout_height="match_parent"
     tools:context=".activities.HomeAdmActivity">
 
+    <!-- DO NOT MERGE PLS -->
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
@@ -17,15 +18,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <ImageButton
-        android:id="@+id/btnProfile2"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_margin="16dp"
-        android:background="?attr/selectableItemBackgroundBorderless"
-        android:contentDescription="Profile"
-        android:src="@android:drawable/ic_menu_myplaces"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:tint="@color/black" />
 </androidx.constraintlayout.widget.ConstraintLayout>

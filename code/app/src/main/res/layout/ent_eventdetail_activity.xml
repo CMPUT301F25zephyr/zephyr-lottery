@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView
+        android:id="@+id/textView_event_details"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#D9D9D9"
+        android:padding="10dp"
+        android:text="Event Details"
+        android:textSize="34sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+    <View
+        android:id="@+id/rectangle_bottom6"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentTop="true"
+        android:background="#D9D9D9"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_register"
+        tools:layout_editor_absoluteX="0dp" />
+    <Button
+        android:id="@+id/button_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="Register"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button_event_details_back" />
+    <Button
+        android:id="@+id/button_event_details_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button_register"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <ScrollView
+        android:layout_width="409dp"
+        android:layout_height="616dp"
+        android:layout_marginTop="1dp"
+        app:layout_constraintBottom_toTopOf="@+id/rectangle_bottom6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_event_details">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/textView_ed_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Event Title"
+                android:textSize="30sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_ed_regcloses"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Registration Closes:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_closingdate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[closing date]"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView_startend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Starts/Ends:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_startenddates"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[starting date] - [ending date]"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView_timestext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Times:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_day_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[day of the week] [time range]"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView_location_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Location:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_location_string"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[location]"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView_price_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Price:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_price_string"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="$[price]"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView_description_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Description:"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/textView_description_string"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="[description]"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/textView_currententrants"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20sp"
+                android:text="Current Entrants: x/x slots"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/textView_lotterywinners"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lottery Winners: X"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

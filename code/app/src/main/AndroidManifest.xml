@@ -37,6 +37,10 @@
             android:exported="false">
         </activity>
         <activity
+            android:name=".activities.AdmProfilesActivity"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".activities.OrgMyEventsActivity"
             android:exported="false">
         </activity>
@@ -52,8 +56,18 @@
             android:name=".activities.QRCodeActivity"
             android:exported="false">
         </activity>
-        <activity android:name=".activities.EventInvitationActivity" />
-        <!-- existing activities -->
+        <activity 
+            android:name=".activities.EventInvitationActivity" 
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.EntEventDetailActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.AdmEventsActivity"
+            android:exported="false">
+        </activity>
     </application>
 
 </manifest>

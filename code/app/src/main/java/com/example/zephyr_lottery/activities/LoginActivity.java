@@ -78,19 +78,13 @@ public class LoginActivity extends AppCompatActivity {
             String email_text = ((EditText) findViewById(R.id.signup_email)).getText().toString();
             String type_text = spinner.getSelectedItem().toString();
 
-            //add to database of profiles (not passwords, those are done through the authenticator)
-            UserProfile profile = new UserProfile(username_text,email_text,type_text);
-            DocumentReference docRef = accountsRef.document(profile.getEmail());
-            docRef.set(profile);
-
-            //create account and immediately sign in the user
-            createAccount(email_text, password_text);
+            //create account
+            createAccount(email_text, password_text, username_text, type_text);
 
             //empty the text fields
             ((EditText) findViewById(R.id.signup_user)).setText("");
             ((EditText) findViewById(R.id.signup_pass)).setText("");
             ((EditText) findViewById(R.id.signup_email)).setText("");
-
         });
 
         //sign in button listener
@@ -108,7 +102,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     //function for creating account
-    private void createAccount(String email, String password) {
+    private void createAccount(String email, String password, String username, String type) {
         String TAG = "EmailPassword";
         mAuth.createUserWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -121,6 +115,25 @@ public class LoginActivity extends AppCompatActivity {
 
                             Toast.makeText(LoginActivity.this, "Account created!",
                                     Toast.LENGTH_SHORT).show();
+
+                            //add to database of profiles (not passwords, those are done through the authenticator)
+                            UserProfile profile = new UserProfile(username,email,type);
+                            DocumentReference docRef = accountsRef.document(profile.getEmail());
+
+                            docRef.set(profile) //this check is for when firestore is not working.
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d(TAG, "Profile created successfully");
+                                    })
+
+                                    //if the firestore thing failed
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Error creating profile", e);
+                                        Toast.makeText(LoginActivity.this,
+                                                "Account created but profile failed. Please contact support.",
+                                                Toast.LENGTH_LONG).show();
+
+                                        mAuth.getCurrentUser().delete();
+                                    });
 
                         } else {
                             //If sign up fails, display a message to the user.

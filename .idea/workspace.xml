@@ -4,8 +4,8 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="QR scan">
-      <change beforePath="$PROJECT_DIR$/code/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/code/app/src/main/AndroidManifest.xml" afterDir="false" />
+    <list default="true" id="ce315748-6781-4f32-b524-72aef7a75017" name="Changes" comment="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity.">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,7 +45,7 @@
   }
 }]]></component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 3
@@ -66,6 +66,7 @@
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
     "git-widget-placeholder": "US01.05.02__eventinvitationacceptreject",
+    "run.code.analysis.last.selected.profile": "pProject Default",
     "settings.editor.selected.configurable": "editor.preferences.tabs"
   }
 }]]></component>
@@ -101,7 +102,15 @@
       <option name="project" value="LOCAL" />
       <updated>1762475860857</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity.">
+      <option name="closed" value="true" />
+      <created>1762535909574</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1762535909574</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -119,6 +128,7 @@
     <MESSAGE value="manifest edit&#10;&#10;and clean up" />
     <MESSAGE value="QR scan and join event logic" />
     <MESSAGE value="QR scan" />
-    <option name="LAST_COMMIT_MESSAGE" value="QR scan" />
+    <MESSAGE value="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity." />
+    <option name="LAST_COMMIT_MESSAGE" value="feat: Implement event invitation handling&#10;&#10;Adds the functionality for users to accept or decline event invitations.&#10;&#10;- Introduces `EventInvitationActivity` to display invitation options.&#10;- Creates `EventRepository` to manage Firestore interactions, including updating participant status and inviting the next person from the waiting list.&#10;- Adds the `Participant` data model.&#10;- Includes the corresponding layout file for the invitation activity." />
   </component>
 </project>

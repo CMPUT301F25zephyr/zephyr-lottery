@@ -2,12 +2,9 @@ package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -20,112 +17,110 @@ import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
 public class OrgMyEventsActivity extends AppCompatActivity {
-    private Button back_my_event_button;
-    private Button add_event_my_event_button;
-    private ListView myEventListView;
-    private ArrayList<Event> myEventArrayList;
-    private ArrayAdapter<Event> myEventArrayAdapter;
 
-    //databases
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
 
+    private ListView myEventsListView;
+    private Button backButton;
+    private Button addEventButton;
+    private Button filterButton;
+
+    private ArrayList<Event> myEventsList;
+    private EventArrayAdapter myEventsAdapter;
+
+    private String userEmail;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.org_my_events_activity);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        userEmail = getIntent().getStringExtra("USER_EMAIL");
+
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
 
-        //set the list view to be the arraylist of events.
-        myEventListView = findViewById(R.id.ListView_my_events);
-        myEventArrayList = new ArrayList<>();
-        myEventArrayAdapter = new EventArrayAdapter(this, myEventArrayList);
-        myEventListView.setAdapter(myEventArrayAdapter);
+        myEventsListView = findViewById(R.id.ListView_my_events);
+        backButton = findViewById(R.id.button_my_event_back);
+        addEventButton = findViewById(R.id.button_my_event_add_event);
+        filterButton = findViewById(R.id.button_my_event_filter);
 
-        //get email from intent
-        String user_email = getIntent().getStringExtra("USER_EMAIL");
+        myEventsList = new ArrayList<>();
+        myEventsAdapter = new EventArrayAdapter(this, myEventsList);
+        myEventsListView.setAdapter(myEventsAdapter);
 
-        //listener. updates array when created and when database changes.
-        //only for events with this email as the organizer.
-        eventsRef
-                .whereEqualTo("organizer_email", user_email)
-                .addSnapshotListener((value, error) -> {
-                    if (error != null) {
-                        Log.e("Firestore", error.toString());
-                        return;
-                    }
-                    if (value != null && !value.isEmpty()) {
-                        myEventArrayList.clear();
-                        for (QueryDocumentSnapshot snapshot : value) {
-                            String name = snapshot.getString("name");
-                            String time = snapshot.getString("time");
-                            String orgEmail = snapshot.getString("organizer_email");
+        loadMyEvents();
 
-                            Event event = new Event(name, time, orgEmail);
+        myEventsListView.setOnItemClickListener((parent, view, position, id) -> {
+            Event clicked = myEventsList.get(position);
+            if (clicked == null) return;
 
-                            //add additional fields (if they exist?)
-                            if (snapshot.contains("description")) {
-                                event.setDescription(snapshot.getString("description"));
-                            }
-                            if (snapshot.contains("price")) {
-                                event.setPrice(snapshot.getDouble("price").floatValue());
-                            }
-                            if (snapshot.contains("location")) {
-                                event.setLocation(snapshot.getString("location"));
-                            }
-                            if (snapshot.contains("weekday")) {
-                                event.setWeekday(snapshot.getLong("weekday").intValue());
-                            }
+            String eventId = Integer.toString(clicked.hashCode());
 
-                            myEventArrayList.add(event);
-                        }
-                        myEventArrayAdapter.notifyDataSetChanged();
-                    }
-                });
+            Intent intent = new Intent(OrgMyEventsActivity.this, OrgMyEventDetailsActivity.class);
+            intent.putExtra("EVENT_CLICKED_CODE", Integer.parseInt(eventId));
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
 
-        //listener for button to return to ORGNAIZER homescreen.
-        back_my_event_button = findViewById(R.id.button_my_event_back);
-        back_my_event_button.setOnClickListener(view -> {
+        backButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventsActivity.this, HomeOrgActivity.class);
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
 
-        //add event button listener
-        add_event_my_event_button = findViewById(R.id.button_my_event_add_event);
-        add_event_my_event_button.setOnClickListener(view -> {
+        addEventButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventsActivity.this, AddEventActivity.class);
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
 
+        filterButton.setOnClickListener(v ->
+                Toast.makeText(this, "Filter not implemented yet", Toast.LENGTH_SHORT).show()
+        );
+    }
 
-        //listener for events in the list. switches to event details activity, pass in the event clicked.
-        myEventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Event event_clicked = (Event) myEventListView.getItemAtPosition(position);
-                Intent intent = new Intent(OrgMyEventsActivity.this, OrgMyEventDetailsActivity.class);
-                intent.putExtra("USER_EMAIL", user_email);
-                intent.putExtra("EVENT_CLICKED_CODE", event_clicked.hashCode());
-                startActivity(intent);
-            }
-        });
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadMyEvents();
+    }
 
+    private void loadMyEvents() {
+        myEventsList.clear();
+        myEventsAdapter.notifyDataSetChanged();
 
+        if (userEmail == null || userEmail.isEmpty()) {
+            Toast.makeText(this, "Organizer email missing", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        eventsRef.whereEqualTo("organizer_email", userEmail)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    myEventsList.clear();
+                    for (var doc : querySnapshot.getDocuments()) {
+                        Event e = doc.toObject(Event.class);
+                        if (e != null) {
+                            myEventsList.add(e);
+                        }
+                    }
+                    myEventsAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, "Failed to load events", Toast.LENGTH_SHORT).show()
+                );
     }
 }

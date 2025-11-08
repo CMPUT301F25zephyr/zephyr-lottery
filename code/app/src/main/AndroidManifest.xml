@@ -80,6 +80,9 @@
             android:exported="false">
         </activity>
         <activity
+            android:name=".activities.EntEventHistoryActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.DrawWinnersPopupActivity"
             android:theme="@style/Theme.AppCompat.Dialog"
             android:exported="false"/>

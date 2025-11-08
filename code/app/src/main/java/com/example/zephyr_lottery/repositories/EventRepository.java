@@ -10,10 +10,23 @@ import com.google.firebase.firestore.*;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * This class manages the statuses of participants and the accepting/declining of invitations.
+ */
 public class EventRepository {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    // Update participant status (accepted/declined)
+    /**
+     * Changes the status of a specified participant in an event
+     * @param eventId
+     *  The event ID that the participant is in the lottery for
+     * @param userId
+     *  The participant's ID
+     * @param status
+     *  The new status of the participant
+     * @return
+     *  Returns a Task when completed asynchronously
+     */
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
                 .document(eventId)
@@ -24,10 +37,20 @@ public class EventRepository {
         return participantRef.set(p, SetOptions.merge());
     }
 
-    // Accept invitation
+    /**
+     * Accepts the invitation (called when the accept button from the notification screen is pushed)
+     * @param eventId
+     *  The ID of the event that the participant is accepting
+     * @param userId
+     *  The ID of the participant
+     * @param onSuccess
+     *  Runnable function if the invitation is properly accepted
+     * @param onError
+     *  Exception if the invitation is not properly accepted
+     */
     public void acceptInvitation(String eventId, String userId,
                                  Runnable onSuccess, Consumer<Exception> onError) {
-        updateParticipantStatus(eventId, userId, "accepted")
+        updateParticipantStatus(eventId, userId, "CONFIRMED")
                 .addOnSuccessListener(v -> {
                     Log.d("EventRepo", "Accepted invitation");
                     if (onSuccess != null) onSuccess.run();
@@ -38,10 +61,20 @@ public class EventRepository {
                 });
     }
 
-    // Decline invitation, then invite next from waiting list
+    /**
+     * Declines the invitation, then invites next participant from the waiting list (called when the decline button from the notification screen is pushed)
+     * @param eventId
+     *  The ID of the event that the participant is declining
+     * @param userId
+     *  The ID of the participant
+     * @param onSuccess
+     *  Runnable function if the invitation is properly declined
+     * @param onError
+     *  Exception if the invitation is not properly declined
+     */
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
-        updateParticipantStatus(eventId, userId, "declined")
+        updateParticipantStatus(eventId, userId, "CANCELLED")
                 .addOnSuccessListener(v -> {
                     Log.d("EventRepo", "Declined invitation");
                     inviteNextFromWaitingList(eventId, onSuccess, onError);
@@ -52,7 +85,15 @@ public class EventRepository {
                 });
     }
 
-    // Invite next waiting list entrant (FIFO by joinedAt)
+    /**
+     * Invites the next participant from the waiting list, based on the oldest joinedAt
+     * @param eventId
+     *  The ID of the event
+     * @param onSuccess
+     *  Runnable function if the invitation is successfully sent
+     * @param onError
+     *  Exception if the invitation is not properly sent
+     */
     public void inviteNextFromWaitingList(String eventId,
                                           Runnable onSuccess,
                                           Consumer<Exception> onError) {
@@ -81,7 +122,7 @@ public class EventRepository {
                             .document(nextUserId);
 
                     Participant invited = new Participant(
-                            nextUserId, "invited", Timestamp.now(), Timestamp.now()
+                            nextUserId, "SELECTED", Timestamp.now(), Timestamp.now()
                     );
 
                     batch.set(participantRef, invited, SetOptions.merge());
@@ -104,6 +145,18 @@ public class EventRepository {
     }
 
     // Listen to participant status for current user to toggle UI
+
+    /**
+     * Sets a listener for any changes in status in the database, to update the list in real time
+     * @param eventId
+     *  The current ID of the event
+     * @param userId
+     *  The current user ID to track
+     * @param onStatus
+     *  Collects the status changes
+     * @return
+     *  Returns a ListenerRegistration that listens for status changes
+     */
     public ListenerRegistration listenToParticipantStatus(String eventId, String userId,
                                                           Consumer<String> onStatus) {
         DocumentReference ref = db.collection("events")

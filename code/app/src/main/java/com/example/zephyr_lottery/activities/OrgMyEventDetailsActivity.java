@@ -20,8 +20,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
 public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
@@ -45,6 +43,8 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button buttonViewEntrants;
     private Button buttonDrawLottery;
     private Button buttonBack;
+
+    private Event event;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,14 +101,23 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        buttonDrawLottery.setOnClickListener(v -> drawLotteryWinners());
+        buttonDrawLottery.setOnClickListener(v -> {
+            ArrayList<String> winners = drawLotteryWinners();
+            if (winners.isEmpty()) {
+                Toast.makeText(this, "No entrants to draw from.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, DrawWinnersPopupActivity.class);
+            intent.putStringArrayListExtra("WINNERS", winners);
+            startActivity(intent);
+        });
     }
 
     private void loadEventDetails() {
         DocumentReference ref = db.collection("events").document(eventId);
         ref.get()
                 .addOnSuccessListener(snapshot -> {
-                    Event event = snapshot.toObject(Event.class);
+                    event = snapshot.toObject(Event.class);
                     if (event == null) {
                         Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
                         finish();
@@ -145,47 +154,32 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 });
     }
 
-    private void drawLotteryWinners() {
-        DocumentReference ref = db.collection("events").document(eventId);
-        ref.get()
-                .addOnSuccessListener(snapshot -> {
-                    Event event = snapshot.toObject(Event.class);
-                    if (event == null) {
-                        Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+    private ArrayList<String> drawLotteryWinners() {
+        ArrayList<String> winners = new ArrayList<>();
 
-                    ArrayList<String> entrants = event.getEntrants();
-                    if (entrants == null || entrants.isEmpty()) {
-                        Toast.makeText(this, "No entrants to draw from", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        if (event == null) {
+            Toast.makeText(this, "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+            return winners;
+        }
 
-                    int sampleSize = event.getSampleSize();
-                    if (sampleSize <= 0) {
-                        Toast.makeText(this, "Sample size is not set", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
+        if (event.getEntrants() == null || event.getEntrants().isEmpty()) {
+            return winners;
+        }
 
-                    Collections.shuffle(entrants);
-                    int winnersToPick = Math.min(sampleSize, entrants.size());
-                    ArrayList<String> winners = new ArrayList<>(entrants.subList(0, winnersToPick));
+        ArrayList<String> entrants = new ArrayList<>(event.getEntrants());
+        int sampleSize = event.getSampleSize();
 
-                    Map<String, Object> updates = new HashMap<>();
-                    updates.put("selectedEntrants", winners);
+        if (sampleSize <= 0 || sampleSize > entrants.size()) {
+            sampleSize = entrants.size();
+        }
 
-                    ref.update(updates)
-                            .addOnSuccessListener(v -> {
-                                Toast.makeText(this, "Lottery drawn", Toast.LENGTH_SHORT).show();
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e(TAG, "Failed to save winners", e);
-                                Toast.makeText(this, "Error saving winners", Toast.LENGTH_SHORT).show();
-                            });
-                })
-                .addOnFailureListener(e -> {
-                    Log.e(TAG, "Failed to load entrants for drawing", e);
-                    Toast.makeText(this, "Error loading entrants", Toast.LENGTH_SHORT).show();
-                });
+        Collections.shuffle(entrants);
+        for (int i = 0; i < sampleSize; i++) {
+            winners.add(entrants.get(i));
+        }
+
+        tvWinners.setText("Last draw: " + winners.size() + " selected");
+
+        return winners;
     }
 }

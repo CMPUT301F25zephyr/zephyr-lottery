@@ -79,6 +79,12 @@
             android:name=".activities.OrgMyEventEntrantsActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".activities.DrawWinnersPopupActivity"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            android:exported="false"/>
+
+
 
 
         <!-- Services -->

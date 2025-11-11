@@ -5,38 +5,65 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
     tools:context=".activities.OrgMyEventsActivity">
 
     <TextView
-        android:id="@+id/text_org_my_events_title"
-        android:layout_width="0dp"
+        android:id="@+id/textView_latest_event"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#D9D9D9"
         android:text="My Events"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintTop_toTopOf="parent"
+        android:padding="10dp"
+        android:textSize="34sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:id="@+id/rectangle_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentTop="true"
+        android:background="#D9D9D9"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@id/button_my_event_filter"
+        tools:layout_editor_absoluteX="0dp" />
 
     <ListView
-        android:id="@+id/org_my_events_list"
-        android:layout_width="0dp"
+        android:id="@+id/ListView_my_events"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:divider="@android:color/darker_gray"
-        android:dividerHeight="1dp"
-        app:layout_constraintTop_toBottomOf="@id/text_org_my_events_title"
-        app:layout_constraintBottom_toTopOf="@id/button_back_home_org"
+        app:layout_constraintBottom_toTopOf="@+id/button_my_event_filter"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/textView_latest_event" />
 
     <Button
-        android:id="@+id/button_back_home_org"
-        android:layout_width="0dp"
+        android:id="@+id/button_my_event_filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="Filter Events"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button_my_event_add_event" />
+
+    <Button
+        android:id="@+id/button_my_event_add_event"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:text="Add Event"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/button_my_event_filter"
+        app:layout_constraintStart_toEndOf="@+id/button_my_event_back" />
+
+    <Button
+        android:id="@+id/button_my_event_back"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
+        app:layout_constraintEnd_toStartOf="@+id/button_my_event_add_event"
+        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

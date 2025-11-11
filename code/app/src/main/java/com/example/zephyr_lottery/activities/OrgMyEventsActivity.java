@@ -2,9 +2,9 @@ package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -22,14 +22,16 @@ import java.util.ArrayList;
 
 public class OrgMyEventsActivity extends AppCompatActivity {
 
-    private static final String TAG = "OrgMyEventsActivity";
-
-    private ListView eventsListView;
-    private ArrayList<Event> myEvents;
-    private EventArrayAdapter adapter;
-
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
+
+    private ListView myEventsListView;
+    private Button backButton;
+    private Button addEventButton;
+    private Button filterButton;
+
+    private ArrayList<Event> myEventsList;
+    private EventArrayAdapter myEventsAdapter;
 
     private String userEmail;
 
@@ -38,6 +40,7 @@ public class OrgMyEventsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.org_my_events_activity);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -49,59 +52,75 @@ public class OrgMyEventsActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
 
-        eventsListView = findViewById(R.id.org_my_events_list);
-        myEvents = new ArrayList<>();
-        adapter = new EventArrayAdapter(this, myEvents);
-        eventsListView.setAdapter(adapter);
+        myEventsListView = findViewById(R.id.ListView_my_events);
+        backButton = findViewById(R.id.button_my_event_back);
+        addEventButton = findViewById(R.id.button_my_event_add_event);
+        filterButton = findViewById(R.id.button_my_event_filter);
 
-        Button backButton = findViewById(R.id.button_back_home_org);
+        myEventsList = new ArrayList<>();
+        myEventsAdapter = new EventArrayAdapter(this, myEventsList);
+        myEventsListView.setAdapter(myEventsAdapter);
+
+        loadMyEvents();
+
+        myEventsListView.setOnItemClickListener((parent, view, position, id) -> {
+            Event clicked = myEventsList.get(position);
+            if (clicked == null) return;
+
+            String eventId = Integer.toString(clicked.hashCode());
+
+            Intent intent = new Intent(OrgMyEventsActivity.this, OrgMyEventDetailsActivity.class);
+            intent.putExtra("EVENT_CLICKED_CODE", Integer.parseInt(eventId));
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventsActivity.this, HomeOrgActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
 
-        eventsListView.setOnItemClickListener((parent, view, position, id) -> {
-            if (position < 0 || position >= myEvents.size()) {
-                return;
-            }
-            Event clickedEvent = myEvents.get(position);
-            if (clickedEvent == null) {
-                return;
-            }
-
-            int eventCode = clickedEvent.hashCode();
-            String eventId = Integer.toString(eventCode);
-
-            Intent intent = new Intent(OrgMyEventsActivity.this, OrgMyEventDetailsActivity.class);
+        addEventButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventsActivity.this, AddEventActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
-            intent.putExtra("EVENT_CLICKED_CODE", eventCode); // for QR / old code
-            intent.putExtra("EVENT_ID", eventId);             // for Firestore lookup
             startActivity(intent);
         });
 
+        filterButton.setOnClickListener(v ->
+                Toast.makeText(this, "Filter not implemented yet", Toast.LENGTH_SHORT).show()
+        );
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
         loadMyEvents();
     }
 
     private void loadMyEvents() {
+        myEventsList.clear();
+        myEventsAdapter.notifyDataSetChanged();
+
         if (userEmail == null || userEmail.isEmpty()) {
-            Log.w(TAG, "User email missing, cannot load events");
+            Toast.makeText(this, "Organizer email missing", Toast.LENGTH_SHORT).show();
             return;
         }
 
         eventsRef.whereEqualTo("organizer_email", userEmail)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
-                    myEvents.clear();
-                    querySnapshot.getDocuments().forEach(doc -> {
+                    myEventsList.clear();
+                    for (var doc : querySnapshot.getDocuments()) {
                         Event e = doc.toObject(Event.class);
                         if (e != null) {
-                            myEvents.add(e);
+                            myEventsList.add(e);
                         }
-                    });
-                    adapter.notifyDataSetChanged();
+                    }
+                    myEventsAdapter.notifyDataSetChanged();
                 })
                 .addOnFailureListener(e ->
-                        Log.e(TAG, "Failed to load organizer events", e));
+                        Toast.makeText(this, "Failed to load events", Toast.LENGTH_SHORT).show()
+                );
     }
 }

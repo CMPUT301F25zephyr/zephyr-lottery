@@ -170,8 +170,16 @@ public class LoginActivity extends AppCompatActivity {
                                     FCMTokenManager.initializeFCMToken();
                                 } else if (type.equals("Entrant")) {
                                     intent = new Intent(LoginActivity.this,HomeEntActivity.class);
-                                } else { //(type == "Admin")
+                                    FCMTokenManager.initializeFCMToken();
+                                } else if (type.equals("Entrant")) {
+                                    // changed to else if instead of else just to make sure that it is an Admin in the database, (null could've logged u in as an admin)
                                     intent = new Intent(LoginActivity.this,HomeAdmActivity.class);
+                                } else {
+                                    // if user's type is not any of the given, toast error and return
+                                    Log.w(TAG, "signInWithEmail:failure", task.getException());
+                                    Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
+                                    return;
                                 }
 
                                 //pass in the user's email

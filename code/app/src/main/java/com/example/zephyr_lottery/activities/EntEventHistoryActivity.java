@@ -9,6 +9,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -34,13 +36,14 @@ public class EntEventHistoryActivity extends AppCompatActivity {
 
     //databases
     private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
     private CollectionReference eventsRef;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.ent_events_activity);
+        setContentView(R.layout.ent_event_history_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
@@ -48,6 +51,7 @@ public class EntEventHistoryActivity extends AppCompatActivity {
         });
 
         db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
         eventsRef = db.collection("events");
 
         //set the list view to be the arraylist of events.
@@ -57,7 +61,8 @@ public class EntEventHistoryActivity extends AppCompatActivity {
         eventListView.setAdapter(eventArrayAdapter);
 
         //get email from intent
-        String user_email = getIntent().getStringExtra("USER_EMAIL");
+        // String user_email = getIntent().getStringExtra("USER_EMAIL");
+        String user_email = mAuth.getCurrentUser().getEmail();
 
         //listener. updates array when created and when database changes.
         eventsRef.whereArrayContains("entrants", user_email).addSnapshotListener((value, error) -> {
@@ -105,6 +110,7 @@ public class EntEventHistoryActivity extends AppCompatActivity {
                 Intent intent = new Intent(EntEventHistoryActivity.this, EntEventDetailActivity.class);
                 intent.putExtra("USER_EMAIL", user_email);
                 intent.putExtra("EVENT", String.valueOf(e.hashCode()));
+                intent.putExtra("FROM_ACTIVITY", "MY_EVENTS");
                 startActivity(intent);
             }
         });

@@ -199,4 +199,8 @@ public class UserProfileActivity extends AppCompatActivity {
                     Log.e("UserProfile", "Error updating profile", e);
                 });
     }
+
+    private void deleteUserProfile() {
+        return ;
+    }
 }

@@ -230,9 +230,20 @@ public class EntEventDetailActivity extends AppCompatActivity {
 
         String finalUserEmailForBack = currentUserEmail;
         back_event_details_button.setOnClickListener(view -> {
-            Intent intent = new Intent(EntEventDetailActivity.this, EntEventsActivity.class);
+            String fromActivity = getIntent().getStringExtra("FROM_ACTIVITY");
+            Intent intent;
+
+            if ("MY_EVENTS".equals(fromActivity)) {
+                // Return to My Events
+                intent = new Intent(EntEventDetailActivity.this, EntEventHistoryActivity.class);
+            } else {
+                // Default: Return to All Events
+                intent = new Intent(EntEventDetailActivity.this, EntEventsActivity.class);
+            }
+
             intent.putExtra("USER_EMAIL", finalUserEmailForBack);
             startActivity(intent);
+            finish();
         });
     }
 

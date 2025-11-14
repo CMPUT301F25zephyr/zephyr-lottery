@@ -17,7 +17,7 @@ import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
-public class QRCodeActivity extends AppCompatActivity {
+public class QRCodeOrgActivity extends AppCompatActivity {
 
     private ImageView imageQRCode;
     private Button back_qr_button;
@@ -46,7 +46,7 @@ public class QRCodeActivity extends AppCompatActivity {
         //listener for button to return to previous.
         back_qr_button = findViewById(R.id.button_back_qr_code);
         back_qr_button.setOnClickListener(view -> {
-            Intent intent = new Intent(QRCodeActivity.this, OrgMyEventDetailsActivity.class);
+            Intent intent = new Intent(QRCodeOrgActivity.this, OrgMyEventDetailsActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             intent.putExtra("EVENT_CLICKED_CODE", event_code);
             startActivity(intent);

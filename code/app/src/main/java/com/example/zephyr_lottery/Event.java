@@ -42,7 +42,6 @@ public class Event {
         this.time = time;
         this.organizer_email = organizer_email;
         this.entrants = new ArrayList<>();
-
     }
 
     @Override
@@ -208,26 +207,6 @@ public class Event {
         this.time = time;
     }
 
-    // compatibility if some old code calls getTimes()/setTimes()
-
-    /**
-     * (compatibility) Obtains the recurring time at which this event takes place
-     * @return
-     * The time, as a String
-     */
-    public String getTimes() {
-        return time;
-    }
-
-    /**
-     * (compatibility) Changes the recurring tim at which this event takes place
-     * @param time
-     * The new time of the event
-     */
-    public void setTimes(String time) {
-        this.time = time;
-    }
-    
     /**
      * Obtain the period over which the event runs
      * @return

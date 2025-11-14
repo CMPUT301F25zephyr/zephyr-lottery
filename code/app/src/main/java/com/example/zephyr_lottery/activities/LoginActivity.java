@@ -171,7 +171,7 @@ public class LoginActivity extends AppCompatActivity {
                                 } else if (type.equals("Entrant")) {
                                     intent = new Intent(LoginActivity.this,HomeEntActivity.class);
                                     FCMTokenManager.initializeFCMToken();
-                                } else if (type.equals("Entrant")) {
+                                } else if (type.equals("Admin")) {
                                     // changed to else if instead of else just to make sure that it is an Admin in the database, (null could've logged u in as an admin)
                                     intent = new Intent(LoginActivity.this,HomeAdmActivity.class);
                                 } else {

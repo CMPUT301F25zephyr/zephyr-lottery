@@ -105,6 +105,7 @@ public class EntEventsActivity extends AppCompatActivity {
                 Intent intent = new Intent(EntEventsActivity.this, EntEventDetailActivity.class);
                 intent.putExtra("USER_EMAIL", user_email);
                 intent.putExtra("EVENT", String.valueOf(e.hashCode()));
+                intent.putExtra("FROM_ACTIVITY", "ALL_EVENTS");
                 startActivity(intent);
             }
         });

@@ -78,9 +78,9 @@ public class HomeEntActivity extends AppCompatActivity {
 
         scanQRButton.setOnClickListener(v -> {
             // TODO: add scan qr view
-            // this is not correct for now
-            Intent intent = new Intent(HomeEntActivity.this, QRCodeActivity.class);
-            startActivity(intent);
+            Toast.makeText(HomeEntActivity.this,
+                    "Scan QR not yet implemented",
+                    Toast.LENGTH_SHORT).show();
         });
     }
 

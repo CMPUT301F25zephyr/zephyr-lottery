@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -18,6 +19,14 @@ import java.util.ArrayList;
 public class ProfileArrayAdapter extends ArrayAdapter<UserProfile> {
     private ArrayList<UserProfile> profiles;
     private Context context;
+    private OnDeleteClickListener deleteClickListener;
+
+    /**
+     * Interface for handling delete button clicks
+     */
+    public interface OnDeleteClickListener {
+        void onDeleteClick(UserProfile profile, int position);
+    }
 
     /**
      * Creates a new ProfileArrayAdapter
@@ -30,6 +39,15 @@ public class ProfileArrayAdapter extends ArrayAdapter<UserProfile> {
         super(context, 0, profiles);
         this.profiles = profiles;
         this.context = context;
+    }
+
+    /**
+     * Sets the delete click listener
+     * @param listener
+     * The listener to handle delete button clicks
+     */
+    public void setOnDeleteClickListener(OnDeleteClickListener listener) {
+        this.deleteClickListener = listener;
     }
 
     /**
@@ -56,9 +74,24 @@ public class ProfileArrayAdapter extends ArrayAdapter<UserProfile> {
         UserProfile profile = profiles.get(position);
         TextView profile_name = view.findViewById(R.id.text_profile_name);
         TextView profile_type = view.findViewById(R.id.text_profile_type);
+        Button btn_delete = view.findViewById(R.id.btn_delete_profile);
 
         profile_name.setText(profile.getUsername());
         profile_type.setText(profile.getType());
+
+        // Hide delete button for admin accounts
+        if ("admin".equalsIgnoreCase(profile.getType())) {
+            btn_delete.setVisibility(View.GONE);
+        } else {
+            btn_delete.setVisibility(View.VISIBLE);
+
+            // Set up delete button click listener
+            btn_delete.setOnClickListener(v -> {
+                if (deleteClickListener != null) {
+                    deleteClickListener.onDeleteClick(profile, position);
+                }
+            });
+        }
 
         return view;
     }

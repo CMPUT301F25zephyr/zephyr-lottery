@@ -8,6 +8,8 @@ import android.widget.Button;
 import android.widget.ListView;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -23,15 +25,20 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 
 public class AdmProfilesActivity extends AppCompatActivity {
-    private Button filter_profiles_button; // needs implementation
+    private Button filter_profiles_button;
     private Button back_browse_profiles_button;
     private ListView profileListView;
     private ArrayList<UserProfile> profileArrayList;
+    private ArrayList<UserProfile> allProfilesList; // original unfiltered list
     private ArrayAdapter<UserProfile> profileArrayAdapter;
+    private int FILTER_MODE = 0;    // filter modes: 0 = both, 1 = entrants, 2 = organizers
 
     //databases
     private FirebaseFirestore db;
     private CollectionReference profilesRef;
+
+    // Activity Result Launcher for filter activity
+    private ActivityResultLauncher<Intent> filterActivityLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,8 +57,24 @@ public class AdmProfilesActivity extends AppCompatActivity {
         //set the list view to be the arraylist of profiles.
         profileListView = findViewById(R.id.ListView_browse_profiles);
         profileArrayList = new ArrayList<>();
+        allProfilesList = new ArrayList<>(); // Initialize the full list
         profileArrayAdapter = new ProfileArrayAdapter(this, profileArrayList);
         profileListView.setAdapter(profileArrayAdapter);
+
+        FILTER_MODE = getIntent().getIntExtra("FILTER_MODE", 0);
+
+        // register activity result launcher
+        filterActivityLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        // get the filter mode from the result
+                        FILTER_MODE = result.getData().getIntExtra("FILTER_MODE", 0);
+                        // apply the filter
+                        applyFilter();
+                    }
+                }
+        );
 
         //listener. updates array when created and when database changes.
         profilesRef.addSnapshotListener((value, error) -> {
@@ -59,15 +82,15 @@ public class AdmProfilesActivity extends AppCompatActivity {
                 Log.e("Firestore", error.toString());
             }
             if(value != null && !value.isEmpty()){
-                profileArrayList.clear();
+                allProfilesList.clear(); // Clear the full list
                 for (QueryDocumentSnapshot snapshot : value){
                     String name = snapshot.getString("username");
                     String email = snapshot.getString("email");
                     String type = snapshot.getString("type");
 
-                    profileArrayList.add(new UserProfile(name, email, type));
+                    allProfilesList.add(new UserProfile(name, email, type)); // Add to full list
                 }
-                profileArrayAdapter.notifyDataSetChanged();
+                applyFilter(); // Apply filter after loading data
             }
         });
 
@@ -82,5 +105,38 @@ public class AdmProfilesActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        filter_profiles_button = findViewById(R.id.button_profile_filter);
+        filter_profiles_button.setOnClickListener(view -> {
+            Intent intent = new Intent(AdmProfilesActivity.this, AdmProfilesFilterActivity.class);
+            intent.putExtra("FILTER_MODE", FILTER_MODE);
+            filterActivityLauncher.launch(intent);
+        });
+    }
+
+    // change the list to filter mode
+    private void applyFilter() {
+        profileArrayList.clear(); // clear the displayed list
+
+        for (UserProfile profile : allProfilesList) { // filter from the full list
+            boolean shouldAdd = false;
+
+            switch (FILTER_MODE) {
+                case 0: // Show all
+                    shouldAdd = true;
+                    break;
+                case 1: // Entrants only
+                    shouldAdd = "entrant".equalsIgnoreCase(profile.getType());
+                    break;
+                case 2: // Organizers only
+                    shouldAdd = "organizer".equalsIgnoreCase(profile.getType());
+                    break;
+            }
+
+            if (shouldAdd) {
+                profileArrayList.add(profile);
+            }
+        }
+
+        profileArrayAdapter.notifyDataSetChanged();
     }
 }

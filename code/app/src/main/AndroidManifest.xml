@@ -83,6 +83,10 @@
             android:name=".activities.EntEventHistoryActivity"
             android:exported="false" />
 
+        <activity
+            android:name=".activities.AdmProfilesFilterActivity"
+            android:exported="false" />
+
 
         <!-- Services -->
         <service

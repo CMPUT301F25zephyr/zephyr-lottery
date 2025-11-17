@@ -9,27 +9,28 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class AdmEventDetailActivity extends AppCompatActivity {
 
     private Button back_event_details_button;
-    private Button register_button;
-    private Button leave_button;
+    private Button button_remove_image;
+    private Button button_delete_event;
 
     private TextView title;
     private TextView closingDate;
@@ -42,20 +43,47 @@ public class AdmEventDetailActivity extends AppCompatActivity {
     private TextView lotteryWinners;
 
     private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
     private CollectionReference eventsRef;
     private DocumentReference docRef;
+
+    private String eventHash;
+    private String currentUserEmail;
+    private String eventName;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.ent_eventdetail_activity);
+        setContentView(R.layout.adm_eventdetail_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        initializeViews();
+
+        mAuth = FirebaseAuth.getInstance();
+        currentUserEmail = getIntent().getStringExtra("USER_EMAIL");
+        if (currentUserEmail == null || currentUserEmail.isEmpty()) {
+            FirebaseUser currentUser = mAuth.getCurrentUser();
+            if (currentUser != null) {
+                currentUserEmail = currentUser.getEmail();
+            }
+        }
+
+        eventHash = getIntent().getStringExtra("EVENT");
+
+        db = FirebaseFirestore.getInstance();
+        eventsRef = db.collection("events");
+        docRef = eventsRef.document(eventHash);
+
+        loadEventDetails();
+        setupClickListeners();
+    }
+
+    private void initializeViews() {
         title = findViewById(R.id.textView_ed_title);
         closingDate = findViewById(R.id.textView_closingdate);
         startEnd = findViewById(R.id.textView_startenddates);
@@ -66,184 +94,25 @@ public class AdmEventDetailActivity extends AppCompatActivity {
         entrantNumbers = findViewById(R.id.textView_currententrants);
         lotteryWinners = findViewById(R.id.textView_lotterywinners);
 
-        register_button = findViewById(R.id.button_register);
-        leave_button = findViewById(R.id.button_leave_waitlist);
         back_event_details_button = findViewById(R.id.button_event_details_back);
+        button_remove_image = findViewById(R.id.button_remove_image);
+        button_delete_event = findViewById(R.id.button_delete_event);
+    }
 
-        String user_email = getIntent().getStringExtra("USER_EMAIL");
-        if (user_email == null || user_email.isEmpty()) {
-            FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
-            if (currentUser != null) {
-                user_email = currentUser.getEmail();
-            }
-        }
-        final String currentUserEmail = user_email;
-
-        String eventHash = getIntent().getStringExtra("EVENT");
-
-        db = FirebaseFirestore.getInstance();
-        eventsRef = db.collection("events");
-        docRef = eventsRef.document(eventHash);
-
-        loadEventDetails();
-
-        String finalUserEmail = currentUserEmail;
-
-        register_button.setOnClickListener(view -> {
-            if (finalUserEmail == null || finalUserEmail.isEmpty()) {
-                Toast.makeText(
-                        AdmEventDetailActivity.this,
-                        "Unable to determine your account. Please sign in again.",
-                        Toast.LENGTH_LONG
-                ).show();
-                return;
-            }
-
-            docRef.get().addOnSuccessListener(currentEvent -> {
-                if (!currentEvent.exists()) {
-                    Toast.makeText(
-                            AdmEventDetailActivity.this,
-                            "Event not found.",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    return;
-                }
-
-                List<String> entrantsList = (List<String>) currentEvent.get("entrants");
-                if (entrantsList == null) {
-                    entrantsList = new ArrayList<>();
-                } else {
-                    entrantsList = new ArrayList<>(entrantsList);
-                    entrantsList.remove(null);
-                }
-
-                if (entrantsList.contains(finalUserEmail)) {
-                    Toast.makeText(
-                            AdmEventDetailActivity.this,
-                            "You are already on the waiting list.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                    return;
-                }
-
-                Long limitLong = currentEvent.getLong("limit");
-                boolean hasLimit = limitLong != null;
-                int limitValue = hasLimit ? limitLong.intValue() : Integer.MAX_VALUE;
-                if (hasLimit && entrantsList.size() >= limitValue) {
-                    Toast.makeText(
-                            AdmEventDetailActivity.this,
-                            "This event is full.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                    return;
-                }
-
-                int currentSize = entrantsList.size();
-                String limitDisplay = hasLimit ? String.valueOf(limitValue) : "?";
-
-                docRef.update("entrants", FieldValue.arrayUnion(finalUserEmail))
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(
-                                    AdmEventDetailActivity.this,
-                                    "Joined waiting list.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                            int newCount = currentSize + 1;
-                            entrantNumbers.setText(
-                                    "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
-                            );
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e("EntEventDetail", "Error adding entrant", e);
-                            Toast.makeText(
-                                    AdmEventDetailActivity.this,
-                                    "Failed to join. Please try again.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        });
-            });
-        });
-
-        leave_button.setOnClickListener(view -> {
-            if (finalUserEmail == null || finalUserEmail.isEmpty()) {
-                Toast.makeText(
-                        AdmEventDetailActivity.this,
-                        "Unable to determine your account. Please sign in again.",
-                        Toast.LENGTH_LONG
-                ).show();
-                return;
-            }
-
-            docRef.get().addOnSuccessListener(currentEvent -> {
-                if (!currentEvent.exists()) {
-                    Toast.makeText(
-                            AdmEventDetailActivity.this,
-                            "Event not found.",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                    return;
-                }
-
-                List<String> entrantsList = (List<String>) currentEvent.get("entrants");
-                if (entrantsList == null) {
-                    entrantsList = new ArrayList<>();
-                } else {
-                    entrantsList = new ArrayList<>(entrantsList);
-                    entrantsList.remove(null);
-                }
-
-                if (!entrantsList.contains(finalUserEmail)) {
-                    Toast.makeText(
-                            AdmEventDetailActivity.this,
-                            "You are not on the waiting list.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                    return;
-                }
-
-                Long limitLong = currentEvent.getLong("limit");
-                String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
-                int currentSize = entrantsList.size();
-
-                docRef.update("entrants", FieldValue.arrayRemove(finalUserEmail))
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(
-                                    AdmEventDetailActivity.this,
-                                    "You have left the waiting list.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                            int newCount = Math.max(0, currentSize - 1);
-                            entrantNumbers.setText(
-                                    "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
-                            );
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e("EntEventDetail", "Error removing entrant", e);
-                            Toast.makeText(
-                                    AdmEventDetailActivity.this,
-                                    "Failed to leave. Please try again.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        });
-            });
-        });
-
-        String finalUserEmailForBack = currentUserEmail;
+    private void setupClickListeners() {
         back_event_details_button.setOnClickListener(view -> {
-            String fromActivity = getIntent().getStringExtra("FROM_ACTIVITY");
-            Intent intent;
-
-            if ("MY_EVENTS".equals(fromActivity)) {
-                // Return to My Events
-                intent = new Intent(AdmEventDetailActivity.this, EntEventHistoryActivity.class);
-            } else {
-                // Default: Return to All Events
-                intent = new Intent(AdmEventDetailActivity.this, EntEventsActivity.class);
-            }
-
-            intent.putExtra("USER_EMAIL", finalUserEmailForBack);
+            Intent intent = new Intent(AdmEventDetailActivity.this, AdmEventsActivity.class);
+            intent.putExtra("USER_EMAIL", currentUserEmail);
             startActivity(intent);
             finish();
+        });
+
+        button_remove_image.setOnClickListener(view -> {
+            showRemoveImageDialog();
+        });
+
+        button_delete_event.setOnClickListener(view -> {
+            showDeleteEventDialog();
         });
     }
 
@@ -251,10 +120,13 @@ public class AdmEventDetailActivity extends AppCompatActivity {
         docRef.get().addOnSuccessListener(currentEvent -> {
             if (!currentEvent.exists()) {
                 Log.e("Firestore", "Event not found.");
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                finish();
                 return;
             }
 
-            title.setText(currentEvent.getString("name"));
+            eventName = currentEvent.getString("name");
+            title.setText(eventName);
 
             closingDate.setText("");
             startEnd.setText("");
@@ -291,6 +163,121 @@ public class AdmEventDetailActivity extends AppCompatActivity {
             Long sampleSizeLong = currentEvent.getLong("sampleSize");
             int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
             lotteryWinners.setText("Lottery Winners: " + sampleSize);
+        }).addOnFailureListener(e -> {
+            Log.e("Firestore", "Error loading event details", e);
+            Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         });
+    }
+
+    /**
+     * shows confirmation dialog for removing event image
+     */
+    private void showRemoveImageDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Remove Event Image")
+                .setMessage("Are you sure you want to remove the image for this event?\n\nEvent: " + eventName)
+                .setPositiveButton("Continue", (dialog, which) -> {
+                    showPasswordConfirmationDialog(true);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+
+    /**
+     * shows confirmation dialog for deleting entire event
+     */
+    private void showDeleteEventDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Event")
+                .setMessage("WARNING: This will permanently delete the entire event!\n\nEvent: " + eventName +
+                        "\n\nThis action cannot be undone.")
+                .setPositiveButton("Continue", (dialog, which) -> {
+                    showPasswordConfirmationDialog(false);
+                })
+                .setNegativeButton("Cancel", null)
+                .setIcon(android.R.drawable.ic_dialog_alert)
+                .show();
+    }
+
+    /**
+     * shows password confirmation dialog
+     * @param isImageRemoval true if removing image, false if deleting event
+     */
+    private void showPasswordConfirmationDialog(boolean isImageRemoval) {
+        AdmEventDialogActivity dialog = new AdmEventDialogActivity(
+                this,
+                eventName,
+                isImageRemoval,
+                password -> verifyPasswordAndExecuteAction(password, isImageRemoval)
+        );
+        dialog.show();
+    }
+
+    /**
+     * verifies admin password and executes
+     */
+    private void verifyPasswordAndExecuteAction(String password, boolean isImageRemoval) {
+        FirebaseUser currentAdmin = mAuth.getCurrentUser();
+
+        if (currentAdmin == null) {
+            Toast.makeText(this, "Not authenticated. Please log in again.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String adminEmail = currentAdmin.getEmail();
+        AuthCredential credential = EmailAuthProvider.getCredential(adminEmail, password);
+
+        currentAdmin.reauthenticate(credential)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("AdminAction", "Admin password verified");
+                    if (isImageRemoval) {
+                        removeEventImage();
+                    } else {
+                        deleteEvent();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("AdminAction", "Password verification failed", e);
+                    Toast.makeText(this, "Incorrect admin password", Toast.LENGTH_LONG).show();
+                });
+    }
+
+    /**
+     * removes the event imageUrl
+     * TODO: wait for actual image in storage, and then implement removal later
+     */
+    private void removeEventImage() {
+        docRef.update("imageUrl", null)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("AdminAction", "Event image reference removed");
+                    Toast.makeText(this, "Event image removed successfully", Toast.LENGTH_SHORT).show();
+                    loadEventDetails();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("AdminAction", "Error removing image", e);
+                    Toast.makeText(this, "Failed to remove image: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
+    }
+
+    /**
+     * deletes the entire event from Firestore
+     */
+    private void deleteEvent() {
+        docRef.delete()
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("AdminAction", "Event deleted successfully");
+                    Toast.makeText(this, "Event deleted successfully", Toast.LENGTH_SHORT).show();
+
+                    // Navigate back to events list
+                    Intent intent = new Intent(AdmEventDetailActivity.this, AdmEventsActivity.class);
+                    intent.putExtra("USER_EMAIL", currentUserEmail);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    startActivity(intent);
+                    finish();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("AdminAction", "Error deleting event", e);
+                    Toast.makeText(this, "Failed to delete event: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                });
     }
 }

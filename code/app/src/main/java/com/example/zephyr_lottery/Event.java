@@ -18,6 +18,7 @@ public class Event {
     private int weekday;
     private String period;
     private ArrayList<String> entrants;
+    private ArrayList<String> chosen_entrants;
     private int limit;
     private Date date_created;
     private LocalDateTime lott_start_date;
@@ -338,6 +339,27 @@ public class Event {
      */
     public void setEntrants(ArrayList<String> entrants) {
         this.entrants = entrants != null ? entrants : new ArrayList<>();
+    }
+
+    /**
+     * Obtain the entrants who won the lottery
+     * @return
+     * The entrants signed up for the lottery, as an ArrayList of Strings
+     */
+    public ArrayList<String> getChosen_entrants() {
+        if (chosen_entrants == null) {
+            chosen_entrants = new ArrayList<>();
+        }
+        return chosen_entrants;
+    }
+
+    /**
+     * Set a new list of entrants who won the lottery
+     * @param chosen_entrants
+     * The new list of entrants
+     */
+    public void setChosen_entrants(ArrayList<String> chosen_entrants) {
+        this.chosen_entrants = chosen_entrants != null ? chosen_entrants : new ArrayList<>();
     }
 
     /**

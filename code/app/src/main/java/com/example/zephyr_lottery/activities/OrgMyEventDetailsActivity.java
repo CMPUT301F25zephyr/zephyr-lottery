@@ -66,9 +66,12 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        generateQrButton.setOnClickListener(v ->
-                Toast.makeText(this, "QR generation not implemented yet", Toast.LENGTH_SHORT).show()
-        );
+        generateQrButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeOrgActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
     }
 
     private void loadEventDetails() {

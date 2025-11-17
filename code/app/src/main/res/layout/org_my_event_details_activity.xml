@@ -14,22 +14,22 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/button_entrants"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        app:layout_constraintTop_toTopOf="parent">
 
         <TextView
             android:id="@+id/text_placeholder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:textColor="@android:color/black"
+            android:gravity="start"
             android:lineSpacingExtra="4dp"
             android:padding="20dp"
             android:scrollbars="vertical"
-            android:gravity="start"
-            android:text="Loading event details..." />
+            android:text="Loading event details..."
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
     </ScrollView>
 
     <Button
@@ -38,18 +38,19 @@
         android:layout_height="wrap_content"
         android:text="View Entrants"
         app:layout_constraintBottom_toTopOf="@+id/button_generate_qr"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5" />
+        app:layout_constraintStart_toEndOf="@+id/button_draw_lottery"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView" />
 
     <Button
         android:id="@+id/button_generate_qr"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Generate QR"
-        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button_org_event_details_back"
+        app:layout_constraintTop_toBottomOf="@+id/button_entrants" />
 
     <Button
         android:id="@+id/button_org_event_details_back"
@@ -57,7 +58,18 @@
         android:layout_height="wrap_content"
         android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/button_generate_qr"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/button_draw_lottery" />
+
+    <Button
+        android:id="@+id/button_draw_lottery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Draw Lottery"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
+        app:layout_constraintEnd_toStartOf="@+id/button_entrants"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

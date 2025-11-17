@@ -82,9 +82,11 @@
         <activity
             android:name=".activities.EntEventHistoryActivity"
             android:exported="false" />
-
         <activity
             android:name=".activities.AdmProfilesFilterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.AdmEventDetailActivity"
             android:exported="false" />
 
 

@@ -3,6 +3,8 @@ package com.example.zephyr_lottery.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -90,6 +92,18 @@ public class AdmEventsActivity extends AppCompatActivity {
 
         //get email from intent
         String user_email = getIntent().getStringExtra("USER_EMAIL");
+
+        eventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Event e = eventArrayList.get(position);
+                Intent intent = new Intent(AdmEventsActivity.this, AdmEventDetailActivity.class);
+                intent.putExtra("USER_EMAIL", user_email);
+                intent.putExtra("EVENT", String.valueOf(e.hashCode()));
+                intent.putExtra("FROM_ACTIVITY", "ALL_EVENTS");
+                startActivity(intent);
+            }
+        });
 
         //listener for button to return to homescreen.
         back_adm_event_button = findViewById(R.id.button_adm_event_back);

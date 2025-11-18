@@ -18,6 +18,7 @@ public class Event {
     private int weekday;
     private String period;
     private ArrayList<String> entrants;
+    private ArrayList<String> chosen_entrants;
     private int limit;
     private Date date_created;
     private LocalDateTime lott_start_date;
@@ -42,7 +43,6 @@ public class Event {
         this.time = time;
         this.organizer_email = organizer_email;
         this.entrants = new ArrayList<>();
-
     }
 
     @Override
@@ -208,26 +208,6 @@ public class Event {
         this.time = time;
     }
 
-    // compatibility if some old code calls getTimes()/setTimes()
-
-    /**
-     * (compatibility) Obtains the recurring time at which this event takes place
-     * @return
-     * The time, as a String
-     */
-    public String getTimes() {
-        return time;
-    }
-
-    /**
-     * (compatibility) Changes the recurring tim at which this event takes place
-     * @param time
-     * The new time of the event
-     */
-    public void setTimes(String time) {
-        this.time = time;
-    }
-    
     /**
      * Obtain the period over which the event runs
      * @return
@@ -359,6 +339,27 @@ public class Event {
      */
     public void setEntrants(ArrayList<String> entrants) {
         this.entrants = entrants != null ? entrants : new ArrayList<>();
+    }
+
+    /**
+     * Obtain the entrants who won the lottery
+     * @return
+     * The entrants signed up for the lottery, as an ArrayList of Strings
+     */
+    public ArrayList<String> getChosen_entrants() {
+        if (chosen_entrants == null) {
+            chosen_entrants = new ArrayList<>();
+        }
+        return chosen_entrants;
+    }
+
+    /**
+     * Set a new list of entrants who won the lottery
+     * @param chosen_entrants
+     * The new list of entrants
+     */
+    public void setChosen_entrants(ArrayList<String> chosen_entrants) {
+        this.chosen_entrants = chosen_entrants != null ? chosen_entrants : new ArrayList<>();
     }
 
     /**

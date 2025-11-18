@@ -1,14 +1,22 @@
 package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,15 +28,21 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class AddEventActivity extends AppCompatActivity {
 
     private Button save_event_button;
     private Button back_add_event_button;
+    private Button upload_image_button;
+    private ImageView upload_image_view;
 
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
+
+    //image poster
+    private Bitmap image_bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +75,36 @@ public class AddEventActivity extends AppCompatActivity {
             Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
+        });
+
+        ActivityResultLauncher<Intent> activityResultLauncher =
+                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        System.out.print("here");
+                        if (result.getResultCode() == AddEventActivity.RESULT_OK){
+                            Intent data = result.getData();
+                            Uri uri = data.getData();
+                            try {
+                                image_bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                                upload_image_view.setImageBitmap(image_bitmap);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                });
+
+        upload_image_view = findViewById(R.id.add_event_image_poster);
+        upload_image_view.setOnClickListener(view ->{
+            Intent img_intent = new Intent(Intent.ACTION_PICK);
+            img_intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            activityResultLauncher.launch(img_intent);
+        });
+
+        upload_image_button = findViewById(R.id.add_event_button_upload_image);
+        upload_image_button.setOnClickListener(view -> {
+            //save image to database if one selected
         });
 
         save_event_button = findViewById(R.id.button_save_event_add_event);

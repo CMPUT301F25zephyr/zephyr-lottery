@@ -198,27 +198,34 @@
         app:layout_constraintStart_toEndOf="@id/button_back_add_event"
         app:layout_constraintTop_toBottomOf="@id/add_event_description" />
 
-    <!--        tools:srcCompat="@android:drawable/ic_menu_upload" />-->
-
     <ImageView
         android:id="@+id/add_event_image_poster"
         android:layout_width="200dp"
         android:layout_height="150dp"
         android:background="#d9d9d9"
-        app:layout_constraintBottom_toTopOf="@+id/add_event_button_upload_image"
+        android:src="@android:drawable/ic_menu_upload"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/add_event_description"
-        app:layout_constraintTop_toTopOf="@+id/add_event_description"
-        android:src="@android:drawable/ic_menu_upload" />
+        app:layout_constraintTop_toBottomOf="@+id/textView" />
 
-    <Button
-        android:id="@+id/add_event_button_upload_image"
+    <TextView
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Upload Image"
+        android:text="Upload Poster Here"
+        app:layout_constraintBottom_toTopOf="@+id/add_event_image_poster"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.562"
-        app:layout_constraintStart_toStartOf="@+id/add_event_image_poster"
-        app:layout_constraintTop_toBottomOf="@+id/add_event_image_poster" />
+        app:layout_constraintStart_toEndOf="@+id/add_event_description"
+        app:layout_constraintTop_toTopOf="@+id/add_event_description" />
+
+    <!--    <Button-->
+<!--        android:id="@+id/add_event_button_upload_image"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Save Image"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintHorizontal_bias="0.562"-->
+<!--        app:layout_constraintStart_toStartOf="@+id/add_event_image_poster"-->
+<!--        app:layout_constraintTop_toBottomOf="@+id/add_event_image_poster" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

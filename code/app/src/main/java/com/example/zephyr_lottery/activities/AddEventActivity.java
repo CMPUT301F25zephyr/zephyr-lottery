@@ -77,14 +77,15 @@ public class AddEventActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        //activity for the selecting images from gallery thing.
         ActivityResultLauncher<Intent> activityResultLauncher =
                 registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
                     @Override
                     public void onActivityResult(ActivityResult result) {
-                        System.out.print("here");
                         if (result.getResultCode() == AddEventActivity.RESULT_OK){
                             Intent data = result.getData();
                             Uri uri = data.getData();
+
                             try {
                                 image_bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
                                 upload_image_view.setImageBitmap(image_bitmap);
@@ -95,6 +96,7 @@ public class AddEventActivity extends AppCompatActivity {
                     }
                 });
 
+        //listener for the image. click image to select from gallery. goes to activity above
         upload_image_view = findViewById(R.id.add_event_image_poster);
         upload_image_view.setOnClickListener(view ->{
             Intent img_intent = new Intent(Intent.ACTION_PICK);
@@ -102,11 +104,7 @@ public class AddEventActivity extends AppCompatActivity {
             activityResultLauncher.launch(img_intent);
         });
 
-        upload_image_button = findViewById(R.id.add_event_button_upload_image);
-        upload_image_button.setOnClickListener(view -> {
-            //save image to database if one selected
-        });
-
+        //TODO: need to add saving the image to the database in this listener.
         save_event_button = findViewById(R.id.button_save_event_add_event);
         save_event_button.setOnClickListener(view -> {
             String event_name = ((EditText) findViewById(R.id.add_event_name)).getText().toString();

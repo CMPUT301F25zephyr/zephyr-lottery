@@ -1,9 +1,13 @@
 package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -27,6 +31,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private static final String TAG = "OrgMyEventDetails";
 
     private TextView detailsText;
+    private ImageView eventImage;
     private Button backButton;
     private Button entrantsButton;
     private Button generateQrButton;
@@ -58,6 +63,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
+        eventImage = findViewById(R.id.imageView_orgEventDetails);
 
         loadEventDetails();
 
@@ -137,6 +143,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     float price = e.getPrice();
                     int limit = e.getLimit();
                     int sampleSize = e.getSampleSize();
+
+                    //get image from class, convert to bitmap, display image.
+                    String image_base64 = e.getPosterImage();
+                    if (image_base64 != null) {
+                        byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
+                        Bitmap image_bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                        eventImage.setImageBitmap(image_bitmap);
+                    }
 
                     String text = ""
                             + "Name: " + name + "\n"

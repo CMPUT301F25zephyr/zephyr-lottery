@@ -1,9 +1,14 @@
 package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +45,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
     private TextView description;
     private TextView entrantNumbers;
     private TextView lotteryWinners;
+    private ImageView eventImageView;
 
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
@@ -65,6 +71,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
         description = findViewById(R.id.textView_description_string);
         entrantNumbers = findViewById(R.id.textView_currententrants);
         lotteryWinners = findViewById(R.id.textView_lotterywinners);
+        eventImageView = findViewById(R.id.imageView_ent_eventImage);
 
         register_button = findViewById(R.id.button_register);
         leave_button = findViewById(R.id.button_leave_waitlist);
@@ -291,6 +298,14 @@ public class EntEventDetailActivity extends AppCompatActivity {
             Long sampleSizeLong = currentEvent.getLong("sampleSize");
             int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
             lotteryWinners.setText("Lottery Winners: " + sampleSize);
+
+            //get image from database, convert to bitmap, display image.
+            String image_base64 = currentEvent.getString("posterImage");
+            if (image_base64 != null) {
+                byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
+                Bitmap image_bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                eventImageView.setImageBitmap(image_bitmap);
+            }
         });
     }
 }

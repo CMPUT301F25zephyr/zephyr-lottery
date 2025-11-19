@@ -1,9 +1,13 @@
 package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -41,6 +45,7 @@ public class AdmEventDetailActivity extends AppCompatActivity {
     private TextView description;
     private TextView entrantNumbers;
     private TextView lotteryWinners;
+    private ImageView eventImageView;
 
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
@@ -97,6 +102,7 @@ public class AdmEventDetailActivity extends AppCompatActivity {
         back_event_details_button = findViewById(R.id.button_event_details_back);
         button_remove_image = findViewById(R.id.button_remove_image);
         button_delete_event = findViewById(R.id.button_delete_event);
+        eventImageView = findViewById(R.id.imageView_adm_eventImage);
     }
 
     private void setupClickListeners() {
@@ -163,6 +169,15 @@ public class AdmEventDetailActivity extends AppCompatActivity {
             Long sampleSizeLong = currentEvent.getLong("sampleSize");
             int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
             lotteryWinners.setText("Lottery Winners: " + sampleSize);
+
+            //get image from database, convert to bitmap, display image.
+            String image_base64 = currentEvent.getString("posterImage");
+            if (image_base64 != null) {
+                byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
+                Bitmap image_bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                eventImageView.setImageBitmap(image_bitmap);
+            }
+
         }).addOnFailureListener(e -> {
             Log.e("Firestore", "Error loading event details", e);
             Toast.makeText(this, "Error loading event: " + e.getMessage(), Toast.LENGTH_SHORT).show();
@@ -243,11 +258,10 @@ public class AdmEventDetailActivity extends AppCompatActivity {
     }
 
     /**
-     * removes the event imageUrl
-     * TODO: wait for actual image in storage, and then implement removal later
+     * removes the event image string from database
      */
     private void removeEventImage() {
-        docRef.update("imageUrl", null)
+        docRef.update("posterImage", null)
                 .addOnSuccessListener(aVoid -> {
                     Log.d("AdminAction", "Event image reference removed");
                     Toast.makeText(this, "Event image removed successfully", Toast.LENGTH_SHORT).show();

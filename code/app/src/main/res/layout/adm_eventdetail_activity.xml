@@ -163,6 +163,23 @@
                 android:textSize="16sp"
                 android:layout_marginTop="4dp" />
 
+<!--            Event image-->
+            <TextView
+                android:id="@+id/textView_eventImage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Event Image:"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:layout_marginTop="4dp" />
+
+            <ImageView
+                android:id="@+id/imageView_adm_eventImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="#d9d9d9"
+                app:srcCompat="@android:drawable/ic_menu_gallery" />
+
             <!-- Admin Actions Section -->
             <TextView
                 android:id="@+id/textView_admin_actions_label"

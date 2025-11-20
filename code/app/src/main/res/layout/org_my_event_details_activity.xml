@@ -14,7 +14,7 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:fillViewport="true"
-        app:layout_constraintBottom_toTopOf="@+id/button_entrants"
+        app:layout_constraintBottom_toTopOf="@+id/button_draw_lottery"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -42,13 +42,30 @@
                 android:id="@+id/imageView_orgEventDetails"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:srcCompat="@android:drawable/ic_menu_gallery"
-                app:layout_constraintBottom_toTopOf="@+id/button_entrants"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/scrollView"/>
+                app:srcCompat="@android:drawable/ic_menu_gallery" />
         </LinearLayout>
     </ScrollView>
+
+    <!-- NEW: Notify Selected Entrants -->
+    <Button
+        android:id="@+id/button_notify_selected"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Notify Selected Entrants"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintBottom_toTopOf="@+id/button_draw_lottery"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/button_draw_lottery"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Draw Lottery"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
+        app:layout_constraintEnd_toStartOf="@+id/button_entrants"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scrollView" />
 
     <Button
         android:id="@+id/button_entrants"
@@ -79,15 +96,4 @@
         app:layout_constraintEnd_toStartOf="@+id/button_generate_qr"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_draw_lottery" />
-
-    <Button
-        android:id="@+id/button_draw_lottery"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Draw Lottery"
-        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
-        app:layout_constraintEnd_toStartOf="@+id/button_entrants"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scrollView" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

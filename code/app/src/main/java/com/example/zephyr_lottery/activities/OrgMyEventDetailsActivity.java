@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -19,6 +20,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
+import com.example.zephyr_lottery.repositories.EventRepository;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -32,14 +34,18 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
     private TextView detailsText;
     private ImageView eventImage;
+
     private Button backButton;
     private Button entrantsButton;
     private Button generateQrButton;
     private Button buttonDrawLottery;
+    private Button buttonNotifySelected; // NEW: Notify Selected button
 
     private int eventCode;
     private String userEmail;
     private Event event;
+
+    private final EventRepository repo = new EventRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,11 +65,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         userEmail = getIntent().getStringExtra("USER_EMAIL");
 
         detailsText = findViewById(R.id.text_placeholder);
+        eventImage = findViewById(R.id.imageView_orgEventDetails);
+
         backButton = findViewById(R.id.button_org_event_details_back);
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
-        eventImage = findViewById(R.id.imageView_orgEventDetails);
+        buttonNotifySelected = findViewById(R.id.button_notify_selected); // bind new button
 
         loadEventDetails();
 
@@ -94,7 +102,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 return;
             }
 
-            //save winners to database, send winners to dialogue
             event.setChosen_entrants(winners);
             db.collection("events").document(Integer.toString(eventCode))
                     .update("winners", winners)
@@ -108,6 +115,25 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         Log.e(TAG, "Failed to save winners", e);
                         Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
                     });
+        });
+
+        // NEW: Notify Selected Entrants
+        buttonNotifySelected.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("Notify selected entrants?")
+                    .setMessage("This will send notifications to all selected entrants.")
+                    .setPositiveButton("Notify", (d, w) -> {
+                        String eventId = Integer.toString(eventCode);
+                        repo.notifyAllSelectedEntrants(eventId,
+                                () -> Toast.makeText(this, "Notifications sent", Toast.LENGTH_SHORT).show(),
+                                e -> Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         });
     }
 
@@ -144,7 +170,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     int limit = e.getLimit();
                     int sampleSize = e.getSampleSize();
 
-                    //get image from class, convert to bitmap, display image.
                     String image_base64 = e.getPosterImage();
                     if (image_base64 != null) {
                         byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
@@ -192,8 +217,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         for (int i = 0; i < sampleSize; i++) {
             winners.add(entrants.get(i));
         }
-
-        //tvWinners.setText("Last draw: " + winners.size() + " selected");
 
         return winners;
     }

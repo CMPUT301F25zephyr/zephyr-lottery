@@ -173,4 +173,44 @@ public class EventRepository {
             if (onStatus != null) onStatus.accept(status);
         });
     }
+
+    /**
+     * US02.07.02: Notify all selected entrants (bulk notification).
+     * Filters participants by status = SELECTED (or CONFIRMED if your schema uses that).
+     */
+    public void notifyAllSelectedEntrants(String eventId,
+                                          Runnable onSuccess,
+                                          Consumer<Exception> onError) {
+        CollectionReference participantsRef = db.collection("events")
+                .document(eventId)
+                .collection("participants");
+
+        participantsRef.whereEqualTo("status", "SELECTED")
+                .get()
+                .addOnSuccessListener(query -> {
+                    if (query.isEmpty()) {
+                        Log.d("EventRepo", "No selected entrants to notify for event " + eventId);
+                        if (onSuccess != null) onSuccess.run();
+                        return;
+                    }
+
+                    for (DocumentSnapshot doc : query) {
+                        String userId = doc.getId();
+                        sendNotificationToUser(userId,
+                                "Congratulations! You have been selected for event " + eventId);
+                    }
+
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to fetch selected entrants", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
+
+    // Placeholder for actual FCM integration
+    private void sendNotificationToUser(String userId, String message) {
+        Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
+    }
+
 }

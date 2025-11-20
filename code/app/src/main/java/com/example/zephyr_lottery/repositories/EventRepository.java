@@ -2,6 +2,13 @@ package com.example.zephyr_lottery.repositories;
 
 import android.util.Log;
 
+import com.example.zephyr_lottery.models.WaitingListEntry;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+
 import com.example.zephyr_lottery.models.Participant;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
@@ -120,4 +127,71 @@ public class EventRepository {
             if (onStatus != null) onStatus.accept(status);
         });
     }
+    /**
+     * Add / update an entrant in the waiting list subcollection for an event,
+     * including optional latitude/longitude.
+     *
+     * Path: events/{eventId}/waitingList/{userId}
+     */
+    public void addEntrantLocationToWaitingList(String eventId,
+                                                String entrantId,
+                                                Double latitude,
+                                                Double longitude) {
+        if (eventId == null || entrantId == null) {
+            Log.e("EventRepository",
+                    "addEntrantLocationToWaitingList: eventId or entrantId is null. " +
+                            "eventId=" + eventId + ", entrantId=" + entrantId);
+            return; // avoid crashing Firestore when path is null
+        }
+
+        CollectionReference waitingRef = db.collection("events")
+                .document(eventId)
+                .collection("waitingList");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", entrantId);
+        data.put("latitude", latitude);
+        data.put("longitude", longitude);
+        data.put("joinedAt", Timestamp.now());
+
+        waitingRef.document(entrantId).set(data, SetOptions.merge());
+    }
+    /**
+     * One-shot read of all waiting-list entries (with locations if present)
+     * for a given event.
+     */
+    public void getWaitingListWithLocations(
+            String eventId,
+            Consumer<List<WaitingListEntry>> onSuccess,
+            Consumer<Exception> onError
+    ) {
+        CollectionReference ref = db.collection("events")
+                .document(eventId)
+                .collection("waitingList");
+
+        ref.get()
+                .addOnSuccessListener(query -> {
+                    List<WaitingListEntry> result = new ArrayList<>();
+                    for (DocumentSnapshot doc : query.getDocuments()) {
+                        WaitingListEntry entry = doc.toObject(WaitingListEntry.class);
+                        if (entry != null) {
+                            // Ensure userId is set even if not stored explicitly
+                            if (entry.getUserId() == null) {
+                                entry.setUserId(doc.getId());
+                            }
+                            result.add(entry);
+                        }
+                    }
+                    if (onSuccess != null) {
+                        onSuccess.accept(result);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to load waiting list", e);
+                    if (onError != null) {
+                        onError.accept(e);
+                    }
+                });
+    }
+
 }

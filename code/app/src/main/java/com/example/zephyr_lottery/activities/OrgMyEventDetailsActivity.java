@@ -26,6 +26,8 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button entrantsButton;
     private Button generateQrButton;
 
+    private Button viewMapButton;
+
     private int eventCode;
     private String userEmail;
 
@@ -50,6 +52,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         backButton = findViewById(R.id.button_org_event_details_back);
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
+        viewMapButton = findViewById(R.id.button_view_entrants_map);
 
         loadEventDetails();
 
@@ -65,6 +68,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
+        viewMapButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEntrantsMapActivity.class);
+            // eventCode is the int you already use for this event's document id
+            intent.putExtra("EVENT_ID", Integer.toString(eventCode));
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+
 
         generateQrButton.setOnClickListener(v ->
                 Toast.makeText(this, "QR generation not implemented yet", Toast.LENGTH_SHORT).show()

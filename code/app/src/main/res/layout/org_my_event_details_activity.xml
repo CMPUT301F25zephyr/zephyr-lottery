@@ -15,7 +15,7 @@
         android:layout_height="0dp"
         android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@+id/button_entrants"
+        app:layout_constraintBottom_toTopOf="@+id/button_generate_qr"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -33,31 +33,43 @@
     </ScrollView>
 
     <Button
-        android:id="@+id/button_entrants"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="View Entrants"
-        app:layout_constraintBottom_toTopOf="@+id/button_generate_qr"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5" />
-
-    <Button
         android:id="@+id/button_generate_qr"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Generate QR"
-        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_entrants"
+        android:layout_margin="8dp" />
+
+    <Button
+        android:id="@+id/button_entrants"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="View Entrants"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_view_entrants_map"
+        android:layout_margin="8dp" />
+
+    <Button
+        android:id="@+id/button_view_entrants_map"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="View Entrants on Map"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
+        android:layout_margin="8dp" />
 
     <Button
         android:id="@+id/button_org_event_details_back"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Back"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_margin="8dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

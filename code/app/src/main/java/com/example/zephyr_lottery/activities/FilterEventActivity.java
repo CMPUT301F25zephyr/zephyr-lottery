@@ -22,7 +22,7 @@ import java.util.Calendar;
 import java.util.Locale;
 
 /**
- * activity for filtering events
+ * activity for filtering events by various criteria
  * can be launched from different activities and returns to the calling activity
  */
 public class FilterEventActivity extends AppCompatActivity {
@@ -40,14 +40,14 @@ public class FilterEventActivity extends AppCompatActivity {
     private Button btnResetFilters;
     private Button btnConfirm;
 
-    // calendar for date picking
+    // Calendar for date picking
     private Calendar startBeforeCalendar;
     private Calendar startAfterCalendar;
     private Calendar endBeforeCalendar;
     private Calendar endAfterCalendar;
     private SimpleDateFormat dateFormat;
 
-    // filter values
+    // Filter values
     private String eventName = "";
     private String eventLocation = "";
     private Long startDateBefore = null;
@@ -115,21 +115,19 @@ public class FilterEventActivity extends AppCompatActivity {
     }
 
     private void setupClickListeners() {
-        // back button
-        btnBack.setOnClickListener(v -> {
-            returnToSourceActivity(false);
-        });
+        // Back button
+        btnBack.setOnClickListener(v -> returnToSourceActivity(false));
 
-        // date picker listeners
-        tvStartDateBefore.setOnClickListener(v -> showDatePicker(startBeforeCalendar, tvStartDateBefore, true));
-        tvStartDateAfter.setOnClickListener(v -> showDatePicker(startAfterCalendar, tvStartDateAfter, false));
-        tvEndDateBefore.setOnClickListener(v -> showDatePicker(endBeforeCalendar, tvEndDateBefore, true));
-        tvEndDateAfter.setOnClickListener(v -> showDatePicker(endAfterCalendar, tvEndDateAfter, false));
+        // Date picker listeners
+        tvStartDateBefore.setOnClickListener(v -> showDatePicker(startBeforeCalendar, tvStartDateBefore));
+        tvStartDateAfter.setOnClickListener(v -> showDatePicker(startAfterCalendar, tvStartDateAfter));
+        tvEndDateBefore.setOnClickListener(v -> showDatePicker(endBeforeCalendar, tvEndDateBefore));
+        tvEndDateAfter.setOnClickListener(v -> showDatePicker(endAfterCalendar, tvEndDateAfter));
 
-        // reset filters button
+        // Reset filters button
         btnResetFilters.setOnClickListener(v -> resetFilters());
 
-        // confirm button
+        // Confirm button
         btnConfirm.setOnClickListener(v -> applyFilters());
     }
 
@@ -189,7 +187,7 @@ public class FilterEventActivity extends AppCompatActivity {
         }
     }
 
-    private void showDatePicker(Calendar calendar, TextView textView, boolean isBefore) {
+    private void showDatePicker(Calendar calendar, TextView textView) {
         DatePickerDialog datePickerDialog = new DatePickerDialog(
                 this,
                 (view, year, month, dayOfMonth) -> {
@@ -226,11 +224,11 @@ public class FilterEventActivity extends AppCompatActivity {
     }
 
     private void applyFilters() {
-        // validate and collect filter values
+        // Validate and collect filter values
         eventName = etEventName.getText().toString().trim();
         eventLocation = etEventLocation.getText().toString().trim();
 
-        // parse price values
+        // Parse price values
         String priceMinStr = etPriceMin.getText().toString().trim();
         String priceMaxStr = etPriceMax.getText().toString().trim();
 
@@ -246,7 +244,7 @@ public class FilterEventActivity extends AppCompatActivity {
                 priceMax = null;
             }
 
-            // validate price range
+            // Validate price range
             if (priceMin != null && priceMax != null && priceMin > priceMax) {
                 Toast.makeText(this, "Minimum price cannot be greater than maximum price",
                         Toast.LENGTH_SHORT).show();
@@ -257,7 +255,7 @@ public class FilterEventActivity extends AppCompatActivity {
             return;
         }
 
-        // get date values if set
+        // Get date values if set
         if (!tvStartDateBefore.getText().toString().equals("[calendar input]")) {
             startDateBefore = startBeforeCalendar.getTimeInMillis();
         } else {
@@ -279,7 +277,7 @@ public class FilterEventActivity extends AppCompatActivity {
             endDateAfter = null;
         }
 
-        // return to source activity with filters applied
+        // Return to source activity with filters applied
         returnToSourceActivity(true);
     }
 
@@ -287,7 +285,7 @@ public class FilterEventActivity extends AppCompatActivity {
         Intent resultIntent = new Intent();
 
         if (applyFilters) {
-            // add all filter values to intent
+            // Add all filter values to intent
             if (eventName != null && !eventName.isEmpty()) {
                 resultIntent.putExtra("FILTER_EVENT_NAME", eventName);
             }

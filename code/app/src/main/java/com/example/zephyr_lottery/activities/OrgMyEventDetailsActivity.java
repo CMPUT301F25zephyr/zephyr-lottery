@@ -36,6 +36,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button entrantsButton;
     private Button generateQrButton;
     private Button buttonDrawLottery;
+    private Button editButton;
 
     private int eventCode;
     private String userEmail;
@@ -64,6 +65,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         generateQrButton = findViewById(R.id.button_generate_qr);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
         eventImage = findViewById(R.id.imageView_orgEventDetails);
+        editButton = findViewById(R.id.button_org_event_details_edit);
 
         loadEventDetails();
 
@@ -82,6 +84,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
         generateQrButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeOrgActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
+
+        editButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEditEventActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
             startActivity(intent);

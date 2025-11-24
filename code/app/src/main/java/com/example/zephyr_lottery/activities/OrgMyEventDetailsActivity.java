@@ -1,4 +1,4 @@
-package com.example.zephyr_lottery.activities;
+﻿package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.graphics.Bitmap;

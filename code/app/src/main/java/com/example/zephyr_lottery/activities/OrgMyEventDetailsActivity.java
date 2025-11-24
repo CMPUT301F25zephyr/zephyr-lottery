@@ -39,7 +39,8 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button entrantsButton;
     private Button generateQrButton;
     private Button buttonDrawLottery;
-    private Button buttonNotifySelected; // NEW: Notify Selected button
+    private Button buttonNotifySelected;   // Notify Selected Entrants
+    private Button editButton;             // Edit Event Details
 
     private int eventCode;
     private String userEmail;
@@ -71,16 +72,19 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
-        buttonNotifySelected = findViewById(R.id.button_notify_selected); // bind new button
+        buttonNotifySelected = findViewById(R.id.button_notify_selected);
+        editButton = findViewById(R.id.button_org_event_details_edit);
 
         loadEventDetails();
 
+        // Back button
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventsActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
 
+        // Entrants button
         entrantsButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
@@ -88,6 +92,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // Generate QR button
         generateQrButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeOrgActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
@@ -95,6 +100,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // Draw Lottery button
         buttonDrawLottery.setOnClickListener(v -> {
             ArrayList<String> winners = drawLotteryWinners();
             if (winners.isEmpty()) {
@@ -117,7 +123,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     });
         });
 
-        // NEW: Notify Selected Entrants
+        // Notify Selected Entrants button
         buttonNotifySelected.setOnClickListener(v -> {
             if (eventCode == -1) {
                 Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
@@ -134,6 +140,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
+        });
+
+        // Edit Event button
+        editButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, EditEventActivity.class);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
         });
     }
 

@@ -7,7 +7,9 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 /**
@@ -204,6 +206,98 @@ public class EventRepository {
                 })
                 .addOnFailureListener(e -> {
                     Log.e("EventRepo", "Failed to fetch selected entrants", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
+
+    /**
+     * US02.07.01: Notify all waiting list entrants (bulk notification).
+     * Filters participants by status = PENDING (waiting list).
+     */
+    public void notifyAllWaitingListEntrants(String eventId,
+                                             Runnable onSuccess,
+                                             Consumer<Exception> onError) {
+        CollectionReference participantsRef = db.collection("events")
+                .document(eventId)
+                .collection("participants");
+
+        participantsRef.whereEqualTo("status", "PENDING")
+                .get()
+                .addOnSuccessListener(query -> {
+                    if (query.isEmpty()) {
+                        Log.d("EventRepo", "No waiting list entrants to notify for event " + eventId);
+                        if (onSuccess != null) onSuccess.run();
+                        return;
+                    }
+
+                    for (DocumentSnapshot doc : query) {
+                        String userId = doc.getId();
+                        sendNotificationToUser(userId,
+                                "You are on the waiting list for event " + eventId);
+                    }
+
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to fetch waiting list entrants", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
+
+    /**
+     * US02.07.03: Notify all cancelled entrants (bulk notification).
+     * Filters participants by status = CANCELLED.
+     */
+    public void notifyAllCancelledEntrants(String eventId,
+                                           Runnable onSuccess,
+                                           Consumer<Exception> onError) {
+        CollectionReference participantsRef = db.collection("events")
+                .document(eventId)
+                .collection("participants");
+
+        participantsRef.whereEqualTo("status", "CANCELLED")
+                .get()
+                .addOnSuccessListener(query -> {
+                    if (query.isEmpty()) {
+                        Log.d("EventRepo", "No cancelled entrants to notify for event " + eventId);
+                        if (onSuccess != null) onSuccess.run();
+                        return;
+                    }
+
+                    for (DocumentSnapshot doc : query) {
+                        String userId = doc.getId();
+                        sendNotificationToUser(userId,
+                                "Your participation in event " + eventId + " has been cancelled");
+                    }
+
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to fetch cancelled entrants", e);
+                    if (onError != null) onError.accept(e);
+                });
+    }
+
+    /**
+     * US03.08.01: Log notification sent to audit trail for admin tracking.
+     * Records notification metadata for compliance and auditing purposes.
+     */
+    public void logNotificationSent(String eventId, String userId, String notificationType,
+                                    Runnable onSuccess, Consumer<Exception> onError) {
+        Map<String, Object> logEntry = new HashMap<>();
+        logEntry.put("eventId", eventId);
+        logEntry.put("userId", userId);
+        logEntry.put("notificationType", notificationType);
+        logEntry.put("sentAt", Timestamp.now());
+
+        db.collection("notificationLogs")
+                .add(logEntry)
+                .addOnSuccessListener(docRef -> {
+                    Log.d("EventRepo", "Logged notification: " + docRef.getId());
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to log notification", e);
                     if (onError != null) onError.accept(e);
                 });
     }

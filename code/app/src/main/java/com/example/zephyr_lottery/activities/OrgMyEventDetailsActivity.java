@@ -144,9 +144,9 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
         // Edit Event button
         editButton.setOnClickListener(v -> {
-            Intent intent = new Intent(OrgMyEventDetailsActivity.this, EditEventActivity.class);
-            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEditEventActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
             startActivity(intent);
         });
     }

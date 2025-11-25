@@ -13,43 +13,21 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * This class manages the statuses of participants and the accepting/declining of invitations.
+ * Manages participant statuses and invitation logic, and supports bulk notifications.
  */
 public class EventRepository {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-    /**
-     * Changes the status of a specified participant in an event
-     * @param eventId
-     *  The event ID that the participant is in the lottery for
-     * @param userId
-     *  The participant's ID
-     * @param status
-     *  The new status of the participant
-     * @return
-     *  Returns a Task when completed asynchronously
-     */
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
                 .document(eventId)
                 .collection("participants")
                 .document(userId);
-
         Participant p = new Participant(userId, status, null, Timestamp.now());
         return participantRef.set(p, SetOptions.merge());
     }
 
-    /**
-     * Accepts the invitation (called when the accept button from the notification screen is pushed)
-     * @param eventId
-     *  The ID of the event that the participant is accepting
-     * @param userId
-     *  The ID of the participant
-     * @param onSuccess
-     *  Runnable function if the invitation is properly accepted
-     * @param onError
-     *  Exception if the invitation is not properly accepted
-     */
+
     public void acceptInvitation(String eventId, String userId,
                                  Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CONFIRMED")
@@ -63,17 +41,7 @@ public class EventRepository {
                 });
     }
 
-    /**
-     * Declines the invitation, then invites next participant from the waiting list (called when the decline button from the notification screen is pushed)
-     * @param eventId
-     *  The ID of the event that the participant is declining
-     * @param userId
-     *  The ID of the participant
-     * @param onSuccess
-     *  Runnable function if the invitation is properly declined
-     * @param onError
-     *  Exception if the invitation is not properly declined
-     */
+
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CANCELLED")
@@ -87,22 +55,13 @@ public class EventRepository {
                 });
     }
 
-    /**
-     * Invites the next participant from the waiting list, based on the oldest joinedAt
-     * @param eventId
-     *  The ID of the event
-     * @param onSuccess
-     *  Runnable function if the invitation is successfully sent
-     * @param onError
-     *  Exception if the invitation is not properly sent
-     */
+
     public void inviteNextFromWaitingList(String eventId,
                                           Runnable onSuccess,
                                           Consumer<Exception> onError) {
         CollectionReference waitingRef = db.collection("events")
                 .document(eventId)
                 .collection("waitingList");
-
         waitingRef.orderBy("joinedAt", Query.Direction.ASCENDING)
                 .limit(1)
                 .get()
@@ -114,22 +73,17 @@ public class EventRepository {
                         return;
                     }
                     DocumentSnapshot next = docs.get(0);
-                    String nextUserId = next.getId(); // waitingList docId == userId (recommended)
-
+                    String nextUserId = next.getId();
                     WriteBatch batch = db.batch();
-
                     DocumentReference participantRef = db.collection("events")
                             .document(eventId)
                             .collection("participants")
                             .document(nextUserId);
-
                     Participant invited = new Participant(
                             nextUserId, "SELECTED", Timestamp.now(), Timestamp.now()
                     );
-
                     batch.set(participantRef, invited, SetOptions.merge());
-                    batch.delete(next.getReference()); // remove from waiting list
-
+                    batch.delete(next.getReference());
                     batch.commit()
                             .addOnSuccessListener(bv -> {
                                 Log.d("EventRepo", "Invited next entrant: " + nextUserId);
@@ -146,26 +100,12 @@ public class EventRepository {
                 });
     }
 
-    // Listen to participant status for current user to toggle UI
-
-    /**
-     * Sets a listener for any changes in status in the database, to update the list in real time
-     * @param eventId
-     *  The current ID of the event
-     * @param userId
-     *  The current user ID to track
-     * @param onStatus
-     *  Collects the status changes
-     * @return
-     *  Returns a ListenerRegistration that listens for status changes
-     */
     public ListenerRegistration listenToParticipantStatus(String eventId, String userId,
                                                           Consumer<String> onStatus) {
         DocumentReference ref = db.collection("events")
                 .document(eventId)
                 .collection("participants")
                 .document(userId);
-
         return ref.addSnapshotListener((snap, error) -> {
             if (error != null) {
                 Log.e("EventRepo", "Listen error", error);
@@ -177,8 +117,7 @@ public class EventRepository {
     }
 
     /**
-     * US02.07.02: Notify all selected entrants (bulk notification).
-     * Filters participants by status = SELECTED (or CONFIRMED if your schema uses that).
+     * US02.07.02: Notify all selected entrants and log notifications.
      */
     public void notifyAllSelectedEntrants(String eventId,
                                           Runnable onSuccess,
@@ -186,7 +125,6 @@ public class EventRepository {
         CollectionReference participantsRef = db.collection("events")
                 .document(eventId)
                 .collection("participants");
-
         participantsRef.whereEqualTo("status", "SELECTED")
                 .get()
                 .addOnSuccessListener(query -> {
@@ -200,6 +138,8 @@ public class EventRepository {
                         String userId = doc.getId();
                         sendNotificationToUser(userId,
                                 "Congratulations! You have been selected for event " + eventId);
+                        // Audit log
+                        logNotificationSent(eventId, userId, "SELECTED", null, null);
                     }
 
                     if (onSuccess != null) onSuccess.run();
@@ -211,8 +151,7 @@ public class EventRepository {
     }
 
     /**
-     * US02.07.01: Notify all waiting list entrants (bulk notification).
-     * Filters participants by status = PENDING (waiting list).
+     * US02.07.01: Notify all waiting list entrants and log notifications.
      */
     public void notifyAllWaitingListEntrants(String eventId,
                                              Runnable onSuccess,
@@ -234,6 +173,8 @@ public class EventRepository {
                         String userId = doc.getId();
                         sendNotificationToUser(userId,
                                 "You are on the waiting list for event " + eventId);
+                        // Audit log
+                        logNotificationSent(eventId, userId, "WAITING", null, null);
                     }
 
                     if (onSuccess != null) onSuccess.run();
@@ -245,8 +186,7 @@ public class EventRepository {
     }
 
     /**
-     * US02.07.03: Notify all cancelled entrants (bulk notification).
-     * Filters participants by status = CANCELLED.
+     * US02.07.03: Notify all cancelled entrants and log notifications.
      */
     public void notifyAllCancelledEntrants(String eventId,
                                            Runnable onSuccess,
@@ -268,6 +208,8 @@ public class EventRepository {
                         String userId = doc.getId();
                         sendNotificationToUser(userId,
                                 "Your participation in event " + eventId + " has been cancelled");
+                        // Audit log
+                        logNotificationSent(eventId, userId, "CANCELLED", null, null);
                     }
 
                     if (onSuccess != null) onSuccess.run();
@@ -279,8 +221,7 @@ public class EventRepository {
     }
 
     /**
-     * US03.08.01: Log notification sent to audit trail for admin tracking.
-     * Records notification metadata for compliance and auditing purposes.
+     * US03.08.01: Record a notification in an audit trail for admin review.
      */
     public void logNotificationSent(String eventId, String userId, String notificationType,
                                     Runnable onSuccess, Consumer<Exception> onError) {
@@ -306,5 +247,4 @@ public class EventRepository {
     private void sendNotificationToUser(String userId, String message) {
         Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
     }
-
 }

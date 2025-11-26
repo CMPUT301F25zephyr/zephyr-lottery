@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/popup_background">
+
+    <TextView
+        android:id="@+id/text_draw_winners"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Selected winners:"
+        android:textSize="18sp"
+        android:textColor="@android:color/black"
+        android:paddingBottom="16dp" />
+
+    <ListView
+        android:id="@+id/list_draw_winners"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/button_close_popup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Close" />
+
+</LinearLayout>
+
+

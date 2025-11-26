@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
@@ -27,6 +30,8 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
@@ -41,6 +46,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
 
     private static final String TAG = "EntEventDetail";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 2001;
+
 
     private Button back_event_details_button;
     private Button register_button;
@@ -89,6 +95,11 @@ public class EntEventDetailActivity extends AppCompatActivity {
         entrantNumbers = findViewById(R.id.textView_currententrants);
         lotteryWinners = findViewById(R.id.textView_lotterywinners);
         eventImageView = findViewById(R.id.imageView_ent_eventImage);
+        eventImageView = findViewById(R.id.imageView_ent_eventImage);
+
+        register_button = findViewById(R.id.button_register);
+        leave_button = findViewById(R.id.button_leave_waitlist);
+        back_event_details_button = findViewById(R.id.button_event_details_back);
 
         register_button = findViewById(R.id.button_register);
         leave_button = findViewById(R.id.button_leave_waitlist);
@@ -107,22 +118,18 @@ public class EntEventDetailActivity extends AppCompatActivity {
         }
         final String currentUserEmail = user_email;
 
-        // ----- Get event doc ID passed from list -----
-        // Your existing code uses "EVENT" extra as the document id/hash.
         String eventHash = getIntent().getStringExtra("EVENT");
+
         eventId = eventHash; // keep a copy for waitingList path
 
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
         docRef = eventsRef.document(eventHash);
 
-        // Load text + image for this event
         loadEventDetails();
 
-        final String finalUserEmail = currentUserEmail;
-        final String finalEventId = eventId;
+        String finalUserEmail = currentUserEmail;
 
-        // -------- JOIN WAITING LIST --------
         register_button.setOnClickListener(view -> {
             if (finalUserEmail == null || finalUserEmail.isEmpty()) {
                 Toast.makeText(
@@ -148,7 +155,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     entrantsList = new ArrayList<>();
                 } else {
                     entrantsList = new ArrayList<>(entrantsList);
-                    entrantsList.remove(null); // clean up bad data
+                    entrantsList.remove(null);
                 }
 
                 if (entrantsList.contains(finalUserEmail)) {
@@ -182,17 +189,13 @@ public class EntEventDetailActivity extends AppCompatActivity {
                                     "Joined waiting list.",
                                     Toast.LENGTH_LONG
                             ).show();
-
                             int newCount = currentSize + 1;
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
                             );
-
-                            // Also save where this entrant joined from (for map)
-                            saveWaitingListLocation(finalEventId, finalUserEmail);
                         })
                         .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error adding entrant", e);
+                            Log.e("EntEventDetail", "Error adding entrant", e);
                             Toast.makeText(
                                     EntEventDetailActivity.this,
                                     "Failed to join. Please try again.",
@@ -202,7 +205,6 @@ public class EntEventDetailActivity extends AppCompatActivity {
             });
         });
 
-        // -------- LEAVE WAITING LIST --------
         leave_button.setOnClickListener(view -> {
             if (finalUserEmail == null || finalUserEmail.isEmpty()) {
                 Toast.makeText(
@@ -257,7 +259,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                             );
                         })
                         .addOnFailureListener(e -> {
-                            Log.e(TAG, "Error removing entrant", e);
+                            Log.e("EntEventDetail", "Error removing entrant", e);
                             Toast.makeText(
                                     EntEventDetailActivity.this,
                                     "Failed to leave. Please try again.",
@@ -267,8 +269,23 @@ public class EntEventDetailActivity extends AppCompatActivity {
             });
         });
 
-        // -------- BACK BUTTON --------
+        String finalUserEmailForBack = currentUserEmail;
+        back_event_details_button.setOnClickListener(view -> {
+            String fromActivity = getIntent().getStringExtra("FROM_ACTIVITY");
+            Intent intent;
 
+            if ("MY_EVENTS".equals(fromActivity)) {
+                // Return to My Events
+                intent = new Intent(EntEventDetailActivity.this, EntEventHistoryActivity.class);
+            } else {
+                // Default: Return to All Events
+                intent = new Intent(EntEventDetailActivity.this, EntEventsActivity.class);
+            }
+
+            intent.putExtra("USER_EMAIL", finalUserEmailForBack);
+            startActivity(intent);
+            finish();
+        });
     }
 
     private void loadEventDetails() {
@@ -316,6 +333,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
             int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
             lotteryWinners.setText("Lottery Winners: " + sampleSize);
 
+            //get image from database, convert to bitmap, display image.
             String image_base64 = currentEvent.getString("posterImage");
             if (image_base64 != null) {
                 byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
@@ -324,7 +342,6 @@ public class EntEventDetailActivity extends AppCompatActivity {
             }
         });
     }
-
     /**
      * Save the entrant's approximate join location into:
      *   events/{eventId}/waitingList/{userEmail}

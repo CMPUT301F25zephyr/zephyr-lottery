@@ -58,7 +58,7 @@
             android:exported="false">
         </activity>
         <activity
-            android:name=".activities.QRCodeActivity"
+            android:name=".activities.QRCodeOrgActivity"
             android:exported="false">
         </activity>
         <activity
@@ -78,6 +78,23 @@
             android:exported="false">
         </activity>
         <activity android:name=".activities.OrgEntrantsMapActivity" />
+        <activity
+            android:name=".activities.EntEventHistoryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.AdmProfilesFilterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.DrawWinnersPopupActivity"
+            android:theme="@style/Theme.AppCompat.Dialog"
+            android:exported="false"/>
+        <activity
+            android:name=".activities.AdmEventDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".activities.OrgEditEventActivity"
+            android:exported="false">
+        </activity>
 
 
         <!-- Services -->

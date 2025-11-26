@@ -21,23 +21,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-/**
- * Repository for event-related Firestore operations.
- * Includes:
- *  - participant status handling
- *  - inviting next from waiting list
- *  - saving entrant locations in waitingList subcollection
- *  - loading waiting list locations for the map
- */
 public class EventRepository {
 
     private static final String TAG = "EventRepository";
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
-
-    // -------------------------------------------------------------------------
-    // Participant / invitation logic (used by other stories)
-    // -------------------------------------------------------------------------
 
     // Update participant status (accepted/declined)
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
@@ -50,35 +38,63 @@ public class EventRepository {
         return participantRef.set(p, SetOptions.merge());
     }
 
-    // Accept invitation
+    /**
+     * Accepts the invitation (called when the accept button from the notification screen is pushed)
+     * @param eventId
+     *  The ID of the event that the participant is accepting
+     * @param userId
+     *  The ID of the participant
+     * @param onSuccess
+     *  Runnable function if the invitation is properly accepted
+     * @param onError
+     *  Exception if the invitation is not properly accepted
+     */
     public void acceptInvitation(String eventId, String userId,
                                  Runnable onSuccess, Consumer<Exception> onError) {
-        updateParticipantStatus(eventId, userId, "accepted")
+        updateParticipantStatus(eventId, userId, "CONFIRMED")
                 .addOnSuccessListener(v -> {
-                    Log.d(TAG, "Accepted invitation");
+                    Log.d("EventRepo", "Accepted invitation");
                     if (onSuccess != null) onSuccess.run();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Accept failed", e);
+                    Log.e("EventRepo", "Accept failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }
 
-    // Decline invitation, then invite next from waiting list
+    /**
+     * Declines the invitation, then invites next participant from the waiting list (called when the decline button from the notification screen is pushed)
+     * @param eventId
+     *  The ID of the event that the participant is declining
+     * @param userId
+     *  The ID of the participant
+     * @param onSuccess
+     *  Runnable function if the invitation is properly declined
+     * @param onError
+     *  Exception if the invitation is not properly declined
+     */
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
-        updateParticipantStatus(eventId, userId, "declined")
+        updateParticipantStatus(eventId, userId, "CANCELLED")
                 .addOnSuccessListener(v -> {
-                    Log.d(TAG, "Declined invitation");
+                    Log.d("EventRepo", "Declined invitation");
                     inviteNextFromWaitingList(eventId, onSuccess, onError);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Decline failed", e);
+                    Log.e("EventRepo", "Decline failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }
 
-    // Invite next waiting list entrant (FIFO by joinedAt)
+    /**
+     * Invites the next participant from the waiting list, based on the oldest joinedAt
+     * @param eventId
+     *  The ID of the event
+     * @param onSuccess
+     *  Runnable function if the invitation is successfully sent
+     * @param onError
+     *  Exception if the invitation is not properly sent
+     */
     public void inviteNextFromWaitingList(String eventId,
                                           Runnable onSuccess,
                                           Consumer<Exception> onError) {
@@ -92,12 +108,12 @@ public class EventRepository {
                 .addOnSuccessListener(query -> {
                     List<DocumentSnapshot> docs = query.getDocuments();
                     if (docs.isEmpty()) {
-                        Log.d(TAG, "No waiting list entrants");
+                        Log.d("EventRepo", "No waiting list entrants");
                         if (onSuccess != null) onSuccess.run();
                         return;
                     }
                     DocumentSnapshot next = docs.get(0);
-                    String nextUserId = next.getId(); // waitingList docId == userId
+                    String nextUserId = next.getId(); // waitingList docId == userId (recommended)
 
                     WriteBatch batch = db.batch();
 
@@ -107,7 +123,7 @@ public class EventRepository {
                             .document(nextUserId);
 
                     Participant invited = new Participant(
-                            nextUserId, "invited", Timestamp.now(), Timestamp.now()
+                            nextUserId, "SELECTED", Timestamp.now(), Timestamp.now()
                     );
 
                     batch.set(participantRef, invited, SetOptions.merge());
@@ -115,21 +131,33 @@ public class EventRepository {
 
                     batch.commit()
                             .addOnSuccessListener(bv -> {
-                                Log.d(TAG, "Invited next entrant: " + nextUserId);
+                                Log.d("EventRepo", "Invited next entrant: " + nextUserId);
                                 if (onSuccess != null) onSuccess.run();
                             })
                             .addOnFailureListener(e -> {
-                                Log.e(TAG, "Failed inviting next entrant", e);
+                                Log.e("EventRepo", "Failed inviting next entrant", e);
                                 if (onError != null) onError.accept(e);
                             });
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "Read waiting list failed", e);
+                    Log.e("EventRepo", "Read waiting list failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }
 
     // Listen to participant status for current user to toggle UI
+
+    /**
+     * Sets a listener for any changes in status in the database, to update the list in real time
+     * @param eventId
+     *  The current ID of the event
+     * @param userId
+     *  The current user ID to track
+     * @param onStatus
+     *  Collects the status changes
+     * @return
+     *  Returns a ListenerRegistration that listens for status changes
+     */
     public ListenerRegistration listenToParticipantStatus(String eventId, String userId,
                                                           Consumer<String> onStatus) {
         DocumentReference ref = db.collection("events")
@@ -139,7 +167,7 @@ public class EventRepository {
 
         return ref.addSnapshotListener((snap, error) -> {
             if (error != null) {
-                Log.e(TAG, "Listen error", error);
+                Log.e("EventRepo", "Listen error", error);
                 return;
             }
             String status = (snap != null && snap.exists()) ? snap.getString("status") : null;

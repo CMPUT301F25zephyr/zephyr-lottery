@@ -1,8 +1,13 @@
 package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Base64;
+import android.util.Log;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -17,18 +22,26 @@ import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
+    private static final String TAG = "OrgMyEventDetails";
 
     private TextView detailsText;
+    private ImageView eventImage;
     private Button backButton;
     private Button entrantsButton;
     private Button generateQrButton;
+    private Button buttonDrawLottery;
+    private Button editButton;
     private Button viewMapButton;
 
     private int eventCode;
     private String userEmail;
+    private Event event;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +65,9 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
         viewMapButton = findViewById(R.id.button_view_entrants_map);
+        buttonDrawLottery = findViewById(R.id.button_draw_lottery);
+        eventImage = findViewById(R.id.imageView_orgEventDetails);
+        editButton = findViewById(R.id.button_org_event_details_edit);
 
         loadEventDetails();
 
@@ -83,9 +99,42 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        generateQrButton.setOnClickListener(v ->
-                Toast.makeText(this, "QR generation not implemented yet", Toast.LENGTH_SHORT).show()
-        );
+        generateQrButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeOrgActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
+
+        editButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEditEventActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
+
+        buttonDrawLottery.setOnClickListener(v -> {
+            ArrayList<String> winners = drawLotteryWinners();
+            if (winners.isEmpty()) {
+                Toast.makeText(this, "No entrants to draw from.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            //save winners to database, send winners to dialogue
+            event.setChosen_entrants(winners);
+            db.collection("events").document(Integer.toString(eventCode))
+                    .update("winners", winners)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(OrgMyEventDetailsActivity.this, DrawWinnersPopupActivity.class);
+                        intent.putStringArrayListExtra("WINNERS", winners);
+                        startActivity(intent);
+                    })
+                    .addOnFailureListener(e -> {
+                        Log.e(TAG, "Failed to save winners", e);
+                        Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
+                    });
+        });
     }
 
     private void loadEventDetails() {
@@ -109,6 +158,8 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         return;
                     }
 
+                    event = e;
+
                     String name = e.getName() != null ? e.getName() : "";
                     String time = e.getTime() != null ? e.getTime() : "";
                     String weekday = e.getWeekdayString() != null ? e.getWeekdayString() : "";
@@ -118,6 +169,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     float price = e.getPrice();
                     int limit = e.getLimit();
                     int sampleSize = e.getSampleSize();
+
+                    //get image from class, convert to bitmap, display image.
+                    String image_base64 = e.getPosterImage();
+                    if (image_base64 != null) {
+                        byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
+                        Bitmap image_bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.length);
+                        eventImage.setImageBitmap(image_bitmap);
+                    }
 
                     String text = ""
                             + "Name: " + name + "\n"
@@ -134,5 +193,34 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Failed to load event", Toast.LENGTH_SHORT).show()
                 );
+    }
+
+    private ArrayList<String> drawLotteryWinners() {
+        ArrayList<String> winners = new ArrayList<>();
+
+        if (event == null) {
+            Toast.makeText(this, "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+            return winners;
+        }
+
+        if (event.getEntrants() == null || event.getEntrants().isEmpty()) {
+            return winners;
+        }
+
+        ArrayList<String> entrants = new ArrayList<>(event.getEntrants());
+        int sampleSize = event.getSampleSize();
+
+        if (sampleSize <= 0 || sampleSize > entrants.size()) {
+            sampleSize = entrants.size();
+        }
+
+        Collections.shuffle(entrants);
+        for (int i = 0; i < sampleSize; i++) {
+            winners.add(entrants.get(i));
+        }
+
+        //tvWinners.setText("Last draw: " + winners.size() + " selected");
+
+        return winners;
     }
 }

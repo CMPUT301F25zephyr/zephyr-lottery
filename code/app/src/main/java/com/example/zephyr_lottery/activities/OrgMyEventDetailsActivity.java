@@ -84,7 +84,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // ✅ View entrants on map: pass Firestore document ID as a String
+        // View entrants on map: pass Firestore document ID as a String
         viewMapButton.setOnClickListener(v -> {
             if (eventCode == -1) {
                 Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();

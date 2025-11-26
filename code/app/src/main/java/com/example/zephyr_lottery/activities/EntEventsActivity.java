@@ -59,6 +59,8 @@ public class EntEventsActivity extends AppCompatActivity {
         eventArrayList = new ArrayList<>();
         eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
         eventListView.setAdapter(eventArrayAdapter);
+        eventList = eventArrayList;
+        eventAdapter = (EventArrayAdapter) eventArrayAdapter;
         loadEvents();
 
         //listener. updates array when created and when database changes.
@@ -130,13 +132,21 @@ public class EntEventsActivity extends AppCompatActivity {
                 .orderBy("date_created", Query.Direction.DESCENDING)
                 .get()
                 .addOnSuccessListener(query -> {
+                    if (eventList == null || eventAdapter == null) {
+                        // Just a safety guard; they *should* be initialized in onCreate.
+                        Log.e("EntEventsActivity", "eventList or eventAdapter is null in loadEvents()");
+                        return;
+                    }
+
                     eventList.clear();
 
                     for (DocumentSnapshot snap : query.getDocuments()) {
                         Event e = snap.toObject(Event.class);
                         if (e == null) continue;
 
-                        e.setEventId(snap.getId());  // 🔥 REQUIRED
+                        // If you have eventId in Event, you can keep this:
+                        // e.setEventId(snap.getId());
+
                         eventList.add(e);
                     }
 

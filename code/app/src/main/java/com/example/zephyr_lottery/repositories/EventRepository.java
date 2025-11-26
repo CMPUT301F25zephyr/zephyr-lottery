@@ -6,6 +6,7 @@ import com.example.zephyr_lottery.models.Participant;
 import com.example.zephyr_lottery.models.WaitingListEntry;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
+import com.google.firebase.firestore.*;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -21,12 +22,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+/**
+ * This class manages the statuses of participants and the accepting/declining of invitations.
+ */
 public class EventRepository {
 
     private static final String TAG = "EventRepository";
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    /**
+     * Changes the status of a specified participant in an event
+     * @param eventId
+     *  The event ID that the participant is in the lottery for
+     * @param userId
+     *  The participant's ID
+     * @param status
+     *  The new status of the participant
+     * @return
+     *  Returns a Task when completed asynchronously
+     */
     // Update participant status (accepted/declined)
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
@@ -175,9 +190,8 @@ public class EventRepository {
         });
     }
 
-    // -------------------------------------------------------------------------
+
     // Waiting-list location logic  (US 02.02.02 map story)
-    // -------------------------------------------------------------------------
 
     /**
      * Add / update an entrant in the waiting list subcollection for an event,

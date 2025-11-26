@@ -95,23 +95,43 @@ public class Event {
     public String getOrganizer_email() {
         return organizer_email;
     }
-
+    /**
+     * Sets the organizer email for the event
+     * @param organizer_email
+     * The email to set as the organizer of the event
+     */
     public void setOrganizer_email(String organizer_email) {
         this.organizer_email = organizer_email;
     }
-
+    /**
+     * Obtains the name of the event
+     * @return
+     * Returns the name as a String
+     */
     public String getName() {
         return name;
     }
-
+    /**
+     * Changes the name of the event
+     * @param name
+     * The new name of the event
+     */
     public void setName(String name) {
         this.name = name;
     }
-
+    /**
+     * Obtains the recurring weekday integer on which this event is held
+     * @return
+     * Returns the weekday as an Integer
+     */
     public int getWeekday() {
         return weekday;
     }
-
+    /**
+     * Obtains the recurring weekday on which this event is held
+     * @return
+     * Returns the weekday as a String
+     */
     public String getWeekdayString() {
         String[] weekdaysStr = {
                 "Monday", "Tuesday", "Wednesday",

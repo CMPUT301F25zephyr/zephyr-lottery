@@ -1,14 +1,23 @@
 package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,15 +29,22 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class AddEventActivity extends AppCompatActivity {
 
     private Button save_event_button;
     private Button back_add_event_button;
+    private Button upload_image_button;
+    private ImageView upload_image_view;
 
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
+
+    //image poster
+    private Bitmap image_bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +79,33 @@ public class AddEventActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        //activity for the selecting images from gallery thing.
+        ActivityResultLauncher<Intent> activityResultLauncher =
+                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
+                    @Override
+                    public void onActivityResult(ActivityResult result) {
+                        if (result.getResultCode() == AddEventActivity.RESULT_OK){
+                            Intent data = result.getData();
+                            Uri uri = data.getData();
+
+                            try {
+                                image_bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+                                upload_image_view.setImageBitmap(image_bitmap);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                });
+
+        //listener for the image. click image to select from gallery. goes to activity above
+        upload_image_view = findViewById(R.id.add_event_image_poster);
+        upload_image_view.setOnClickListener(view ->{
+            Intent img_intent = new Intent(Intent.ACTION_PICK);
+            img_intent.setData(MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+            activityResultLauncher.launch(img_intent);
+        });
+
         save_event_button = findViewById(R.id.button_save_event_add_event);
         save_event_button.setOnClickListener(view -> {
             String event_name = ((EditText) findViewById(R.id.add_event_name)).getText().toString();
@@ -73,6 +116,7 @@ public class AddEventActivity extends AppCompatActivity {
             String event_description = ((EditText) findViewById(R.id.add_event_description)).getText().toString();
             String event_sample_size = ((EditText) findViewById(R.id.add_event_sample_size)).getText().toString();
             String event_period = ((EditText) findViewById(R.id.add_event_period)).getText().toString();
+            String base64_image = bitmap_to_base64(image_bitmap); //if no image added, image_bitmap = null
 
             int event_limit = 0;
             String limitText = ((EditText) findViewById(R.id.add_event_ent_limit)).getText().toString();
@@ -95,6 +139,11 @@ public class AddEventActivity extends AppCompatActivity {
                 return;
             }
 
+            if (base64_image != null && base64_image.length() > 500000) {
+                Toast.makeText(this, "Image too large, please select a smaller image", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             Event event = new Event(event_name, event_time, user_email);
             event.setWeekdayString(event_weekday);
             event.setPrice(Float.parseFloat(event_price));
@@ -103,6 +152,7 @@ public class AddEventActivity extends AppCompatActivity {
             event.setPeriod(event_period);
             event.setLimit(event_limit);
             event.setEntrants(new ArrayList<>());
+            event.setPosterImage(base64_image);
 
             int sampleSize = 0;
             if (!event_sample_size.isEmpty()) {
@@ -131,5 +181,18 @@ public class AddEventActivity extends AppCompatActivity {
         } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private String bitmap_to_base64(Bitmap bitmap_image) {
+        if (bitmap_image == null) {
+            return null;
+        }
+
+        //convert image
+        ByteArrayOutputStream byteArray_image = new ByteArrayOutputStream();
+        bitmap_image.compress(Bitmap.CompressFormat.JPEG, 100, byteArray_image);
+        byte[] byteArray = byteArray_image.toByteArray();
+
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
     }
 }

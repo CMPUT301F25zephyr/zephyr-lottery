@@ -95,6 +95,10 @@
         <activity
             android:name=".activities.FilterEventActivity"
             android:exported="false" />
+        <activity
+            android:name=".activities.OrgEditEventActivity"
+            android:exported="false">
+        </activity>
 
 
         <!-- Services -->

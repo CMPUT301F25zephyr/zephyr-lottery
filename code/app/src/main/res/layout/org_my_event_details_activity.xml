@@ -19,17 +19,35 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
-        <TextView
-            android:id="@+id/text_placeholder"
+        <LinearLayout
+            android:id="@+id/org_myeventdetails_linlayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="start"
-            android:lineSpacingExtra="4dp"
-            android:padding="20dp"
-            android:scrollbars="vertical"
-            android:text="Loading event details..."
-            android:textColor="@android:color/black"
-            android:textSize="18sp" />
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <TextView
+                android:id="@+id/text_placeholder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start"
+                android:lineSpacingExtra="4dp"
+                android:padding="20dp"
+                android:scrollbars="vertical"
+                android:text="Loading event details..."
+                android:textColor="@android:color/black"
+                android:textSize="18sp" />
+
+            <ImageView
+                android:id="@+id/imageView_orgEventDetails"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:srcCompat="@android:drawable/ic_menu_gallery"
+                app:layout_constraintBottom_toTopOf="@+id/button_entrants"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/scrollView"/>
+        </LinearLayout>
     </ScrollView>
 
     <Button
@@ -47,9 +65,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Generate QR"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/button_org_event_details_back"
+        app:layout_constraintStart_toEndOf="@+id/button_org_event_details_edit"
         app:layout_constraintTop_toBottomOf="@+id/button_entrants" />
 
     <Button
@@ -58,6 +76,16 @@
         android:layout_height="wrap_content"
         android:text="Back"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_org_event_details_edit" />
+
+    <Button
+        android:id="@+id/button_org_event_details_edit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Edit Event"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
         app:layout_constraintEnd_toStartOf="@+id/button_generate_qr"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_draw_lottery" />
@@ -67,7 +95,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Draw Lottery"
-        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_edit"
         app:layout_constraintEnd_toStartOf="@+id/button_entrants"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scrollView" />

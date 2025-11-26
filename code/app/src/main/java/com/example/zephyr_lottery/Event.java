@@ -24,6 +24,7 @@ public class Event {
     private LocalDateTime lott_start_date;
     private LocalDateTime lott_end_date;
     private int sampleSize;
+    private String posterImage; //image in base64
 
     public Event() {
         entrants = new ArrayList<>();
@@ -378,5 +379,23 @@ public class Event {
      */
     public void setLimit(int limit) {
         this.limit = limit;
+    }
+
+    /**
+     * Get the poster image of this event (null if it doesn't exist)
+     * @return
+     * Poster image in base64
+     */
+    public String getPosterImage() {
+        return posterImage;
+    }
+
+    /**
+     * set the poster image of this event to the argument
+     * @param posterImage
+     * Poster image in base64
+     */
+    public void setPosterImage(String posterImage) {
+        this.posterImage = posterImage;
     }
 }

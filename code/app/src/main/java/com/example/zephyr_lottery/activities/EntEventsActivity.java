@@ -3,6 +3,9 @@ package com.example.zephyr_lottery.activities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -30,6 +33,8 @@ public class EntEventsActivity extends AppCompatActivity {
     private ListView eventListView;
     private ArrayList<Event> eventArrayList;
     private ArrayAdapter<Event> eventArrayAdapter;
+    private ArrayList<Event> eventList;
+    private EventArrayAdapter eventAdapter;
 
     //databases
     private FirebaseFirestore db;
@@ -109,26 +114,6 @@ public class EntEventsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-        private void loadEvents() {
-            db.collection("events")
-                    .orderBy("date_created", Query.Direction.DESCENDING)
-                    .get()
-                    .addOnSuccessListener(query -> {
-                        eventList.clear();
-
-                        for (DocumentSnapshot snap : query.getDocuments()) {
-                            Event e = snap.toObject(Event.class);
-                            if (e == null) continue;
-
-                            e.setEventId(snap.getId());  // 🔥 REQUIRED
-                            eventList.add(e);
-                        }
-
-                        eventAdapter.notifyDataSetChanged();
-                    })
-                    .addOnFailureListener(e ->
-                            Log.e("EntEventsActivity", "Failed loading events", e)
-                    );
 
 
         //listener for button to return to homescreen.
@@ -139,4 +124,27 @@ public class EntEventsActivity extends AppCompatActivity {
             startActivity(intent);
         });
     }
-}
+
+    private void loadEvents() {
+        db.collection("events")
+                .orderBy("date_created", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(query -> {
+                    eventList.clear();
+
+                    for (DocumentSnapshot snap : query.getDocuments()) {
+                        Event e = snap.toObject(Event.class);
+                        if (e == null) continue;
+
+                        e.setEventId(snap.getId());  // 🔥 REQUIRED
+                        eventList.add(e);
+                    }
+
+                    eventAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e ->
+                        Log.e("EntEventsActivity", "Failed loading events", e)
+                );
+    }
+    }
+

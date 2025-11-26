@@ -32,10 +32,15 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
+import android.location.Location;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class EntEventDetailActivity extends AppCompatActivity {
+
+    private static final String TAG = "EntEventDetail";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 2001;
 
     private Button back_event_details_button;
     private Button register_button;
@@ -56,22 +61,24 @@ public class EntEventDetailActivity extends AppCompatActivity {
     private CollectionReference eventsRef;
     private DocumentReference docRef;
 
-    // 🔹 Added for location + waiting list
-    private static final int LOCATION_PERMISSION_REQUEST_CODE = 2001; // not strictly needed, but kept if you later request perms
+    // For saving entrant location
     private FusedLocationProviderClient fusedLocationClient;
     private EventRepository eventRepository;
+    private String eventId;   // Firestore document ID for this event
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.ent_eventdetail_activity);
+
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
 
+        // ----- UI refs -----
         title = findViewById(R.id.textView_ed_title);
         closingDate = findViewById(R.id.textView_closingdate);
         startEnd = findViewById(R.id.textView_startenddates);
@@ -87,10 +94,10 @@ public class EntEventDetailActivity extends AppCompatActivity {
         leave_button = findViewById(R.id.button_leave_waitlist);
         back_event_details_button = findViewById(R.id.button_event_details_back);
 
-        // 🔹 Init location + repo
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         eventRepository = new EventRepository();
 
+        // ----- Get user email -----
         String user_email = getIntent().getStringExtra("USER_EMAIL");
         if (user_email == null || user_email.isEmpty()) {
             FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
@@ -100,16 +107,22 @@ public class EntEventDetailActivity extends AppCompatActivity {
         }
         final String currentUserEmail = user_email;
 
+        // ----- Get event doc ID passed from list -----
+        // Your existing code uses "EVENT" extra as the document id/hash.
         String eventHash = getIntent().getStringExtra("EVENT");
+        eventId = eventHash; // keep a copy for waitingList path
 
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
         docRef = eventsRef.document(eventHash);
 
+        // Load text + image for this event
         loadEventDetails();
 
-        String finalUserEmail = currentUserEmail;
+        final String finalUserEmail = currentUserEmail;
+        final String finalEventId = eventId;
 
+        // -------- JOIN WAITING LIST --------
         register_button.setOnClickListener(view -> {
             if (finalUserEmail == null || finalUserEmail.isEmpty()) {
                 Toast.makeText(
@@ -135,7 +148,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     entrantsList = new ArrayList<>();
                 } else {
                     entrantsList = new ArrayList<>(entrantsList);
-                    entrantsList.remove(null);
+                    entrantsList.remove(null); // clean up bad data
                 }
 
                 if (entrantsList.contains(finalUserEmail)) {
@@ -169,17 +182,17 @@ public class EntEventDetailActivity extends AppCompatActivity {
                                     "Joined waiting list.",
                                     Toast.LENGTH_LONG
                             ).show();
+
                             int newCount = currentSize + 1;
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
                             );
 
-                            // 🔹 NEW: save where this entrant joined from (email + location)
-                            // eventHash is the Firestore doc ID for this event
-                            saveWaitingListLocation(eventHash, finalUserEmail);
+                            // Also save where this entrant joined from (for map)
+                            saveWaitingListLocation(finalEventId, finalUserEmail);
                         })
                         .addOnFailureListener(e -> {
-                            Log.e("EntEventDetail", "Error adding entrant", e);
+                            Log.e(TAG, "Error adding entrant", e);
                             Toast.makeText(
                                     EntEventDetailActivity.this,
                                     "Failed to join. Please try again.",
@@ -189,6 +202,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
             });
         });
 
+        // -------- LEAVE WAITING LIST --------
         leave_button.setOnClickListener(view -> {
             if (finalUserEmail == null || finalUserEmail.isEmpty()) {
                 Toast.makeText(
@@ -243,7 +257,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                             );
                         })
                         .addOnFailureListener(e -> {
-                            Log.e("EntEventDetail", "Error removing entrant", e);
+                            Log.e(TAG, "Error removing entrant", e);
                             Toast.makeText(
                                     EntEventDetailActivity.this,
                                     "Failed to leave. Please try again.",
@@ -252,6 +266,8 @@ public class EntEventDetailActivity extends AppCompatActivity {
                         });
             });
         });
+
+        // -------- BACK BUTTON --------
 
     }
 
@@ -300,7 +316,6 @@ public class EntEventDetailActivity extends AppCompatActivity {
             int sampleSize = sampleSizeLong != null ? sampleSizeLong.intValue() : 0;
             lotteryWinners.setText("Lottery Winners: " + sampleSize);
 
-            //get image from database, convert to bitmap, display image.
             String image_base64 = currentEvent.getString("posterImage");
             if (image_base64 != null) {
                 byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
@@ -311,28 +326,28 @@ public class EntEventDetailActivity extends AppCompatActivity {
     }
 
     /**
-     * Save entrant's join location for this event in:
+     * Save the entrant's approximate join location into:
      *   events/{eventId}/waitingList/{userEmail}
-     * This is used later by the organizer map (OrgEntrantsMapActivity).
      */
     private void saveWaitingListLocation(String eventId, String userEmail) {
         if (eventId == null || userEmail == null) {
-            Log.e("EntEventDetail", "saveWaitingListLocation: eventId or userEmail is null");
+            Log.e(TAG, "saveWaitingListLocation: eventId or userEmail is null");
             return;
         }
 
-        if (fusedLocationClient == null) {
-            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        }
-
-        // If no runtime permission, just save without coordinates (still records the entrant)
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
                         != PackageManager.PERMISSION_GRANTED) {
 
-            Log.w("EntEventDetail", "Location permission not granted, saving without location");
-            eventRepository.addEntrantLocationToWaitingList(eventId, userEmail, null, null);
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{
+                            Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION
+                    },
+                    LOCATION_PERMISSION_REQUEST_CODE
+            );
             return;
         }
 
@@ -340,28 +355,16 @@ public class EntEventDetailActivity extends AppCompatActivity {
                 .addOnSuccessListener(location -> {
                     Double lat = null;
                     Double lng = null;
+
                     if (location != null) {
                         lat = location.getLatitude();
                         lng = location.getLongitude();
-                    } else {
-                        Log.w("EntEventDetail", "Location is null, saving without lat/lng");
                     }
 
-                    eventRepository.addEntrantLocationToWaitingList(
-                            eventId,
-                            userEmail,
-                            lat,
-                            lng
-                    );
+                    eventRepository.addEntrantLocationToWaitingList(eventId, userEmail, lat, lng);
                 })
-                .addOnFailureListener(e -> {
-                    Log.e("EntEventDetail", "Failed to get device location", e);
-                    eventRepository.addEntrantLocationToWaitingList(
-                            eventId,
-                            userEmail,
-                            null,
-                            null
-                    );
-                });
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to get device location", e)
+                );
     }
 }

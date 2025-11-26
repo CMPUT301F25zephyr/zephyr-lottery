@@ -17,8 +17,6 @@ import com.mapbox.geojson.Point;
 import com.mapbox.maps.CameraOptions;
 import com.mapbox.maps.MapView;
 import com.mapbox.maps.Style;
-
-// v10 annotation imports
 import com.mapbox.maps.plugin.annotation.AnnotationConfig;
 import com.mapbox.maps.plugin.annotation.AnnotationPlugin;
 import com.mapbox.maps.plugin.annotation.AnnotationPluginImplKt;
@@ -52,14 +50,12 @@ public class OrgEntrantsMapActivity extends AppCompatActivity {
         mapView = findViewById(R.id.mapView);
         eventRepository = new EventRepository();
 
-        // get eventId from Intent (same as before)
+        // OrgMyEventDetailsActivity sends EVENT_ID as a String
         eventId = getIntent().getStringExtra("EVENT_ID");
-
         if (eventId == null) {
             Log.e(TAG, "eventId is null, cannot load map");
         }
 
-        // load map style, then query Firestore and place entrant dots
         mapView.getMapboxMap().loadStyleUri(
                 Style.MAPBOX_STREETS,
                 style -> loadEntrantMarkers()
@@ -79,19 +75,13 @@ public class OrgEntrantsMapActivity extends AppCompatActivity {
         );
     }
 
-    /**
-     * Called when Firestore returns the waiting-list entries that have lat/lng.
-     */
     private void addMarkersToMap(@NonNull List<WaitingListEntry> entries) {
         if (entries.isEmpty()) {
             Log.d(TAG, "No entrants with location to display.");
             return;
         }
 
-        // Get the v10 AnnotationPlugin from the MapView
         AnnotationPlugin annotationApi = AnnotationPluginImplKt.getAnnotations(mapView);
-
-        // Create a CircleAnnotationManager for this map
         CircleAnnotationManager circleManager =
                 CircleAnnotationManagerKt.createCircleAnnotationManager(
                         annotationApi,
@@ -123,9 +113,6 @@ public class OrgEntrantsMapActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Center camera roughly on the entrants (average lat/lng) with medium zoom.
-     */
     private void zoomToPoints(@NonNull List<Point> points) {
         double sumLat = 0;
         double sumLng = 0;

@@ -45,6 +45,7 @@ public class HomeEntActivity extends AppCompatActivity {
     private FirebaseAuth mAuth;
     private String userEmail;
     private ArrayList<Integer> incoming_invitations;
+    private ActivityResultLauncher<ScanOptions> scanLauncher;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -130,7 +131,7 @@ public class HomeEntActivity extends AppCompatActivity {
         String currentUserEmail = mAuth.getCurrentUser().getEmail();
 
         db.collection("accounts")
-                .document(userEmail)
+                .document(currentUserEmail)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     UserProfile profile = documentSnapshot.toObject(UserProfile.class);

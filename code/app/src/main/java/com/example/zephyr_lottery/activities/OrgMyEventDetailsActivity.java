@@ -142,7 +142,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             DocumentReference doc_ref = usersRef.document(email);
             doc_ref.get().addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
-
                     //user has been found. now we add to their list of invitations
                     DocumentSnapshot document = task.getResult();
 
@@ -159,9 +158,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     } else {
                         Log.e(TAG, "account not found for: " + email + ":(");
                     }
-
-                    //now we update the invitations in the database
-                    doc_ref.update("invitationCodes", profile.getInvitationCodes());
 
                 } else {
                     Log.e("firestore stuff", "error getting user: " + email + "!!!!!!!!! bad!", task.getException());

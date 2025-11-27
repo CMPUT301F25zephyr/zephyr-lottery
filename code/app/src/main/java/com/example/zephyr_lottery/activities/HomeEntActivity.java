@@ -21,7 +21,10 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.util.ArrayList;
 
 public class HomeEntActivity extends AppCompatActivity {
     private static final int NOTIFICATION_PERMISSION_CODE = 101;
@@ -31,6 +34,7 @@ public class HomeEntActivity extends AppCompatActivity {
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private String userEmail;
+    private ArrayList<Integer> incoming_invitations;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,8 +59,8 @@ public class HomeEntActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Load username from Firebase
-        loadUsername();
+        // Load username from Firebase,
+        //loadUsername_checkAccount();
 
         editProfileButton.setOnClickListener(v -> {
             Intent intent = new Intent(HomeEntActivity.this, UserProfileActivity.class);
@@ -88,10 +92,10 @@ public class HomeEntActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         // Reload username when returning from UserProfileActivity
-        loadUsername();
+        loadUsername_checkAccount();
     }
 
-    private void loadUsername() {
+    private void loadUsername_checkAccount() {
         String currentUserEmail = mAuth.getCurrentUser().getEmail();
 
         db.collection("accounts")
@@ -105,6 +109,34 @@ public class HomeEntActivity extends AppCompatActivity {
                         String username = profile.getUsername();
                         String userEmail = profile.getEmail();
                         textViewGreeting.setText("Greetings, " + username);
+
+                        //get any event invitations from database meant for this user
+                        incoming_invitations = profile.getInvitationCodes();
+
+                        //if we have any event invitations, we start the invitation activity
+                        if (incoming_invitations != null && !incoming_invitations.isEmpty()) {
+                            Intent intent = new Intent(HomeEntActivity.this, EventInvitationActivity.class);
+                            intent.putExtra("USER_EMAIL", mAuth.getCurrentUser().getEmail());
+
+                            //get code of the event and pass into activity
+                            int invitation_code = incoming_invitations.get(incoming_invitations.size() - 1);
+                            incoming_invitations.remove(incoming_invitations.size() - 1);
+                            intent.putExtra("EVENT_CODE", Integer.toString(invitation_code));
+
+                            //remove the invitation from database as well.
+                            db.collection("accounts").document(currentUserEmail)
+                                .update("invitationCodes", FieldValue.arrayRemove(invitation_code))
+                                    .addOnSuccessListener(aVoid -> {
+                                        //start activity after invitation removed.
+                                        startActivity(intent);
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Toast.makeText(HomeEntActivity.this,
+                                                "invitation not removed from database :(",
+                                                Toast.LENGTH_SHORT).show();
+                                    });
+                        }
+
                     } else {
                         textViewGreeting.setText("Hello, User");
                     }

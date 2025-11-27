@@ -19,7 +19,10 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
+import com.example.zephyr_lottery.UserProfile;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
@@ -104,11 +107,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             }
 
             //save winners to database, send winners to dialogue
-            event.setChosen_entrants(winners);
             db.collection("events").document(Integer.toString(eventCode))
                     .update("winners", winners)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();
+
+                        //save the invitation to the events chosen
+                        sendInvitations(winners);
+
                         Intent intent = new Intent(OrgMyEventDetailsActivity.this, DrawWinnersPopupActivity.class);
                         intent.putStringArrayListExtra("WINNERS", winners);
                         startActivity(intent);
@@ -118,6 +124,50 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
                     });
         });
+    }
+
+    /**
+     * finds users of the winners and updates their pending invitations
+     * @param winner_emails
+     * the emails of the lottery winners
+     */
+    private void sendInvitations(ArrayList<String> winner_emails){
+        //reference to users database
+        CollectionReference usersRef = db.collection("accounts");
+
+        //go through all emails of winners
+        for (String email : winner_emails) {
+
+            //get user and send invitation
+            DocumentReference doc_ref = usersRef.document(email);
+            doc_ref.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+
+                    //user has been found. now we add to their list of invitations
+                    DocumentSnapshot document = task.getResult();
+
+                    //check for null (like if account has been deleted perhaps?)
+                    if (document.exists()) {
+                        UserProfile profile = document.toObject(UserProfile.class);
+                        if (profile != null) {
+                            //if successful, update this user's invitation codes in database.
+                            profile.addInvitationCode(eventCode);
+                            doc_ref.update("invitationCodes", profile.getInvitationCodes());
+                        } else {
+                            Log.e(TAG, "account does not exist for " + email + ":(");
+                        }
+                    } else {
+                        Log.e(TAG, "account not found for: " + email + ":(");
+                    }
+
+                    //now we update the invitations in the database
+                    doc_ref.update("invitationCodes", profile.getInvitationCodes());
+
+                } else {
+                    Log.e("firestore stuff", "error getting user: " + email + "!!!!!!!!! bad!", task.getException());
+                }
+            });
+        }
     }
 
     private void loadEventDetails() {

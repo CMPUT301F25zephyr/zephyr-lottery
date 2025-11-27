@@ -1,9 +1,7 @@
 package com.example.zephyr_lottery.activities;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
@@ -20,23 +18,15 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
-public class OrgMyEventEntrantsActivity extends AppCompatActivity {
+public class OrgMyEventEntrantsCancelledActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.org_my_event_entrants_activity);
+        setContentView(R.layout.org_my_event_entrants_cancelled_activity);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
-        });
-
-        findViewById(R.id.button_list_cancelled).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsCancelledActivity.class);
-                startActivity(intent);
-            }
         });
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
@@ -52,11 +42,11 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
 
                     if (snapshot.getId().equals(Integer.toString(getIntent().getIntExtra("EVENT_CLICKED_CODE", -1)))) {
                         System.out.println("Populating list\n\n");
-                        ListView nameListView = findViewById(R.id.ListView_entrants);
+                        ListView nameListView = findViewById(R.id.ListView_entrants_cancelled);
                         ArrayAdapter<String> nameArrayAdapter;
-                        ArrayList<String> nameArrayList = (ArrayList<String>) snapshot.get("entrants");
+                        ArrayList<String> nameArrayList = (ArrayList<String>) snapshot.get("rejected_entrants");
                         System.out.println(nameArrayList);
-                        nameArrayAdapter = new ArrayAdapter<String>(this, R.layout.org_my_event_entrantslist_activity, R.id.entrants_item, nameArrayList);
+                        nameArrayAdapter = new ArrayAdapter<String>(this, R.layout.org_my_event_entrantslist_cancelled_activity, R.id.entrants_cancelled_item, nameArrayList);
                         nameListView.setAdapter(nameArrayAdapter);
                     }
                 }

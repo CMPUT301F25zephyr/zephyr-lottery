@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -15,10 +17,13 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class OrgMyEventEntrantsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,6 +45,9 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        ListView nameListView = findViewById(R.id.ListView_entrants);
+
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String path = "events";
         CollectionReference eventsRef = db.collection(path);
@@ -53,12 +61,80 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
 
                     if (snapshot.getId().equals(Integer.toString(EVENT_CLICKED_CODE))) {
                         System.out.println("Populating list\n\n");
-                        ListView nameListView = findViewById(R.id.ListView_entrants);
                         ArrayAdapter<String> nameArrayAdapter;
                         ArrayList<String> nameArrayList = (ArrayList<String>) snapshot.get("entrants");
+                        if (nameArrayList == null) {
+                            return;
+                        }
                         System.out.println(nameArrayList);
                         nameArrayAdapter = new ArrayAdapter<String>(this, R.layout.org_my_event_entrantslist_activity, R.id.entrants_item, nameArrayList);
                         nameListView.setAdapter(nameArrayAdapter);
+
+                        nameListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                DocumentReference docRef = eventsRef.document(Integer.toString(EVENT_CLICKED_CODE));
+                                docRef.get().addOnSuccessListener(currentEvent -> {
+                                    String finalUserEmail = nameArrayList.get(position);
+                                    if (!currentEvent.exists()) {
+                                        Toast.makeText(
+                                                OrgMyEventEntrantsActivity.this,
+                                                "Event not found.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                        return;
+                                    }
+
+                                    List<String> entrantsList = (List<String>) currentEvent.get("entrants");
+                                    if (entrantsList == null) {
+                                        entrantsList = new ArrayList<>();
+                                    } else {
+                                        entrantsList = new ArrayList<>(entrantsList);
+                                        entrantsList.remove(null);
+                                    }
+
+                                    if (!entrantsList.contains(finalUserEmail)) {
+                                        Toast.makeText(
+                                                OrgMyEventEntrantsActivity.this,
+                                                "The selected user is not on the waiting list.",
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                        return;
+                                    }
+
+                                    List<String> cancelledEntrantsList = (List<String>) currentEvent.get("cancelled_entrants");
+                                    if (cancelledEntrantsList == null) {
+                                        cancelledEntrantsList = new ArrayList<>();
+                                    } else {
+                                        cancelledEntrantsList = new ArrayList<>(cancelledEntrantsList);
+                                        cancelledEntrantsList.remove(null);
+                                    }
+
+                                    Long limitLong = currentEvent.getLong("limit");
+                                    String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
+                                    int currentSize = entrantsList.size();
+
+                                    docRef.update("entrants", FieldValue.arrayRemove(finalUserEmail))
+                                            .addOnSuccessListener(aVoid -> {
+                                                Toast.makeText(
+                                                        OrgMyEventEntrantsActivity.this,
+                                                        "The user has been removed from the waiting list.",
+                                                        Toast.LENGTH_LONG
+                                                ).show();
+                                                docRef.update("cancelled_entrants", FieldValue.arrayUnion(finalUserEmail));
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("EntEventDetail", "Error removing entrant", e);
+                                                Toast.makeText(
+                                                        OrgMyEventEntrantsActivity.this,
+                                                        "Failed to remove. Please try again.",
+                                                        Toast.LENGTH_LONG
+                                                ).show();
+                                            });
+                                });
+
+                            }
+                        });
                     }
                 }
             }

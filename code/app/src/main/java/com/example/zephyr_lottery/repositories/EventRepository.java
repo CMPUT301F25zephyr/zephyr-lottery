@@ -25,6 +25,18 @@ import java.util.function.Consumer;
 public class EventRepository {
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
+    /**
+     * Changes the status of a specified participant in an event
+     * @param eventId
+     *  The event ID that the participant is in the lottery for
+     * @param userId
+     *  The participant's ID
+     * @param status
+     *  The new status of the participant
+     * @return
+     *  Returns a Task when completed asynchronously
+     */
+
     /** Update a participant’s status in Firestore. */
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
@@ -35,6 +47,18 @@ public class EventRepository {
         Participant p = new Participant(userId, status, null, Timestamp.now());
         return participantRef.set(p, SetOptions.merge());
     }
+
+    /**
+     * Accepts the invitation (called when the accept button from the notification screen is pushed)
+     * @param eventId
+     *  The ID of the event that the participant is accepting
+     * @param userId
+     *  The ID of the participant
+     * @param onSuccess
+     *  Runnable function if the invitation is properly accepted
+     * @param onError
+     *  Exception if the invitation is not properly accepted
+     */
 
     /** Accept an invitation (sets status to "accepted"). */
     public void acceptInvitation(String eventId, String userId,
@@ -50,6 +74,18 @@ public class EventRepository {
                 });
     }
 
+    /**
+     * Declines the invitation, then invites next participant from the waiting list (called when the decline button from the notification screen is pushed)
+     * @param eventId
+     *  The ID of the event that the participant is declining
+     * @param userId
+     *  The ID of the participant
+     * @param onSuccess
+     *  Runnable function if the invitation is properly declined
+     * @param onError
+     *  Exception if the invitation is not properly declined
+     */
+
     /** Decline an invitation (sets status to "declined" and invite next from waiting list). */
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
@@ -63,6 +99,16 @@ public class EventRepository {
                     if (onError != null) onError.accept(e);
                 });
     }
+
+    /**
+     * Invites the next participant from the waiting list, based on the oldest joinedAt
+     * @param eventId
+     *  The ID of the event
+     * @param onSuccess
+     *  Runnable function if the invitation is successfully sent
+     * @param onError
+     *  Exception if the invitation is not properly sent
+     */
 
     /** Invite the next participant from the waiting list (oldest joinedAt first). */
     public void inviteNextFromWaitingList(String eventId,
@@ -113,6 +159,18 @@ public class EventRepository {
                     if (onError != null) onError.accept(e);
                 });
     }
+
+    /**
+     * Sets a listener for any changes in status in the database, to update the list in real time
+     * @param eventId
+     *  The current ID of the event
+     * @param userId
+     *  The current user ID to track
+     * @param onStatus
+     *  Collects the status changes
+     * @return
+     *  Returns a ListenerRegistration that listens for status changes
+     */
 
     /** Listen to a participant’s status so the UI can react in real time. */
     public ListenerRegistration listenToParticipantStatus(String eventId, String userId,

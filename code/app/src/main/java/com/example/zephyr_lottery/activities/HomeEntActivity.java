@@ -3,13 +3,19 @@ package com.example.zephyr_lottery.activities;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.core.app.ActivityCompat;
@@ -23,8 +29,12 @@ import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.util.ArrayList;
+
+import java.io.IOException;
 
 public class HomeEntActivity extends AppCompatActivity {
     private static final int NOTIFICATION_PERMISSION_CODE = 101;
@@ -80,11 +90,32 @@ public class HomeEntActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        //activity launcher for scanning qr code.
+        scanLauncher = registerForActivityResult(new ScanContract(), result -> {
+            if (result.getContents() != null) {
+                String event_code = result.getContents();
+
+                //switch to details activity and pass in the hashcode of the QR code
+                Intent intent = new Intent(HomeEntActivity.this, EntEventDetailActivity.class);
+                intent.putExtra("USER_EMAIL", mAuth.getCurrentUser().getEmail());
+                intent.putExtra("EVENT", event_code);
+                intent.putExtra("FROM_ACTIVITY", "HOME_ENT");
+                startActivity(intent);
+            } else {
+                Toast.makeText(HomeEntActivity.this, "Scan cancelled", Toast.LENGTH_SHORT).show();
+            }
+        });
+
         scanQRButton.setOnClickListener(v -> {
-            // TODO: add scan qr view
-            Toast.makeText(HomeEntActivity.this,
-                    "Scan QR not yet implemented",
-                    Toast.LENGTH_SHORT).show();
+            ScanOptions options = new ScanOptions();
+            options.setDesiredBarcodeFormats(ScanOptions.QR_CODE);
+            options.setPrompt("scan an event QR code");
+            options.setCameraId(0);  //rear camera
+            options.setBeepEnabled(true);
+            options.setBarcodeImageEnabled(false);
+            options.setOrientationLocked(false);
+
+            scanLauncher.launch(options);
         });
     }
 
@@ -99,7 +130,7 @@ public class HomeEntActivity extends AppCompatActivity {
         String currentUserEmail = mAuth.getCurrentUser().getEmail();
 
         db.collection("accounts")
-                .document(currentUserEmail)
+                .document(userEmail)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
                     UserProfile profile = documentSnapshot.toObject(UserProfile.class);

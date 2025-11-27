@@ -189,6 +189,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                                     "Joined waiting list.",
                                     Toast.LENGTH_LONG
                             ).show();
+                            saveWaitingListLocation(eventHash, finalUserEmail);
                             int newCount = currentSize + 1;
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
@@ -246,6 +247,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                 String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
                 int currentSize = entrantsList.size();
 
+                // 1) Remove from entrants array
                 docRef.update("entrants", FieldValue.arrayRemove(finalUserEmail))
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(
@@ -253,13 +255,30 @@ public class EntEventDetailActivity extends AppCompatActivity {
                                     "You have left the waiting list.",
                                     Toast.LENGTH_LONG
                             ).show();
+
                             int newCount = Math.max(0, currentSize - 1);
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
                             );
+
+                            // 2) Also remove from waitingList collection
+                            String eventDocId = (eventId != null) ? eventId : eventHash;
+
+                            FirebaseFirestore.getInstance()
+                                    .collection("events")
+                                    .document(eventDocId)
+                                    .collection("waitingList")
+                                    .document(finalUserEmail)
+                                    .delete()
+                                    .addOnSuccessListener(v ->
+                                            Log.d(TAG, "Removed from waitingList collection: " + finalUserEmail)
+                                    )
+                                    .addOnFailureListener(e ->
+                                            Log.e(TAG, "Failed to delete waitingList entry", e)
+                                    );
                         })
                         .addOnFailureListener(e -> {
-                            Log.e("EntEventDetail", "Error removing entrant", e);
+                            Log.e(TAG, "Error removing entrant", e);
                             Toast.makeText(
                                     EntEventDetailActivity.this,
                                     "Failed to leave. Please try again.",
@@ -268,6 +287,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                         });
             });
         });
+
 
         String finalUserEmailForBack = currentUserEmail;
         back_event_details_button.setOnClickListener(view -> {

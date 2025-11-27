@@ -30,15 +30,16 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        int EVENT_CLICKED_CODE = getIntent().getIntExtra("EVENT_CLICKED_CODE", -1);
 
         findViewById(R.id.button_list_cancelled).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsCancelledActivity.class);
+                intent.putExtra("EVENT_CLICKED_CODE", EVENT_CLICKED_CODE);
                 startActivity(intent);
             }
         });
-
         FirebaseFirestore db = FirebaseFirestore.getInstance();
         String path = "events";
         CollectionReference eventsRef = db.collection(path);
@@ -50,7 +51,7 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
                 //nameArrayList.clear();
                 for (QueryDocumentSnapshot snapshot : value){
 
-                    if (snapshot.getId().equals(Integer.toString(getIntent().getIntExtra("EVENT_CLICKED_CODE", -1)))) {
+                    if (snapshot.getId().equals(Integer.toString(EVENT_CLICKED_CODE))) {
                         System.out.println("Populating list\n\n");
                         ListView nameListView = findViewById(R.id.ListView_entrants);
                         ArrayAdapter<String> nameArrayAdapter;

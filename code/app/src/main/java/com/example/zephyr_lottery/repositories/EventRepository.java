@@ -2,10 +2,19 @@ package com.example.zephyr_lottery.repositories;
 
 import android.util.Log;
 
+
 import com.example.zephyr_lottery.models.Participant;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.*;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
 
 import java.util.HashMap;
 import java.util.List;
@@ -178,7 +187,7 @@ public class EventRepository {
      * US02.07.02: Notify all selected entrants and log notifications.
      */
     public void notifyAllSelectedEntrants(String eventId,
-                                          Runnable onSuccess,
+                                          Consumer<Integer> onComplete,
                                           Consumer<Exception> onError) {
         CollectionReference participantsRef = db.collection("events")
                 .document(eventId)
@@ -186,9 +195,10 @@ public class EventRepository {
         participantsRef.whereEqualTo("status", "SELECTED")
                 .get()
                 .addOnSuccessListener(query -> {
-                    if (query.isEmpty()) {
+                    int count = query.size();
+                    if (count == 0) {
                         Log.d("EventRepo", "No selected entrants to notify for event " + eventId);
-                        if (onSuccess != null) onSuccess.run();
+                        if (onComplete != null) onComplete.accept(0);
                         return;
                     }
 
@@ -200,7 +210,7 @@ public class EventRepository {
                         logNotificationSent(eventId, userId, "SELECTED", null, null);
                     }
 
-                    if (onSuccess != null) onSuccess.run();
+                    if (onComplete != null) onComplete.accept(count);
                 })
                 .addOnFailureListener(e -> {
                     Log.e("EventRepo", "Failed to fetch selected entrants", e);

@@ -1,4 +1,4 @@
-﻿package com.example.zephyr_lottery.activities;
+package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -108,6 +108,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 return;
             }
 
+//            String eventId = Integer.toString(eventCode);
+//
+//            // Mark each winner as SELECTED in participants subcollection
+//            for (String winnerId : winners) {
+//                repo.updateParticipantStatus(eventId, winnerId, "SELECTED");
+//            }
+
             event.setChosen_entrants(winners);
             db.collection("events").document(Integer.toString(eventCode))
                     .update("winners", winners)
@@ -134,9 +141,29 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     .setMessage("This will send notifications to all selected entrants.")
                     .setPositiveButton("Notify", (d, w) -> {
                         String eventId = Integer.toString(eventCode);
-                        repo.notifyAllSelectedEntrants(eventId,
-                                () -> Toast.makeText(this, "Notifications sent", Toast.LENGTH_SHORT).show(),
-                                e -> Toast.makeText(this, "Failed: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+                        repo.notifyAllSelectedEntrants(
+                                eventId,
+                                count -> {
+                                    if (count == 0) {
+                                        Toast.makeText(
+                                                this,
+                                                "There are no selected entrants to notify.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    } else {
+                                        Toast.makeText(
+                                                this,
+                                                "Notifications sent to " + count + " entrant(s).",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                },
+                                e -> Toast.makeText(
+                                        this,
+                                        "Failed: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
                     })
                     .setNegativeButton("Cancel", null)
                     .show();

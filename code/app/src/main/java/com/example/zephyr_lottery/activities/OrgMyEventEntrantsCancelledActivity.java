@@ -42,7 +42,7 @@ public class OrgMyEventEntrantsCancelledActivity extends AppCompatActivity {
 
                     if (snapshot.getId().equals(Integer.toString(getIntent().getIntExtra("EVENT_CLICKED_CODE", -1)))) {
                         System.out.println("Populating list\n\n");
-                        ListView nameListView = findViewById(R.id.ListView_entrants_rejected);
+                        ListView nameListView = findViewById(R.id.ListView_entrants_cancelled);
                         ArrayAdapter<String> nameArrayAdapter;
                         ArrayList<String> nameArrayList = (ArrayList<String>) snapshot.get("rejected_entrants");
                         if (nameArrayList == null) {

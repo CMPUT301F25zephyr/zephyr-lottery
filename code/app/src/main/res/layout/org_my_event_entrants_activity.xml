@@ -22,18 +22,27 @@
         android:id="@+id/ListView_entrants"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginBottom="50dp"
+        android:layout_marginBottom="100dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView_latest_event" />
 
     <Button
-        android:id="@+id/button_list_cancelled"
+        android:id="@+id/button_noti_accepted"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Show cancelled entrants"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_list_accepted" />
+
+    <Button
+        android:id="@+id/button_list_accepted"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show accepted entrants"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ListView_entrants" />

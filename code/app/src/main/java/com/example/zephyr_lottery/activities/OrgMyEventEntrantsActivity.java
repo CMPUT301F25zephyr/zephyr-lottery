@@ -37,10 +37,19 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
         });
         int EVENT_CLICKED_CODE = getIntent().getIntExtra("EVENT_CLICKED_CODE", -1);
 
-        findViewById(R.id.button_list_cancelled).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.button_noti_accepted).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsCancelledActivity.class);
+                intent.putExtra("EVENT_CLICKED_CODE", EVENT_CLICKED_CODE);
+                startActivity(intent);
+            }
+        });
+
+        findViewById(R.id.button_list_accepted).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsAcceptedActivity.class);
                 intent.putExtra("EVENT_CLICKED_CODE", EVENT_CLICKED_CODE);
                 startActivity(intent);
             }

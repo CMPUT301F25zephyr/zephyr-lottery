@@ -16,6 +16,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.appcompat.app.AlertDialog;
+import com.example.zephyr_lottery.repositories.EventRepository;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
@@ -37,10 +39,12 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button generateQrButton;
     private Button buttonDrawLottery;
     private Button editButton;
+    private Button buttonNotifyWaiting;
 
     private int eventCode;
     private String userEmail;
     private Event event;
+    private final EventRepository eventRepository = new EventRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +70,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
         eventImage = findViewById(R.id.imageView_orgEventDetails);
         editButton = findViewById(R.id.button_org_event_details_edit);
+        buttonNotifyWaiting = findViewById(R.id.button_notify_waiting);
 
         loadEventDetails();
 
@@ -117,6 +122,47 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         Log.e(TAG, "Failed to save winners", e);
                         Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
                     });
+        });
+
+        // Notify Waiting List button (US02.07.01)
+        buttonNotifyWaiting.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Notify waiting list entrants?")
+                    .setMessage("This will send notifications to all entrants on the waiting list.")
+                    .setPositiveButton("Notify", (dialog, which) -> {
+                        String eventId = Integer.toString(eventCode);
+
+                        eventRepository.notifyAllWaitingListEntrants(
+                                eventId,
+                                count -> {
+                                    if (count == 0) {
+                                        Toast.makeText(
+                                                this,
+                                                "There are no waiting list entrants to notify.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    } else {
+                                        Toast.makeText(
+                                                this,
+                                                "Notifications sent to " + count + " entrant(s).",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                },
+                                e -> Toast.makeText(
+                                        this,
+                                        "Failed: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         });
     }
 

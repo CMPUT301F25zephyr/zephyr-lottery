@@ -250,7 +250,7 @@ public class AdmProfilesActivity extends AppCompatActivity {
 
                     if (totalEvents == 0) {
                         // No events the user is entered in
-                        removeUserFromSelectedEntrants(email, onComplete);
+                        removeUserFromWinners(email, onComplete);
                         return;
                     }
 
@@ -265,7 +265,7 @@ public class AdmProfilesActivity extends AppCompatActivity {
 
                                     if (processedCount[0] == totalEvents) {
                                         // All events processed
-                                        removeUserFromSelectedEntrants(email, onComplete);
+                                        removeUserFromWinners(email, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
@@ -274,7 +274,7 @@ public class AdmProfilesActivity extends AppCompatActivity {
 
                                     if (processedCount[0] == totalEvents) {
                                         // Continue even if some fail
-                                        removeUserFromSelectedEntrants(email, onComplete);
+                                        removeUserFromWinners(email, onComplete);
                                     }
                                 });
                     }
@@ -282,22 +282,24 @@ public class AdmProfilesActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Log.e("AdminDelete", "Error querying events with user as entrant", e);
                     // Continue to next step even if this fails
-                    removeUserFromSelectedEntrants(email, onComplete);
+                    removeUserFromWinners(email, onComplete);
+                    removeUserFromAcceptedEntrants(email, onComplete);
+                    removeUserFromRejectedEntrants(email, onComplete);
                 });
     }
 
     /**
-     * Removes user from selectedEntrants arrays in all events
+     * Removes user from winners arrays in all events
      */
-    private void removeUserFromSelectedEntrants(String email, Runnable onComplete) {
-        Log.d("AdminDelete", "Removing user from selectedEntrants in all events");
+    private void removeUserFromWinners(String email, Runnable onComplete) {
+        Log.d("AdminDelete", "Removing user from winners in all events");
 
         db.collection("events")
-                .whereArrayContains("selectedEntrants", email)
+                .whereArrayContains("winners", email)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
-                    Log.d("AdminDelete", "Found " + totalEvents + " events with user as selected entrant");
+                    Log.d("AdminDelete", "Found " + totalEvents + " events with user as winner");
 
                     if (totalEvents == 0) {
                         // No events, proceed to next step
@@ -305,14 +307,14 @@ public class AdmProfilesActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // Remove user from selectedEntrants array in each event
+                    // Remove user from winners array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
-                                .update("selectedEntrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .update("winners", com.google.firebase.firestore.FieldValue.arrayRemove(email))
                                 .addOnSuccessListener(aVoid -> {
                                     processedCount[0]++;
-                                    Log.d("AdminDelete", "Removed from selectedEntrants in event: " + document.getId());
+                                    Log.d("AdminDelete", "Removed from winners in event: " + document.getId());
 
                                     if (processedCount[0] == totalEvents) {
                                         // All events processed
@@ -320,7 +322,7 @@ public class AdmProfilesActivity extends AppCompatActivity {
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("AdminDelete", "Error removing from selectedEntrants: " + document.getId(), e);
+                                    Log.e("AdminDelete", "Error removing from winners: " + document.getId(), e);
                                     processedCount[0]++;
 
                                     if (processedCount[0] == totalEvents) {
@@ -331,7 +333,109 @@ public class AdmProfilesActivity extends AppCompatActivity {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("AdminDelete", "Error querying events with user as selected entrant", e);
+                    Log.e("AdminDelete", "Error querying events with user as winner", e);
+                    // Continue to next step even if this fails
+                    onComplete.run();
+                });
+    }
+
+    /**
+     * Removes user from rejected_entrants arrays in all events
+     */
+    private void removeUserFromRejectedEntrants(String email, Runnable onComplete) {
+        Log.d("AdminDelete", "Removing user from rejected_entrants in all events");
+
+        db.collection("events")
+                .whereArrayContains("rejected_entrants", email)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int totalEvents = querySnapshot.size();
+                    Log.d("AdminDelete", "Found " + totalEvents + " events with user as rejected entrant");
+
+                    if (totalEvents == 0) {
+                        // No events, proceed to next step
+                        onComplete.run();
+                        return;
+                    }
+
+                    // Remove user from winners array in each event
+                    int[] processedCount = {0};
+                    for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        document.getReference()
+                                .update("rejected_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .addOnSuccessListener(aVoid -> {
+                                    processedCount[0]++;
+                                    Log.d("AdminDelete", "Removed from rejected_entrants in event: " + document.getId());
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // All events processed
+                                        onComplete.run();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("AdminDelete", "Error removing from rejected_entrants: " + document.getId(), e);
+                                    processedCount[0]++;
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // Continue even if some fail
+                                        onComplete.run();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("AdminDelete", "Error querying events with user as rejected entrant", e);
+                    // Continue to next step even if this fails
+                    onComplete.run();
+                });
+    }
+
+    /**
+     * Removes user from rejected_entrants arrays in all events
+     */
+    private void removeUserFromAcceptedEntrants(String email, Runnable onComplete) {
+        Log.d("AdminDelete", "Removing user from accepted_entrants in all events");
+
+        db.collection("events")
+                .whereArrayContains("accepted_entrants", email)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int totalEvents = querySnapshot.size();
+                    Log.d("AdminDelete", "Found " + totalEvents + " events with user as accepted entrant");
+
+                    if (totalEvents == 0) {
+                        // No events, proceed to next step
+                        onComplete.run();
+                        return;
+                    }
+
+                    // Remove user from winners array in each event
+                    int[] processedCount = {0};
+                    for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        document.getReference()
+                                .update("accepted_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .addOnSuccessListener(aVoid -> {
+                                    processedCount[0]++;
+                                    Log.d("AdminDelete", "Removed from accepted_entrants in event: " + document.getId());
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // All events processed
+                                        onComplete.run();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("AdminDelete", "Error removing from accepted_entrants: " + document.getId(), e);
+                                    processedCount[0]++;
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // Continue even if some fail
+                                        onComplete.run();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("AdminDelete", "Error querying events with user as accepted entrant", e);
                     // Continue to next step even if this fails
                     onComplete.run();
                 });

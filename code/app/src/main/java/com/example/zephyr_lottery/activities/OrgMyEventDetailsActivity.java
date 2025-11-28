@@ -108,8 +108,14 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 return;
             }
 
+            // NEW: mark each winner as SELECTED in participants/{userId}
+            String eventId = Integer.toString(eventCode);
+            for (String winnerId : winners) {
+                repo.updateParticipantStatus(eventId, winnerId, "SELECTED");
+            }
 
-            db.collection("events").document(Integer.toString(eventCode))
+
+            db.collection("events").document(eventId)
                     .update("winners", winners)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();

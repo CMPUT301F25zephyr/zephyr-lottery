@@ -325,10 +325,13 @@ public class UserProfileActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * Removes user from all events where they are an entrant
+     * Then chains to remove from winners, accepted, and rejected arrays
+     */
     private void removeUserFromAllEvents(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from all events");
+        Log.d("UserProfile", "Removing user from entrants in all events");
 
-        // Query all events where user is in entrants array
         db.collection("events")
                 .whereArrayContains("entrants", email)
                 .get()
@@ -337,7 +340,7 @@ public class UserProfileActivity extends AppCompatActivity {
                     Log.d("UserProfile", "Found " + totalEvents + " events with user as entrant");
 
                     if (totalEvents == 0) {
-                        // No events the user is entered in
+                        // No events, move to next step
                         removeUserFromWinners(email, onComplete);
                         return;
                     }
@@ -352,7 +355,7 @@ public class UserProfileActivity extends AppCompatActivity {
                                     Log.d("UserProfile", "Removed from entrants in event: " + document.getId());
 
                                     if (processedCount[0] == totalEvents) {
-                                        // All events processed
+                                        // All entrants processed, move to winners
                                         removeUserFromWinners(email, onComplete);
                                     }
                                 })
@@ -371,13 +374,12 @@ public class UserProfileActivity extends AppCompatActivity {
                     Log.e("UserProfile", "Error querying events with user as entrant", e);
                     // Continue to next step even if this fails
                     removeUserFromWinners(email, onComplete);
-                    removeUserFromAcceptedEntrants(email, onComplete);
-                    removeUserFromRejectedEntrants(email, onComplete);
                 });
     }
 
     /**
      * Removes user from winners arrays in all events
+     * Then chains to remove from accepted_entrants
      */
     private void removeUserFromWinners(String email, Runnable onComplete) {
         Log.d("UserProfile", "Removing user from winners in all events");
@@ -390,8 +392,8 @@ public class UserProfileActivity extends AppCompatActivity {
                     Log.d("UserProfile", "Found " + totalEvents + " events with user as winner");
 
                     if (totalEvents == 0) {
-                        // No events, proceed to next step
-                        onComplete.run();
+                        // No events, proceed to accepted_entrants
+                        removeUserFromAcceptedEntrants(email, onComplete);
                         return;
                     }
 
@@ -405,8 +407,8 @@ public class UserProfileActivity extends AppCompatActivity {
                                     Log.d("UserProfile", "Removed from winners in event: " + document.getId());
 
                                     if (processedCount[0] == totalEvents) {
-                                        // All events processed
-                                        onComplete.run();
+                                        // All winners processed, move to accepted_entrants
+                                        removeUserFromAcceptedEntrants(email, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
@@ -415,7 +417,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                                     if (processedCount[0] == totalEvents) {
                                         // Continue even if some fail
-                                        onComplete.run();
+                                        removeUserFromAcceptedEntrants(email, onComplete);
                                     }
                                 });
                     }
@@ -423,63 +425,13 @@ public class UserProfileActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Log.e("UserProfile", "Error querying events with user as winner", e);
                     // Continue to next step even if this fails
-                    onComplete.run();
+                    removeUserFromAcceptedEntrants(email, onComplete);
                 });
     }
 
     /**
-     * Removes user from rejected_entrants arrays in all events
-     */
-    private void removeUserFromRejectedEntrants(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from rejected_entrants in all events");
-
-        db.collection("events")
-                .whereArrayContains("rejected_entrants", email)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    int totalEvents = querySnapshot.size();
-                    Log.d("UserProfile", "Found " + totalEvents + " events with user as rejected entrant");
-
-                    if (totalEvents == 0) {
-                        // No events, proceed to next step
-                        onComplete.run();
-                        return;
-                    }
-
-                    // Remove user from winners array in each event
-                    int[] processedCount = {0};
-                    for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
-                        document.getReference()
-                                .update("rejected_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
-                                .addOnSuccessListener(aVoid -> {
-                                    processedCount[0]++;
-                                    Log.d("UserProfile", "Removed from rejected_entrants in event: " + document.getId());
-
-                                    if (processedCount[0] == totalEvents) {
-                                        // All events processed
-                                        onComplete.run();
-                                    }
-                                })
-                                .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error removing from rejected_entrants: " + document.getId(), e);
-                                    processedCount[0]++;
-
-                                    if (processedCount[0] == totalEvents) {
-                                        // Continue even if some fail
-                                        onComplete.run();
-                                    }
-                                });
-                    }
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events with user as rejected entrant", e);
-                    // Continue to next step even if this fails
-                    onComplete.run();
-                });
-    }
-
-    /**
-     * Removes user from rejected_entrants arrays in all events
+     * Removes user from accepted_entrants arrays in all events
+     * Then chains to remove from rejected_entrants
      */
     private void removeUserFromAcceptedEntrants(String email, Runnable onComplete) {
         Log.d("UserProfile", "Removing user from accepted_entrants in all events");
@@ -492,12 +444,12 @@ public class UserProfileActivity extends AppCompatActivity {
                     Log.d("UserProfile", "Found " + totalEvents + " events with user as accepted entrant");
 
                     if (totalEvents == 0) {
-                        // No events, proceed to next step
-                        onComplete.run();
+                        // No events, proceed to rejected_entrants
+                        removeUserFromRejectedEntrants(email, onComplete);
                         return;
                     }
 
-                    // Remove user from winners array in each event
+                    // Remove user from accepted_entrants array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
@@ -507,8 +459,8 @@ public class UserProfileActivity extends AppCompatActivity {
                                     Log.d("UserProfile", "Removed from accepted_entrants in event: " + document.getId());
 
                                     if (processedCount[0] == totalEvents) {
-                                        // All events processed
-                                        onComplete.run();
+                                        // All accepted_entrants processed, move to rejected_entrants
+                                        removeUserFromRejectedEntrants(email, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
@@ -517,7 +469,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
                                     if (processedCount[0] == totalEvents) {
                                         // Continue even if some fail
-                                        onComplete.run();
+                                        removeUserFromRejectedEntrants(email, onComplete);
                                     }
                                 });
                     }
@@ -525,6 +477,62 @@ public class UserProfileActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     Log.e("UserProfile", "Error querying events with user as accepted entrant", e);
                     // Continue to next step even if this fails
+                    removeUserFromRejectedEntrants(email, onComplete);
+                });
+    }
+
+    /**
+     * Removes user from rejected_entrants arrays in all events
+     * This is the final step before calling onComplete
+     */
+    private void removeUserFromRejectedEntrants(String email, Runnable onComplete) {
+        Log.d("UserProfile", "Removing user from rejected_entrants in all events");
+
+        db.collection("events")
+                .whereArrayContains("rejected_entrants", email)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int totalEvents = querySnapshot.size();
+                    Log.d("UserProfile", "Found " + totalEvents + " events with user as rejected entrant");
+
+                    if (totalEvents == 0) {
+                        // No events, all cleanup complete
+                        Log.d("UserProfile", "All event cleanups complete");
+                        onComplete.run();
+                        return;
+                    }
+
+                    // Remove user from rejected_entrants array in each event
+                    int[] processedCount = {0};
+                    for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        document.getReference()
+                                .update("rejected_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .addOnSuccessListener(aVoid -> {
+                                    processedCount[0]++;
+                                    Log.d("UserProfile", "Removed from rejected_entrants in event: " + document.getId());
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // All cleanup complete
+                                        Log.d("UserProfile", "All event cleanups complete");
+                                        onComplete.run();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("UserProfile", "Error removing from rejected_entrants: " + document.getId(), e);
+                                    processedCount[0]++;
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // Continue to deletion even if some fail
+                                        Log.d("UserProfile", "Event cleanup completed with some errors");
+                                        onComplete.run();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("UserProfile", "Error querying events with user as rejected entrant", e);
+                    // Proceed to deletion even if this fails
+                    Log.d("UserProfile", "Event cleanup completed with errors");
                     onComplete.run();
                 });
     }

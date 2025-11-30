@@ -150,12 +150,22 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     return;
                 }
 
+                //add this user to the all entrants arraylist
                 List<String> entrantsList = (List<String>) currentEvent.get("entrants");
                 if (entrantsList == null) {
                     entrantsList = new ArrayList<>();
                 } else {
                     entrantsList = new ArrayList<>(entrantsList);
                     entrantsList.remove(null);
+                }
+
+                //add this user to the pending invitation arraylist
+                List<String> entrantsWaitlist = (List<String>) currentEvent.get("entrants_waitlist");
+                if (entrantsWaitlist == null) {
+                    entrantsWaitlist = new ArrayList<>();
+                } else {
+                    entrantsWaitlist = new ArrayList<>(entrantsWaitlist);
+                    entrantsWaitlist.remove(null);
                 }
 
                 if (entrantsList.contains(finalUserEmail)) {
@@ -167,19 +177,34 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     return;
                 }
 
+                List<String> waitlist_list = (List<String>) currentEvent.get("entrants_waitlist");
+                List<String> accepted_list = (List<String>) currentEvent.get("accepted_entrants");
+                List<String> winners_list = (List<String>) currentEvent.get("winners");
+
+                //calculate the number of entrants total.
+                //if waitlist is not null, set it's size to be the number of entrants
+                int num_entrants = (waitlist_list != null ? waitlist_list.size() : 0);
+                //if accepted list is not null, add it's size to number of entrants
+                num_entrants += (accepted_list != null ? accepted_list.size() : 0) ;
+                //if pending invitations list is not null, add it's size to number of entrants
+                num_entrants += (winners_list != null ? winners_list.size() : 0);
+
+                //checking entrant limit
                 Long limitLong = currentEvent.getLong("limit");
                 boolean hasLimit = limitLong != null;
-                int limitValue = hasLimit ? limitLong.intValue() : Integer.MAX_VALUE;
-                if (hasLimit && entrantsList.size() >= limitValue) {
-                    Toast.makeText(
-                            EntEventDetailActivity.this,
-                            "This event is full.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                    return;
+                int limitValue = 0;
+
+                //return and send toast if the event is already full
+                if (hasLimit) {
+                    limitValue = limitLong.intValue();
+                    if (num_entrants >= limitValue) {
+                        Toast.makeText(EntEventDetailActivity.this,
+                            "This event is full.", Toast.LENGTH_LONG).show();
+                        return;
+                    }
                 }
 
-                int currentSize = entrantsList.size();
+                int currentSize = num_entrants; // this is needed because of lambda expressions :(
                 String limitDisplay = hasLimit ? String.valueOf(limitValue) : "?";
 
                 docRef.update("entrants", FieldValue.arrayUnion(finalUserEmail))
@@ -190,6 +215,26 @@ public class EntEventDetailActivity extends AppCompatActivity {
                                     Toast.LENGTH_LONG
                             ).show();
                             saveWaitingListLocation(eventHash, finalUserEmail);
+
+                            //if succeded, we also need to add to entrants_waitlist
+                            docRef.update("entrants_waitlist", FieldValue.arrayUnion(finalUserEmail))
+                                    .addOnSuccessListener(bVoid -> {
+                                        Toast.makeText(
+                                                EntEventDetailActivity.this,
+                                                "Joined waiting list.",
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("EntEventDetail", "Error adding entrant to waitlist", e);
+                                        Toast.makeText(
+                                                EntEventDetailActivity.this,
+                                                "Failed to join. Please leave and try again.",
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                    });
+
+
                             int newCount = currentSize + 1;
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
@@ -206,6 +251,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
             });
         });
 
+        //leave waitlist button listener
         leave_button.setOnClickListener(view -> {
             if (finalUserEmail == null || finalUserEmail.isEmpty()) {
                 Toast.makeText(
@@ -226,12 +272,22 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     return;
                 }
 
+                //leave all entrants arraylist
                 List<String> entrantsList = (List<String>) currentEvent.get("entrants");
                 if (entrantsList == null) {
                     entrantsList = new ArrayList<>();
                 } else {
                     entrantsList = new ArrayList<>(entrantsList);
                     entrantsList.remove(null);
+                }
+
+                //leave entrants waitlist arraylist
+                List<String> entrantsWaitlist = (List<String>) currentEvent.get("entrants_waitlist");
+                if (entrantsWaitlist == null) {
+                    entrantsWaitlist = new ArrayList<>();
+                } else {
+                    entrantsWaitlist = new ArrayList<>(entrantsWaitlist);
+                    entrantsWaitlist.remove(null);
                 }
 
                 if (!entrantsList.contains(finalUserEmail)) {
@@ -245,16 +301,48 @@ public class EntEventDetailActivity extends AppCompatActivity {
 
                 Long limitLong = currentEvent.getLong("limit");
                 String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
-                int currentSize = entrantsList.size();
 
+                List<String> waitlist_list = (List<String>) currentEvent.get("entrants_waitlist");
+                List<String> accepted_list = (List<String>) currentEvent.get("accepted_entrants");
+                List<String> winners_list = (List<String>) currentEvent.get("winners");
+
+                //calculate the number of entrants total.
+                //if waitlist is not null, set it's size to be the number of entrants
+                int num_entrants = (waitlist_list != null ? waitlist_list.size() : 0);
+                //if accepted list is not null, add it's size to number of entrants
+                num_entrants += (accepted_list != null ? accepted_list.size() : 0) ;
+                //if pending invitations list is not null, add it's size to number of entrants
+                num_entrants += (winners_list != null ? winners_list.size() : 0);
+
+                int currentSize = num_entrants; // i think this is needed because of lambda expressions :(
                 // 1) Remove from entrants array
                 docRef.update("entrants", FieldValue.arrayRemove(finalUserEmail))
                         .addOnSuccessListener(aVoid -> {
                             Toast.makeText(
                                     EntEventDetailActivity.this,
-                                    "You have left the waiting list.",
+                                    "You have left the entrant list.",
                                     Toast.LENGTH_LONG
                             ).show();
+
+
+                            //if successful, we also need to update the entrants_waitlist
+                            docRef.update("entrants_waitlist", FieldValue.arrayRemove(finalUserEmail))
+                                    .addOnSuccessListener(bVoid -> {
+                                        Toast.makeText(
+                                                EntEventDetailActivity.this,
+                                                "You have left waiting list.",
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e("EntEventDetail", "Error removing entrant from waitlist", e);
+                                        Toast.makeText(
+                                                EntEventDetailActivity.this,
+                                                "Failed to leave. Please rejoin and try again.",
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                    });
+
 
                             int newCount = Math.max(0, currentSize - 1);
                             entrantNumbers.setText(
@@ -345,8 +433,14 @@ public class EntEventDetailActivity extends AppCompatActivity {
 
             description.setText(currentEvent.getString("description"));
 
-            List<String> entrants = (List<String>) currentEvent.get("entrants");
-            int entrantCount = entrants != null ? entrants.size() : 0;
+            //get number of current entrants: people in waitlist, people who have acceptedinvitations, peple with pending invitations.
+            List<String> waitlist = (List<String>) currentEvent.get("entrants_waitlist");
+            List<String> accepted = (List<String>) currentEvent.get("accepted_entrants");
+            List<String> winners = (List<String>) currentEvent.get("winners");
+
+            int entrantCount = (waitlist != null ? waitlist.size() : 0);
+            entrantCount += (accepted != null ? accepted.size() : 0) ;
+            entrantCount += (winners != null ? winners.size() : 0);
 
             Long limitLong = currentEvent.getLong("limit");
             String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";

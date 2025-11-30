@@ -6,7 +6,17 @@ import com.example.zephyr_lottery.models.Participant;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.*;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.SetOptions;
+import com.google.firebase.firestore.WriteBatch;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -14,6 +24,7 @@ import java.util.function.Consumer;
  * This class manages the statuses of participants and the accepting/declining of invitations.
  */
 public class EventRepository {
+    private static final String TAG = "EventRepo";
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
@@ -52,11 +63,11 @@ public class EventRepository {
                                  Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CONFIRMED")
                 .addOnSuccessListener(v -> {
-                    Log.d("EventRepo", "Accepted invitation");
+                    Log.d(TAG, "Accepted invitation");
                     if (onSuccess != null) onSuccess.run();
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Accept failed", e);
+                    Log.e(TAG, "Accept failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }
@@ -76,11 +87,11 @@ public class EventRepository {
                                   Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CANCELLED")
                 .addOnSuccessListener(v -> {
-                    Log.d("EventRepo", "Declined invitation");
+                    Log.d(TAG, "Declined invitation");
                     inviteNextFromWaitingList(eventId, onSuccess, onError);
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Decline failed", e);
+                    Log.e(TAG, "Decline failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }
@@ -130,16 +141,16 @@ public class EventRepository {
 
                     batch.commit()
                             .addOnSuccessListener(bv -> {
-                                Log.d("EventRepo", "Invited next entrant: " + nextUserId);
+                                Log.d(TAG, "Invited next entrant: " + nextUserId);
                                 if (onSuccess != null) onSuccess.run();
                             })
                             .addOnFailureListener(e -> {
-                                Log.e("EventRepo", "Failed inviting next entrant", e);
+                                Log.e(TAG, "Failed inviting next entrant", e);
                                 if (onError != null) onError.accept(e);
                             });
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Read waiting list failed", e);
+                    Log.e(TAG, "Read waiting list failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }
@@ -172,5 +183,35 @@ public class EventRepository {
             String status = (snap != null && snap.exists()) ? snap.getString("status") : null;
             if (onStatus != null) onStatus.accept(status);
         });
+    }
+
+    /**
+     * US 02.06.01
+     * Get all chosen entrants (status == "SELECTED") for a given event.
+     * Returns a list of userIds (emails) via onSuccess.
+     */
+    public void getSelectedEntrants(String eventId,
+                                    Consumer<List<String>> onSuccess,
+                                    Consumer<Exception> onError) {
+
+        CollectionReference participantsRef = db.collection("events")
+                .document(eventId)
+                .collection("participants");
+
+        participantsRef.whereEqualTo("status", "SELECTED")
+                .get()
+                .addOnSuccessListener((QuerySnapshot snapshot) -> {
+                    List<String> selected = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                        // We assume docId == userId (email)
+                        selected.add(doc.getId());
+                    }
+                    Log.d(TAG, "Loaded " + selected.size() + " selected entrants for " + eventId);
+                    if (onSuccess != null) onSuccess.accept(selected);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "getSelectedEntrants failed", e);
+                    if (onError != null) onError.accept(e);
+                });
     }
 }

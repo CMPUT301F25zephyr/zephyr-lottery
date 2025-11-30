@@ -37,6 +37,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button generateQrButton;
     private Button buttonDrawLottery;
     private Button editButton;
+    private Button chosenEntrantsButton;
 
     private int eventCode;
     private String userEmail;
@@ -66,6 +67,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
         eventImage = findViewById(R.id.imageView_orgEventDetails);
         editButton = findViewById(R.id.button_org_event_details_edit);
+        chosenEntrantsButton = findViewById(R.id.button_chosen_entrants);
 
         loadEventDetails();
 
@@ -117,6 +119,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         Log.e(TAG, "Failed to save winners", e);
                         Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
                     });
+        });
+
+        chosenEntrantsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventChosenEntrantsActivity.class);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
         });
     }
 

@@ -97,6 +97,9 @@
             android:name=".activities.OrgEditEventActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".activities.OrgMyEventChosenEntrantsActivity"
+            android:exported="false" />
 
 
         <!-- Services -->

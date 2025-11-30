@@ -40,6 +40,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button generateQrButton;
     private Button buttonDrawLottery;
     private Button editButton;
+    private Button viewMapButton;
 
     private int eventCode;
     private String userEmail;
@@ -66,6 +67,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         backButton = findViewById(R.id.button_org_event_details_back);
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
+        viewMapButton = findViewById(R.id.button_view_entrants_map);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
         eventImage = findViewById(R.id.imageView_orgEventDetails);
         editButton = findViewById(R.id.button_org_event_details_edit);
@@ -81,6 +83,21 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         entrantsButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+
+        // View entrants on map: pass Firestore document ID as a String
+        viewMapButton.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String eventId = Integer.toString(eventCode);
+
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEntrantsMapActivity.class);
+            intent.putExtra("EVENT_ID", eventId);
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });

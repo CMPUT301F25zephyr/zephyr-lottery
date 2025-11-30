@@ -119,18 +119,16 @@
                     android:textColor="?android:attr/textColorSecondary"
                     android:layout_gravity="center_vertical"/>
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/tvStartDateBefore"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="[calendar input]"
-                    android:textSize="14sp"
-                    android:padding="12dp"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginEnd="8dp"/>
+                    android:text="Click to Set"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="8dp"
+                    app:cornerRadius="8dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -140,17 +138,15 @@
                     android:textColor="?android:attr/textColorSecondary"
                     android:layout_gravity="center_vertical"/>
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/tvStartDateAfter"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="[calendar input]"
-                    android:textSize="14sp"
-                    android:padding="12dp"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"/>
+                    android:text="Click to Set"
+                    android:textSize="12sp"
+                    app:cornerRadius="8dp"/>
             </LinearLayout>
 
             <!-- Ending Date -->
@@ -177,18 +173,16 @@
                     android:textColor="?android:attr/textColorSecondary"
                     android:layout_gravity="center_vertical"/>
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/tvEndDateBefore"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="[calendar input]"
-                    android:textSize="14sp"
-                    android:padding="12dp"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:layout_marginEnd="8dp"/>
+                    android:text="Click to Set"
+                    android:textSize="12sp"
+                    android:layout_marginEnd="8dp"
+                    app:cornerRadius="8dp"/>
 
                 <TextView
                     android:layout_width="wrap_content"
@@ -198,17 +192,15 @@
                     android:textColor="?android:attr/textColorSecondary"
                     android:layout_gravity="center_vertical"/>
 
-                <TextView
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/tvEndDateAfter"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="[calendar input]"
-                    android:textSize="14sp"
-                    android:padding="12dp"
-                    android:background="?android:attr/selectableItemBackground"
-                    android:clickable="true"
-                    android:focusable="true"/>
+                    android:text="Click to Set"
+                    android:textSize="12sp"
+                    app:cornerRadius="8dp"/>
             </LinearLayout>
 
             <!-- Price Range -->

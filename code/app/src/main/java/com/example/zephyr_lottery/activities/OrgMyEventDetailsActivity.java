@@ -296,8 +296,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
         //calculate sample size: number of participants to roll for.
         int sampleSize = event.getSampleSize() - accepted_size - pending_size;
-        //temp test
-        Toast.makeText(this, "sample size: " + sampleSize + ", and pending_size: " + pending_size, Toast.LENGTH_SHORT).show();
 
         if (sampleSize > entrants.size()) {
             sampleSize = entrants.size();

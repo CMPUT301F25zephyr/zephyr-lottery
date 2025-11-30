@@ -8,6 +8,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,7 +22,9 @@ import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
@@ -34,6 +37,8 @@ public class EntEventsActivity extends AppCompatActivity {
     private ArrayList<Event> eventArrayList;
     private ArrayList<Event> allEventsList; // Keep original unfiltered list
     private ArrayAdapter<Event> eventArrayAdapter;
+    private ArrayList<Event> eventList;
+    private EventArrayAdapter eventAdapter;
 
     // Filter values
     private String filterEventName = "";
@@ -71,6 +76,9 @@ public class EntEventsActivity extends AppCompatActivity {
         allEventsList = new ArrayList<>(); // Initialize full list
         eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
         eventListView.setAdapter(eventArrayAdapter);
+        eventList = eventArrayList;
+        eventAdapter = (EventArrayAdapter) eventArrayAdapter;
+        loadEvents();
 
         // Set up filter activity launcher
         filterActivityLauncher = registerForActivityResult(
@@ -172,6 +180,7 @@ public class EntEventsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
 
         //listener for button to return to homescreen.
         back_latest_event_button = findViewById(R.id.button_latest_event_back);
@@ -317,4 +326,35 @@ public class EntEventsActivity extends AppCompatActivity {
             return calendar.getTimeInMillis();
         }
     }
+
+    private void loadEvents() {
+        db.collection("events")
+                .orderBy("date_created", Query.Direction.DESCENDING)
+                .get()
+                .addOnSuccessListener(query -> {
+                    if (eventList == null || eventAdapter == null) {
+                        // Just a safety guard; they *should* be initialized in onCreate.
+                        Log.e("EntEventsActivity", "eventList or eventAdapter is null in loadEvents()");
+                        return;
+                    }
+
+                    eventList.clear();
+
+                    for (DocumentSnapshot snap : query.getDocuments()) {
+                        Event e = snap.toObject(Event.class);
+                        if (e == null) continue;
+
+                        // If you have eventId in Event, you can keep this:
+                        // e.setEventId(snap.getId());
+
+                        eventList.add(e);
+                    }
+
+                    eventAdapter.notifyDataSetChanged();
+                })
+                .addOnFailureListener(e ->
+                        Log.e("EntEventsActivity", "Failed loading events", e)
+                );
+    }
 }
+

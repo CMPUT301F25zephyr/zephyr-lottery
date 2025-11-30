@@ -17,11 +17,12 @@ public class Event {
     private String time;
     private int weekday;
     private String period;
-    private ArrayList<String> entrants; //all waitlisted participants. no invitation.
+    private ArrayList<String> entrants; //all participants.
     private ArrayList<String> winners; //all entrants with pending invitations
     private ArrayList<String> rejected_entrants; //all entrants who rejected the invitation
     private ArrayList<String> accepted_entrants; //all entrants who accept the invitation
-    private ArrayList<String> entrants_reroll; //all entrants who did not receive an invitation but could if someone cancels.
+    private ArrayList<String> entrants_waitlist; //all entrants who have not received an invitation.
+    private ArrayList<String> cancelled_entrant; //entrants who's invitation was revoked by organizer
     private int limit;
     private Date date_created;
     private LocalDateTime lott_start_date;
@@ -50,7 +51,7 @@ public class Event {
         this.winners = new ArrayList<>();
         this.rejected_entrants = new ArrayList<>();
         this.accepted_entrants = new ArrayList<>();
-        this.entrants_reroll = new ArrayList<>();
+        this.entrants_waitlist = new ArrayList<>();
     }
 
     @Override
@@ -414,17 +415,17 @@ public class Event {
      * @return
      * The entrants who did not get invitation but could if someone cancels
      */
-    public ArrayList<String> getEntrants_reroll() {
-        return entrants_reroll;
+    public ArrayList<String> getEntrants_waitlist() {
+        return entrants_waitlist;
     }
 
     /**
      * set the the list of entrants who did not get invitation but could if someone cancels
-     * @param entrants_reroll
+     * @param entrants_waitlist
      * new list for entrants who did not get invitation but could if someone cancels, as an arraylist of strings
      */
-    public void setEntrants_reroll(ArrayList<String> entrants_reroll) {
-        this.entrants_reroll = entrants_reroll;
+    public void setEntrants_waitlist(ArrayList<String> entrants_waitlist) {
+        this.entrants_waitlist = entrants_waitlist;
     }
 
     /**

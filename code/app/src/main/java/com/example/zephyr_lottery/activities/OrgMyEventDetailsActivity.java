@@ -23,10 +23,12 @@ import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
@@ -102,9 +104,12 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         buttonDrawLottery.setOnClickListener(v -> {
             ArrayList<String> winners = drawLotteryWinners();
             if (winners.isEmpty()) {
-                Toast.makeText(this, "No entrants to draw from.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "No entrants to draw from, or all winners already chosen.", Toast.LENGTH_SHORT).show();
                 return;
             }
+
+            //disable button until memory stuff done
+            buttonDrawLottery.setEnabled(false);
 
             //save winners to database, send winners to dialogue
             db.collection("events").document(Integer.toString(eventCode))
@@ -112,16 +117,23 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();
 
+                        //update local version of winners as well
+                        event.setWinners(winners);
+
                         //save the invitation to the events chosen
                         sendInvitations(winners);
 
                         Intent intent = new Intent(OrgMyEventDetailsActivity.this, DrawWinnersPopupActivity.class);
                         intent.putStringArrayListExtra("WINNERS", winners);
                         startActivity(intent);
+
+                        //enable button after memory stuff done
+                        buttonDrawLottery.setEnabled(true);
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to save winners", e);
                         Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
+                        buttonDrawLottery.setEnabled(true);
                     });
         });
     }
@@ -149,12 +161,31 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     if (document.exists()) {
                         UserProfile profile = document.toObject(UserProfile.class);
                         if (profile != null) {
-                            //if successful, update this user's invitation codes in database.
-                            profile.addInvitationCode(eventCode);
-                            doc_ref.update("invitationCodes", profile.getInvitationCodes());
+
+                            //add this invitation to the user's invitation codes if it's not already there
+                            doc_ref.update("invitationCodes", FieldValue.arrayUnion(eventCode))
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d(TAG, "Invitation sent to " + email);
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Failed to send invitation to " + email, e);
+                                    });
+
                         } else {
                             Log.e(TAG, "account does not exist for " + email + ":(");
                         }
+
+                        //remove this user from the entrants_waitlist
+                        db.collection("events").document(Integer.toString(eventCode))
+                                .update("entrants_waitlist", FieldValue.arrayRemove(email))
+                                .addOnSuccessListener(aVoid ->{
+                                    event.getEntrants_waitlist().remove(email);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "user not removed from waitlist!", e);
+                                    Toast.makeText(this, "Failed to remove from waitlist", Toast.LENGTH_SHORT).show();
+                                });
+
                     } else {
                         Log.e(TAG, "account not found for: " + email + ":(");
                     }
@@ -232,15 +263,33 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             return winners;
         }
 
-        if (event.getEntrants() == null || event.getEntrants().isEmpty()) {
+        if (event.getEntrants_waitlist() == null || event.getEntrants_waitlist().isEmpty()) {
             return winners;
         }
 
-        ArrayList<String> entrants = new ArrayList<>(event.getEntrants());
-        int sampleSize = event.getSampleSize();
+        ArrayList<String> entrants = new ArrayList<>(event.getEntrants_waitlist());
 
-        if (sampleSize <= 0 || sampleSize > entrants.size()) {
+        List<String> accepted_list = event.getAccepted_entrants();
+        List<String> winners_list = event.getWinners();
+
+        //if accepted list is not null, we subtract it's size from the sample size
+        int accepted_size = !(accepted_list == null) ? accepted_list.size() : 0;
+        //if pending invitations list is not null, subtract it's size from the sample size
+        int pending_size = !(winners_list == null) ? winners_list.size() : 0;
+
+        //calculate sample size: number of participants to roll for.
+        int sampleSize = event.getSampleSize() - accepted_size - pending_size;
+        //temp test
+        Toast.makeText(this, "sample size: " + sampleSize + ", and pending_size: " + pending_size, Toast.LENGTH_SHORT).show();
+
+        if (sampleSize > entrants.size()) {
             sampleSize = entrants.size();
+        }
+
+        //if sample size is 0 (or below??) then return.
+        if (sampleSize <= 0) {
+            Log.d(TAG, "you already have enough winners");
+            return winners;
         }
 
         Collections.shuffle(entrants);

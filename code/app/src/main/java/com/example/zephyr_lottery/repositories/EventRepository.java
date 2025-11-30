@@ -200,19 +200,58 @@ public class EventRepository {
                 .document(eventId)
                 .collection("participants");
 
-        participantsRef.whereEqualTo("status", Arrays.asList("SELECTED", "CONFIRMED"))
+        participantsRef.whereEqualTo("status", "SELECTED")
                 .get()
-                .addOnSuccessListener((QuerySnapshot snapshot) -> {
+                .addOnSuccessListener(selectedSnap -> {
                     List<String> selected = new ArrayList<>();
-                    for (DocumentSnapshot doc : snapshot.getDocuments()) {
-                        // We assume docId == userId (email)
-                        selected.add(doc.getId());
+
+                    for (DocumentSnapshot doc : selectedSnap.getDocuments()) {
+                        selected.add(doc.getId());   // assume docId == userId/email
                     }
-                    Log.d(TAG, "Loaded " + selected.size() + " chosen entrants for event " + eventId);
-                    if (onSuccess != null) onSuccess.accept(selected);
+
+                    participantsRef.whereEqualTo("status", "CONFIRMED")
+                            .get()
+                            .addOnSuccessListener(confirmedSnap -> {
+                                for (DocumentSnapshot doc : confirmedSnap.getDocuments()) {
+                                    String id = doc.getId();
+                                    if (!selected.contains(id)) {
+                                        selected.add(id);
+                                    }
+                                }
+
+                                if (!selected.isEmpty()) {
+                                    Log.d(TAG, "Loaded " + selected.size()
+                                            + " selected/confirmed entrants for " + eventId);
+                                    if (onSuccess != null) onSuccess.accept(selected);
+                                } else {
+                                    db.collection("events")
+                                            .document(eventId)
+                                            .get()
+                                            .addOnSuccessListener(eventSnap -> {
+                                                List<String> winners =
+                                                        (List<String>) eventSnap.get("winners");
+                                                if (winners == null) {
+                                                    winners = new ArrayList<>();
+                                                }
+
+                                                Log.d(TAG, "Fallback winners size = "
+                                                        + winners.size() + " for " + eventId);
+
+                                                if (onSuccess != null) onSuccess.accept(winners);
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e(TAG, "getSelectedEntrants fallback failed", e);
+                                                if (onError != null) onError.accept(e);
+                                            });
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                Log.e(TAG, "getSelectedEntrants CONFIRMED query failed", e);
+                                if (onError != null) onError.accept(e);
+                            });
                 })
                 .addOnFailureListener(e -> {
-                    Log.e(TAG, "getSelectedEntrants failed", e);
+                    Log.e(TAG, "getSelectedEntrants SELECTED query failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }

@@ -15,6 +15,9 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.repositories.EventRepository;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.List;

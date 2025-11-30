@@ -19,6 +19,8 @@ import com.google.firebase.firestore.WriteBatch;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * This class manages the statuses of participants and the accepting/declining of invitations.
@@ -198,7 +200,7 @@ public class EventRepository {
                 .document(eventId)
                 .collection("participants");
 
-        participantsRef.whereEqualTo("status", "SELECTED")
+        participantsRef.whereEqualTo("status", Arrays.asList("SELECTED", "CONFIRMED"))
                 .get()
                 .addOnSuccessListener((QuerySnapshot snapshot) -> {
                     List<String> selected = new ArrayList<>();
@@ -206,7 +208,7 @@ public class EventRepository {
                         // We assume docId == userId (email)
                         selected.add(doc.getId());
                     }
-                    Log.d(TAG, "Loaded " + selected.size() + " selected entrants for " + eventId);
+                    Log.d(TAG, "Loaded " + selected.size() + " chosen entrants for event " + eventId);
                     if (onSuccess != null) onSuccess.accept(selected);
                 })
                 .addOnFailureListener(e -> {

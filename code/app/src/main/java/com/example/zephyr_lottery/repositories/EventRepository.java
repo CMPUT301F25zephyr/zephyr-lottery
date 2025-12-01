@@ -4,6 +4,7 @@ import android.util.Log;
 
 
 import com.example.zephyr_lottery.models.Participant;
+import com.example.zephyr_lottery.models.WaitingListEntry;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.*;
@@ -16,6 +17,7 @@ import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.SetOptions;
 import com.google.firebase.firestore.WriteBatch;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,9 @@ import java.util.function.Consumer;
  * Manages participant statuses and invitation logic, and supports bulk notifications.
  */
 public class EventRepository {
+
+    private static final String TAG = "EventRepository";
+
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
@@ -40,6 +45,7 @@ public class EventRepository {
      *  Returns a Task when completed asynchronously
      */
 
+    // Update participant status (accepted/declined)
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
                 .document(eventId)
@@ -314,5 +320,72 @@ public class EventRepository {
     // Placeholder for actual FCM integration
     private void sendNotificationToUser(String userId, String message) {
         Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
+    }
+
+    // Waiting-list location logic  (US 02.02.02 map story)
+
+    /**
+     * Add / update an entrant in the waiting list subcollection for an event,
+     * including optional latitude/longitude.
+     * <p>
+     * Path: events/{eventId}/waitingList/{userId}
+     */
+    public void addEntrantLocationToWaitingList(String eventId,
+                                                String entrantId,
+                                                Double latitude,
+                                                Double longitude) {
+        if (eventId == null || entrantId == null) {
+            Log.e(TAG, "Null eventId or entrantId");
+            return;
+        }
+
+        CollectionReference waitingRef = db.collection("events")
+                .document(eventId)
+                .collection("waitingList");
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", entrantId);
+        data.put("latitude", latitude);
+        data.put("longitude", longitude);
+        data.put("joinedAt", Timestamp.now());
+
+        waitingRef.document(entrantId).set(data, SetOptions.merge());
+    }
+
+    /**
+     * One-shot read of all waiting-list entries (with locations if present)
+     * for a given event.
+     */
+    public void getWaitingListWithLocations(
+            String eventId,
+            Consumer<List<WaitingListEntry>> onSuccess,
+            Consumer<Exception> onError
+    ) {
+        CollectionReference ref = db.collection("events")
+                .document(eventId)
+                .collection("waitingList");
+
+        ref.get()
+                .addOnSuccessListener(query -> {
+                    List<WaitingListEntry> result = new ArrayList<>();
+                    for (DocumentSnapshot doc : query.getDocuments()) {
+                        WaitingListEntry entry = doc.toObject(WaitingListEntry.class);
+                        if (entry != null) {
+                            if (entry.getUserId() == null) {
+                                entry.setUserId(doc.getId());
+                            }
+                            result.add(entry);
+                        }
+                    }
+                    if (onSuccess != null) {
+                        onSuccess.accept(result);
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to load waiting list", e);
+                    if (onError != null) {
+                        onError.accept(e);
+                    }
+                });
     }
 }

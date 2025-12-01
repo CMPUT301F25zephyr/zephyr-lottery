@@ -1,5 +1,7 @@
 package com.example.zephyr_lottery;
 
+import com.google.firebase.firestore.Exclude;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
@@ -9,6 +11,11 @@ import java.util.Objects;
  * This class stores all of the details of an event from the database
  */
 public class Event {
+
+    //  Firestore document id (NOT stored in Firestore)
+    @Exclude
+    private String eventId;
+
     private String name;
     private String description;
     private String organizer_email;
@@ -17,11 +24,12 @@ public class Event {
     private String time;
     private int weekday;
     private String period;
-    private ArrayList<String> entrants; //all waitlisted participants. no invitation.
+    private ArrayList<String> entrants; //all participants.
     private ArrayList<String> winners; //all entrants with pending invitations
     private ArrayList<String> rejected_entrants; //all entrants who rejected the invitation
     private ArrayList<String> accepted_entrants; //all entrants who accept the invitation
-    private ArrayList<String> entrants_reroll; //all entrants who did not receive an invitation but could if someone cancels.
+    private ArrayList<String> entrants_waitlist; //all entrants who have not received an invitation.
+    private ArrayList<String> cancelled_entrant; //entrants who's invitation was revoked by organizer
     private int limit;
     private Date date_created;
     private LocalDateTime lott_start_date;
@@ -32,7 +40,7 @@ public class Event {
     public Event() {
         entrants = new ArrayList<>();
     }
-    
+
     /**
      * Creates a new event with a name, time, and email
      * @param name
@@ -50,7 +58,19 @@ public class Event {
         this.winners = new ArrayList<>();
         this.rejected_entrants = new ArrayList<>();
         this.accepted_entrants = new ArrayList<>();
-        this.entrants_reroll = new ArrayList<>();
+        this.entrants_waitlist = new ArrayList<>();
+    }
+
+    // ===== Firestore document ID (used only in app code) =====
+
+    @Exclude
+    public String getEventId() {
+        return eventId;
+    }
+
+    @Exclude
+    public void setEventId(String eventId) {
+        this.eventId = eventId;
     }
 
     @Override
@@ -83,7 +103,6 @@ public class Event {
     public String getOrganizer_email() {
         return organizer_email;
     }
-
     /**
      * Sets the organizer email for the event
      * @param organizer_email
@@ -92,7 +111,6 @@ public class Event {
     public void setOrganizer_email(String organizer_email) {
         this.organizer_email = organizer_email;
     }
-
     /**
      * Obtains the name of the event
      * @return
@@ -101,7 +119,6 @@ public class Event {
     public String getName() {
         return name;
     }
-
     /**
      * Changes the name of the event
      * @param name
@@ -110,7 +127,6 @@ public class Event {
     public void setName(String name) {
         this.name = name;
     }
-
     /**
      * Obtains the recurring weekday integer on which this event is held
      * @return
@@ -119,7 +135,6 @@ public class Event {
     public int getWeekday() {
         return weekday;
     }
-
     /**
      * Obtains the recurring weekday on which this event is held
      * @return
@@ -133,7 +148,7 @@ public class Event {
         if (weekday < 0 || weekday >= weekdaysStr.length) return "";
         return weekdaysStr[this.weekday];
     }
-    
+
     /**
      * Changes the weekday string on which this event is held
      * @param weekdayStr
@@ -305,7 +320,7 @@ public class Event {
     public void setLott_end_date(LocalDateTime lott_end_date) {
         this.lott_end_date = lott_end_date;
     }
-    
+
     /**
      * Obtain the number of users to be drawn from the lottery
      * @return
@@ -414,17 +429,17 @@ public class Event {
      * @return
      * The entrants who did not get invitation but could if someone cancels
      */
-    public ArrayList<String> getEntrants_reroll() {
-        return entrants_reroll;
+    public ArrayList<String> getEntrants_waitlist() {
+        return entrants_waitlist;
     }
 
     /**
      * set the the list of entrants who did not get invitation but could if someone cancels
-     * @param entrants_reroll
+     * @param entrants_waitlist
      * new list for entrants who did not get invitation but could if someone cancels, as an arraylist of strings
      */
-    public void setEntrants_reroll(ArrayList<String> entrants_reroll) {
-        this.entrants_reroll = entrants_reroll;
+    public void setEntrants_waitlist(ArrayList<String> entrants_waitlist) {
+        this.entrants_waitlist = entrants_waitlist;
     }
 
     /**

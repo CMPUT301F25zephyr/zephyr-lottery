@@ -92,6 +92,62 @@ public class EventRepository {
                 });
     }
 
+    /**
+     * US02.07.01: Notify all waiting list entrants and log notifications.
+     * Waiting list entrants are those with status "PENDING" in the participants subcollection.
+     */
+    public void notifyAllWaitingListEntrants(String eventId,
+                                             Consumer<Integer> onComplete,
+                                             Consumer<Exception> onError) {
+
+        // Read the event document itself
+        DocumentReference eventRef = db.collection("events").document(eventId);
+
+        eventRef.get()
+                .addOnSuccessListener(snapshot -> {
+                    if (!snapshot.exists()) {
+                        Log.d(TAG, "Event " + eventId + " not found when notifying waiting list");
+                        if (onComplete != null) onComplete.accept(0);
+                        return;
+                    }
+
+                    // Waiting list = "entrants" array on the event
+                    List<String> entrants = (List<String>) snapshot.get("entrants");
+                    if (entrants == null) {
+                        entrants = Collections.emptyList();
+                    }
+
+                    int count = entrants.size();
+                    if (count == 0) {
+                        Log.d(TAG, "No entrants to notify for event " + eventId);
+                        if (onComplete != null) onComplete.accept(0);
+                        return;
+                    }
+
+                    // Optional: nice event name in your notification text (for backend use)
+                    String eventName = snapshot.getString("name");
+
+                    for (String userId : entrants) {
+                        if (userId == null || userId.isEmpty()) continue;
+
+                        // We log a notification for each waiting-list entrant.
+                        // Your Cloud Function can watch notificationLogs and send FCM pushes.
+                        logNotificationSent(
+                                eventId,
+                                userId,
+                                "WAITING",
+                                null,
+                                null
+                        );
+                    }
+
+                    if (onComplete != null) onComplete.accept(count);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e(TAG, "Failed to fetch event for waiting list entrants", e);
+                });
+    }
+
     // Waiting-list location logic  (US 02.02.02 map story)
 
     /**
@@ -156,6 +212,31 @@ public class EventRepository {
                     if (onError != null) {
                         onError.accept(e);
                     }
+                });
+
+    }
+
+    /**
+     * US03.08.01: Record a notification in an audit trail for admin review.
+     * Your Cloud Function can watch this collection and send FCM pushes.
+     */
+    public void logNotificationSent(String eventId, String userId, String notificationType,
+                                    Runnable onSuccess, Consumer<Exception> onError) {
+        Map<String, Object> logEntry = new HashMap<>();
+        logEntry.put("eventId", eventId);
+        logEntry.put("userId", userId);
+        logEntry.put("notificationType", notificationType);
+        logEntry.put("sentAt", Timestamp.now());
+
+        db.collection("notificationLogs")
+                .add(logEntry)
+                .addOnSuccessListener(docRef -> {
+                    Log.d("EventRepo", "Logged notification: " + docRef.getId());
+                    if (onSuccess != null) onSuccess.run();
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EventRepo", "Failed to log notification", e);
+                    if (onError != null) onError.accept(e);
                 });
     }
 }

@@ -107,6 +107,14 @@ public class EventInvitationActivity extends AppCompatActivity {
                                 Toast.LENGTH_SHORT).show();
                     });
 
+            //remove user's email from the waitlist entrants (entrants_waitlist)
+            docRef.update("entrants_waitlist", FieldValue.arrayRemove(user_email))
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(EventInvitationActivity.this,
+                                "not removed from waitlist?",
+                                Toast.LENGTH_SHORT).show();
+                    });
+
             //send user back to home screen
             finish();
         });
@@ -130,7 +138,15 @@ public class EventInvitationActivity extends AppCompatActivity {
             docRef.update("winners", FieldValue.arrayRemove(user_email))
                     .addOnFailureListener(e -> {
                         Toast.makeText(EventInvitationActivity.this,
-                                "not removed from pending list?",
+                                "not removed from pending invitation list?",
+                                Toast.LENGTH_SHORT).show();
+                    });
+
+            //remove user's email from the waitlist entrants (entrants_waitlist)
+            docRef.update("entrants_waitlist", FieldValue.arrayRemove(user_email))
+                    .addOnFailureListener(e -> {
+                        Toast.makeText(EventInvitationActivity.this,
+                                "not removed from waitlist?",
                                 Toast.LENGTH_SHORT).show();
                     });
 

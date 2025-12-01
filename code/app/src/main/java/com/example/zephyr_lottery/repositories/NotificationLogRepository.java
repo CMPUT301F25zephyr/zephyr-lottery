@@ -3,72 +3,74 @@ package com.example.zephyr_lottery.repositories;
 import android.util.Log;
 
 import com.example.zephyr_lottery.models.NotificationLog;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.*;
+import com.google.firebase.firestore.CollectionReference;
+import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.QuerySnapshot;
+import com.google.firebase.firestore.FirebaseFirestoreException;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * Repository for reading & writing notification log entries.
+ * Repository for interacting with notificationLogs collection.
  */
 public class NotificationLogRepository {
-
     private static final String TAG = "NotificationLogRepo";
-    private static final String COLLECTION = "notification_logs";
-
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
-     * Write a new log entry.
+     * Listen to logs for a specific event (if you only need one event).
      */
-    public Task<Void> logNotification(NotificationLog log) {
-        if (log.getTimestamp() == null) {
-            log.setTimestamp(Timestamp.now());
-        }
-
-        CollectionReference logsRef = db.collection(COLLECTION);
-
-        return logsRef.add(log)
-                .addOnSuccessListener(docRef ->
-                        Log.d(TAG, "Logged notification with id=" + docRef.getId()))
-                .addOnFailureListener(e ->
-                        Log.e(TAG, "Failed to write log", e))
-                // convert Task<DocumentReference> -> Task<Void>
-                .continueWith(task -> null);
-    }
-
-    /**
-     * Listen to all logs ordered by timestamp (newest first).
-     * Used by the admin UI.
-     */
-    public ListenerRegistration listenToAllLogs(Consumer<List<NotificationLog>> onLogs,
-                                                Consumer<Exception> onError) {
-        return db.collection(COLLECTION)
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .addSnapshotListener((snap, e) -> {
+    public ListenerRegistration listenToLogsForEvent(
+            String eventId,
+            Consumer<List<NotificationLog>> onSuccess,
+            Consumer<Exception> onError
+    ) {
+        CollectionReference logsRef = db.collection("notificationLogs");
+        return logsRef.whereEqualTo("eventId", eventId)
+                .addSnapshotListener((QuerySnapshot snapshots, FirebaseFirestoreException e) -> {
                     if (e != null) {
-                        Log.e(TAG, "Listen error", e);
+                        Log.e(TAG, "Listen failed.", e);
                         if (onError != null) onError.accept(e);
                         return;
                     }
-                    if (snap == null) {
-                        if (onLogs != null) onLogs.accept(Collections.emptyList());
-                        return;
+                    List<NotificationLog> results = new ArrayList<>();
+                    if (snapshots != null) {
+                        snapshots.forEach(doc -> {
+                            NotificationLog log = doc.toObject(NotificationLog.class);
+                            results.add(log);
+                        });
                     }
-
-                    List<NotificationLog> list = new ArrayList<>();
-                    for (DocumentSnapshot doc : snap.getDocuments()) {
-                        NotificationLog log = doc.toObject(NotificationLog.class);
-                        if (log != null) {
-                            log.setId(doc.getId());
-                            list.add(log);
-                        }
-                    }
-                    if (onLogs != null) onLogs.accept(list);
+                    if (onSuccess != null) onSuccess.accept(results);
                 });
+    }
+
+    /**
+     * Listen to all logs (for admin).
+     */
+    public ListenerRegistration listenToAllLogs(
+            Consumer<List<NotificationLog>> onSuccess,
+            Consumer<Exception> onError
+    ) {
+        CollectionReference logsRef = db.collection("notificationLogs");
+        return logsRef.addSnapshotListener((QuerySnapshot snapshots, FirebaseFirestoreException e) -> {
+            if (e != null) {
+                Log.e(TAG, "Listen failed.", e);
+                if (onError != null) onError.accept(e);
+                return;
+            }
+            List<NotificationLog> results = new ArrayList<>();
+            if (snapshots != null) {
+                snapshots.forEach(doc -> {
+                    NotificationLog log = doc.toObject(NotificationLog.class);
+                    results.add(log);
+                });
+            }
+            if (onSuccess != null) onSuccess.accept(results);
+        });
     }
 }

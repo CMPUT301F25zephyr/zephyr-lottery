@@ -1,71 +1,50 @@
 package com.example.zephyr_lottery.models;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.Exclude;
 
 /**
- * Model for a single notification log entry.
+ * Model for notification audit log entries for admins.
+ * Stored in the "notificationLogs" collection.
  */
 public class NotificationLog {
 
-    @Exclude
-    private String id;           // Firestore document ID (not stored)
+    // ID of the event this notification is about
+    private String eventId;
 
-    private String senderEmail;   // organizer
-    private String recipientEmail; // entrant
-    private String eventId;       // optional
-    private String eventName;     // optional
-    private String type;          // e.g. "INVITATION", "WAITLIST_NOTIFY", etc.
-    private String title;         // notification title
-    private String body;          // notification body
-    private Timestamp timestamp;  // when it was sent
+    // Human-readable event name (optional, for nice UI)
+    private String eventName;
 
-    // **Required** public no-arg constructor for Firestore
-    public NotificationLog() {}
+    // Organizer who triggered the notification
+    private String senderEmail;
 
-    public NotificationLog(String senderEmail,
-                           String recipientEmail,
-                           String eventId,
+    // Recipient user id / email (canonical field)
+    private String userId;
+
+    // e.g. "WAITING", "SELECTED", "REMINDER", etc.
+    private String notificationType;
+
+    // When the notification was sent/logged
+    private Timestamp sentAt;
+
+    // Required empty constructor for Firestore
+    public NotificationLog() {
+    }
+
+    public NotificationLog(String eventId,
                            String eventName,
-                           String type,
-                           String title,
-                           String body,
-                           Timestamp timestamp) {
-        this.senderEmail = senderEmail;
-        this.recipientEmail = recipientEmail;
+                           String senderEmail,
+                           String userId,
+                           String notificationType,
+                           Timestamp sentAt) {
         this.eventId = eventId;
         this.eventName = eventName;
-        this.type = type;
-        this.title = title;
-        this.body = body;
-        this.timestamp = timestamp;
-    }
-
-    @Exclude
-    public String getId() {
-        return id;
-    }
-
-    @Exclude
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getSenderEmail() {
-        return senderEmail;
-    }
-
-    public void setSenderEmail(String senderEmail) {
         this.senderEmail = senderEmail;
+        this.userId = userId;
+        this.notificationType = notificationType;
+        this.sentAt = sentAt;
     }
 
-    public String getRecipientEmail() {
-        return recipientEmail;
-    }
-
-    public void setRecipientEmail(String recipientEmail) {
-        this.recipientEmail = recipientEmail;
-    }
+    // ----- Getters / setters -----
 
     public String getEventId() {
         return eventId;
@@ -83,35 +62,47 @@ public class NotificationLog {
         this.eventName = eventName;
     }
 
-    public String getType() {
-        return type;
+    public String getSenderEmail() {
+        return senderEmail;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setSenderEmail(String senderEmail) {
+        this.senderEmail = senderEmail;
     }
 
-    public String getTitle() {
-        return title;
+    // Used by NotificationLogArrayAdapter
+    public String getUserId() {
+        return userId;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
-    public String getBody() {
-        return body;
+    public String getNotificationType() {
+        return notificationType;
     }
 
-    public void setBody(String body) {
-        this.body = body;
+    public void setNotificationType(String notificationType) {
+        this.notificationType = notificationType;
     }
 
-    public Timestamp getTimestamp() {
-        return timestamp;
+    public Timestamp getSentAt() {
+        return sentAt;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
-        this.timestamp = timestamp;
+    public void setSentAt(Timestamp sentAt) {
+        this.sentAt = sentAt;
+    }
+
+    // ----- Aliases for FCM logging code -----
+
+    // FCM code might use "recipientEmail" wording
+    public String getRecipientEmail() {
+        return userId;
+    }
+
+    public void setRecipientEmail(String recipientEmail) {
+        this.userId = recipientEmail;
     }
 }

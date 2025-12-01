@@ -25,13 +25,10 @@ import java.util.List;
 public class AdmNotificationLogsActivity extends AppCompatActivity {
 
     private static final String TAG = "AdmNotificationLogs";
-
     private ListView logsListView;
     private Button backButton;
-
     private NotificationLogArrayAdapter adapter;
-    private ArrayList<NotificationLog> logs;
-
+    private final ArrayList<NotificationLog> logs = new ArrayList<>();
     private final NotificationLogRepository logRepository = new NotificationLogRepository();
     private ListenerRegistration listenerRegistration;
 
@@ -50,14 +47,11 @@ public class AdmNotificationLogsActivity extends AppCompatActivity {
         logsListView = findViewById(R.id.listView_adm_logs);
         backButton = findViewById(R.id.button_adm_logs_back);
 
-        logs = new ArrayList<>();
         adapter = new NotificationLogArrayAdapter(this, logs);
         logsListView.setAdapter(adapter);
 
-        // Optional: get admin email if needed
         String adminEmail = getIntent().getStringExtra("USER_EMAIL");
 
-        // Listen to all logs
         listenerRegistration = logRepository.listenToAllLogs(
                 this::updateLogs,
                 e -> {
@@ -67,7 +61,6 @@ public class AdmNotificationLogsActivity extends AppCompatActivity {
         );
 
         backButton.setOnClickListener(v -> {
-            // Go back to admin home, preserving admin email
             Intent intent = new Intent(AdmNotificationLogsActivity.this, HomeAdmActivity.class);
             intent.putExtra("USER_EMAIL", adminEmail);
             startActivity(intent);
@@ -83,8 +76,6 @@ public class AdmNotificationLogsActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (listenerRegistration != null) {
-            listenerRegistration.remove();
-        }
+        if (listenerRegistration != null) listenerRegistration.remove();
     }
 }

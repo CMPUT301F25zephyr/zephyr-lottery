@@ -12,11 +12,19 @@ import androidx.core.app.NotificationCompat;
 
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.activities.HomeEntActivity;
+import com.example.zephyr_lottery.models.NotificationLog;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+import java.util.Map;
+
+/**
+ * FCM service: receives push notifications,
+ * optionally logs them, and shows a system notification.
+ */
 public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
     private static final String TAG = "FCMService";
@@ -28,8 +36,46 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Log.d(TAG, "Message received from: " + remoteMessage.getFrom());
 
-        // Check if user has notifications enabled
+        // 1) Log this notification in Firestore (for admin audit logs)
+        logNotificationToFirestore(remoteMessage);
+
+        // 2) Check user preference and show notification if allowed
         checkNotificationPreferenceAndShow(remoteMessage);
+    }
+
+    /**
+     * Writes a NotificationLog entry to Firestore for admin review.
+     * This uses your models.NotificationLog class.
+     */
+    private void logNotificationToFirestore(RemoteMessage remoteMessage) {
+        FirebaseFirestore db = FirebaseFirestore.getInstance();
+        FirebaseAuth auth = FirebaseAuth.getInstance();
+
+        NotificationLog log = new NotificationLog();
+
+        // Read data payload (if organizer code / Cloud Functions sent it)
+        Map<String, String> data = remoteMessage.getData();
+        if (data != null) {
+            log.setEventId(data.get("eventId"));
+            log.setEventName(data.get("eventName"));
+            log.setNotificationType(data.get("notificationType"));
+            log.setSenderEmail(data.get("senderEmail")); // optional, may be null
+        }
+
+        // Current device user is the recipient
+        if (auth.getCurrentUser() != null) {
+            String recipientEmail = auth.getCurrentUser().getEmail();
+            log.setRecipientEmail(recipientEmail); // this maps to userId in your model
+        }
+
+        log.setSentAt(Timestamp.now());
+
+        db.collection("notificationLogs")
+                .add(log)
+                .addOnSuccessListener(docRef ->
+                        Log.d(TAG, "Logged notification: " + docRef.getId()))
+                .addOnFailureListener(e ->
+                        Log.e(TAG, "Failed to log notification", e));
     }
 
     private void checkNotificationPreferenceAndShow(RemoteMessage remoteMessage) {
@@ -60,11 +106,13 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     }
 
     private void showNotification(RemoteMessage remoteMessage) {
-        // Get notification data
-        String title = remoteMessage.getNotification() != null ?
-                remoteMessage.getNotification().getTitle() : "New Notification";
-        String body = remoteMessage.getNotification() != null ?
-                remoteMessage.getNotification().getBody() : "";
+        // Get notification data (from notification payload)
+        String title = remoteMessage.getNotification() != null
+                ? remoteMessage.getNotification().getTitle()
+                : "New Notification";
+        String body = remoteMessage.getNotification() != null
+                ? remoteMessage.getNotification().getBody()
+                : "";
 
         // Create notification channel (required for Android 8.0+)
         createNotificationChannel();
@@ -82,7 +130,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
         // Build notification
         NotificationCompat.Builder notificationBuilder =
                 new NotificationCompat.Builder(this, CHANNEL_ID)
-                        .setSmallIcon(R.drawable.ic_notification) // You'll need to create this icon
+                        .setSmallIcon(R.drawable.ic_notification) // make sure this exists
                         .setContentTitle(title)
                         .setContentText(body)
                         .setAutoCancel(true)
@@ -103,10 +151,12 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             String description = "Notifications for lottery events";
             int importance = NotificationManager.IMPORTANCE_HIGH;
 
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            NotificationChannel channel =
+                    new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            NotificationManager notificationManager =
+                    getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
     }
@@ -130,12 +180,10 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
             db.collection("accounts")
                     .document(userEmail)
                     .update("fcmToken", token)
-                    .addOnSuccessListener(aVoid -> {
-                        Log.d(TAG, "FCM token saved to Firestore");
-                    })
-                    .addOnFailureListener(e -> {
-                        Log.e(TAG, "Error saving FCM token", e);
-                    });
+                    .addOnSuccessListener(aVoid ->
+                            Log.d(TAG, "FCM token saved to Firestore"))
+                    .addOnFailureListener(e ->
+                            Log.e(TAG, "Error saving FCM token", e));
         }
     }
 }

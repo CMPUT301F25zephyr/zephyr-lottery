@@ -21,6 +21,7 @@ public class HomeAdmActivity extends AppCompatActivity {
     private Button events_button;
     private Button profile_button;
     private Button images_button;
+    private Button logs_button;
 
     //database variables
     private FirebaseFirestore db;
@@ -66,10 +67,19 @@ public class HomeAdmActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Space to add button to go to images activity
+        // Browse images (whatever activity your team uses for this)
         images_button = findViewById(R.id.admin_images_button);
-        images_button.setOnClickListener(v -> {
+        images_button.setOnClickListener(view -> {
             Intent intent = new Intent(HomeAdmActivity.this, AdmBrowseImagesActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
+        });
+
+        // NEW: Notification logs screen
+        logs_button = findViewById(R.id.admin_notification_logs_button);
+        logs_button.setOnClickListener(view -> {
+            Intent intent = new Intent(HomeAdmActivity.this, AdmNotificationLogsActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
     }

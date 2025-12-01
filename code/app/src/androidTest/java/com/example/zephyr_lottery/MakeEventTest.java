@@ -23,6 +23,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+// Tests event creation blackbox (US 02.02.01)
 @RunWith(AndroidJUnit4.class)
 public class MakeEventTest {
     @Rule

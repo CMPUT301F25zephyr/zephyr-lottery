@@ -12,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -20,6 +21,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
+import com.example.zephyr_lottery.repositories.EventRepository;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -42,12 +44,17 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button generateQrButton;
     private Button buttonDrawLottery;
     private Button editButton;
-    private Button chosenEntrantsButton;
+    private Button buttonNotifyWaiting;
+    private Button buttonNotifySelected;
     private Button viewMapButton;
+    private Button chosenEntrantsButton;
 
     private int eventCode;
     private String userEmail;
     private Event event;
+
+    // Repository used for US02.07.01 / US02.07.02
+    private final EventRepository eventRepository = new EventRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +73,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         eventCode = getIntent().getIntExtra("EVENT_CLICKED_CODE", -1);
         userEmail = getIntent().getStringExtra("USER_EMAIL");
 
+        // --- find views ---
         detailsText = findViewById(R.id.text_placeholder);
         backButton = findViewById(R.id.button_org_event_details_back);
         entrantsButton = findViewById(R.id.button_entrants);
@@ -74,9 +82,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
         eventImage = findViewById(R.id.imageView_orgEventDetails);
         editButton = findViewById(R.id.button_org_event_details_edit);
+        buttonNotifyWaiting = findViewById(R.id.button_notify_waiting);
+        buttonNotifySelected = findViewById(R.id.button_notify_selected);
         chosenEntrantsButton = findViewById(R.id.button_chosen_entrants);
 
         loadEventDetails();
+
+        // --- navigation & actions ---
 
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventsActivity.class);
@@ -85,11 +97,16 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         });
 
         entrantsButton.setOnClickListener(v -> {
+            if (event == null) {
+                Toast.makeText(this, "Event not loaded yet.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
             intent.putExtra("USER_EMAIL", userEmail);
 
-            //add in arraylists of entrants with statuses
+            // add in arraylists of entrants with statuses
             intent.putExtra("WAITLIST_ENTRANTS", event.getEntrants_waitlist());
             intent.putExtra("ACCEPT_ENTRANTS", event.getAccepted_entrants());
             intent.putExtra("REJECT_ENTRANTS", event.getRejected_entrants());
@@ -98,7 +115,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // View entrants on map: pass Firestore document ID as a String
+        // View entrants on map
         viewMapButton.setOnClickListener(v -> {
             if (eventCode == -1) {
                 Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
@@ -134,26 +151,25 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 return;
             }
 
-            //disable button until memory stuff done
+            // disable button until database updates are done
             buttonDrawLottery.setEnabled(false);
 
-            //save winners to database, send winners to dialogue
             db.collection("events").document(Integer.toString(eventCode))
                     .update("winners", winners)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();
 
-                        //update local version of winners as well
+                        // update local event object
                         event.setWinners(winners);
+                        event.setChosen_entrants(winners); // keep chosen entrants alias in sync
 
-                        //save the invitation to the events chosen
+                        // send invitations
                         sendInvitations(winners);
 
                         Intent intent = new Intent(OrgMyEventDetailsActivity.this, DrawWinnersPopupActivity.class);
                         intent.putStringArrayListExtra("WINNERS", winners);
                         startActivity(intent);
 
-                        //enable button after memory stuff done
                         buttonDrawLottery.setEnabled(true);
                     })
                     .addOnFailureListener(e -> {
@@ -162,28 +178,61 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         buttonDrawLottery.setEnabled(true);
                     });
         });
-    }
 
-        chosenEntrantsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventChosenEntrantsActivity.class);
-            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
-            intent.putExtra("USER_EMAIL", userEmail);
-            startActivity(intent);
+        // US02.07.01 – notify all waiting list entrants
+        buttonNotifyWaiting.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Notify waiting list entrants?")
+                    .setMessage("This will send notifications to all entrants on the waiting list.")
+                    .setPositiveButton("Notify", (dialog, which) -> {
+                        String eventId = Integer.toString(eventCode);
+
+                        eventRepository.notifyAllWaitingListEntrants(
+                                eventId,
+                                count -> {
+                                    if (count == 0) {
+                                        Toast.makeText(
+                                                this,
+                                                "There are no waiting list entrants to notify.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    } else {
+                                        Toast.makeText(
+                                                this,
+                                                "Notifications sent to " + count + " entrant(s).",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                },
+                                e -> Toast.makeText(
+                                        this,
+                                        "Failed: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         });
-    }
 
-        // Notify Selected Entrants button
+        // US02.07.02 – notify all selected entrants
         buttonNotifySelected.setOnClickListener(v -> {
             if (eventCode == -1) {
                 Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
                 return;
             }
+
             new AlertDialog.Builder(this)
                     .setTitle("Notify selected entrants?")
                     .setMessage("This will send notifications to all selected entrants.")
                     .setPositiveButton("Notify", (d, w) -> {
                         String eventId = Integer.toString(eventCode);
-                        repo.notifyAllSelectedEntrants(
+                        eventRepository.notifyAllSelectedEntrants(
                                 eventId,
                                 count -> {
                                     if (count == 0) {
@@ -210,6 +259,16 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     .setNegativeButton("Cancel", null)
                     .show();
         });
+
+        // US02.06.01 – view chosen entrants (winners)
+        chosenEntrantsButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventChosenEntrantsActivity.class);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+    }
+
     /**
      * finds users of the winners and updates their pending invitations
      * @param winner_emails
@@ -251,7 +310,9 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         db.collection("events").document(Integer.toString(eventCode))
                                 .update("entrants_waitlist", FieldValue.arrayRemove(email))
                                 .addOnSuccessListener(aVoid ->{
-                                    event.getEntrants_waitlist().remove(email);
+                                    if (event != null && event.getEntrants_waitlist() != null) {
+                                        event.getEntrants_waitlist().remove(email);
+                                    }
                                 })
                                 .addOnFailureListener(e -> {
                                     Log.e(TAG, "user not removed from waitlist!", e);
@@ -344,10 +405,10 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         List<String> accepted_list = event.getAccepted_entrants();
         List<String> winners_list = event.getWinners();
 
-        //if accepted list is not null, we subtract it's size from the sample size
-        int accepted_size = !(accepted_list == null) ? accepted_list.size() : 0;
-        //if pending invitations list is not null, subtract it's size from the sample size
-        int pending_size = !(winners_list == null) ? winners_list.size() : 0;
+        //if accepted list is not null, we subtract its size from the sample size
+        int accepted_size = (accepted_list != null) ? accepted_list.size() : 0;
+        //if pending invitations list is not null, subtract its size from the sample size
+        int pending_size = (winners_list != null) ? winners_list.size() : 0;
 
         //calculate sample size: number of participants to roll for.
         int sampleSize = event.getSampleSize() - accepted_size - pending_size;
@@ -366,8 +427,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         for (int i = 0; i < sampleSize; i++) {
             winners.add(entrants.get(i));
         }
-
-        //tvWinners.setText("Last draw: " + winners.size() + " selected");
 
         return winners;
     }

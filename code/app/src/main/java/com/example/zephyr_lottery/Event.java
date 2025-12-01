@@ -30,6 +30,7 @@ public class Event {
     private ArrayList<String> accepted_entrants; //all entrants who accept the invitation
     private ArrayList<String> entrants_waitlist; //all entrants who have not received an invitation.
     private ArrayList<String> cancelled_entrant; //entrants who's invitation was revoked by organizer
+    private ArrayList<String> chosen_entrants; //all entrants currently chosen (selected winners)
     private int limit;
     private Date date_created;
     private LocalDateTime lott_start_date;
@@ -39,6 +40,12 @@ public class Event {
 
     public Event() {
         entrants = new ArrayList<>();
+        winners = new ArrayList<>();
+        rejected_entrants = new ArrayList<>();
+        accepted_entrants = new ArrayList<>();
+        entrants_waitlist = new ArrayList<>();
+        cancelled_entrant = new ArrayList<>();
+        chosen_entrants = new ArrayList<>();
     }
 
     /**
@@ -59,6 +66,8 @@ public class Event {
         this.rejected_entrants = new ArrayList<>();
         this.accepted_entrants = new ArrayList<>();
         this.entrants_waitlist = new ArrayList<>();
+        this.cancelled_entrant = new ArrayList<>();
+        this.chosen_entrants = new ArrayList<>();
     }
 
     // ===== Firestore document ID (used only in app code) =====
@@ -386,6 +395,27 @@ public class Event {
             new_winners = new ArrayList<>();
         }
         this.winners = new_winners;
+    }
+
+    /**
+     * Obtain the list of chosen entrants (selected winners)
+     * @return
+     * list of chosen entrants as an ArrayList of Strings
+     */
+    public ArrayList<String> getChosen_entrants() {
+        if (chosen_entrants == null) {
+            chosen_entrants = new ArrayList<>();
+        }
+        return chosen_entrants;
+    }
+
+    /**
+     * set the list of chosen entrants (selected winners)
+     * @param chosen_entrants
+     * new list for chosen entrants as an ArrayList of Strings
+     */
+    public void setChosen_entrants(ArrayList<String> chosen_entrants) {
+        this.chosen_entrants = (chosen_entrants != null) ? chosen_entrants : new ArrayList<>();
     }
 
     /**

@@ -59,11 +59,11 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <Button
-        android:id="@+id/button_noti_accepted"
+        android:id="@+id/button_list_cancelled"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Show cancelled entrants"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/rectangle_bottom"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_list_accepted" />

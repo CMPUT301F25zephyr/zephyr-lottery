@@ -121,6 +121,8 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
         //buttons initialization
         export_csv_button = findViewById(R.id.button_exportcsv);
         my_entrants_back_button = findViewById(R.id.button_back_my_entrants);
+        Button accepted_entrants_button = findViewById(R.id.button_list_accepted);
+        Button cancelled_entrants_button = findViewById(R.id.button_list_cancelled);
         //get things from intent
         eventCode = getIntent().getIntExtra("EVENT_CLICKED_CODE", -1);
         userEmail = getIntent().getStringExtra("USER_EMAIL");
@@ -183,6 +185,30 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
             Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventDetailsActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
+
+        //accepted entrants list
+        accepted_entrants_button.setOnClickListener(view -> {
+            Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsAcceptedActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("WAITLIST_ENTRANTS", waitlist_entrants);
+            intent.putExtra("ACCEPT_ENTRANTS", accepted_entrants);
+            intent.putExtra("REJECT_ENTRANTS", rejected_entrants);
+            intent.putExtra("PENDING_ENTRANTS", pending_entrants);
+            startActivity(intent);
+        });
+
+        //cancelled entrants list
+        cancelled_entrants_button.setOnClickListener(view -> {
+            Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsCancelledActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("WAITLIST_ENTRANTS", waitlist_entrants);
+            intent.putExtra("ACCEPT_ENTRANTS", accepted_entrants);
+            intent.putExtra("REJECT_ENTRANTS", rejected_entrants);
+            intent.putExtra("PENDING_ENTRANTS", pending_entrants);
             startActivity(intent);
         });
     }

@@ -84,6 +84,21 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
+        // View entrants on map: pass Firestore document ID as a String
+        viewMapButton.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String eventId = Integer.toString(eventCode);
+
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEntrantsMapActivity.class);
+            intent.putExtra("EVENT_ID", eventId);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+
         generateQrButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, QRCodeOrgActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);

@@ -21,13 +21,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Collections;
 
 /**
  * This class manages the statuses of participants and the accepting/declining of invitations.
  */
 public class EventRepository {
-
-    private static final String TAG = "EventRepository";
+    private static final String TAG = "EventRepo";
 
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
@@ -53,7 +55,7 @@ public class EventRepository {
                 .addOnSuccessListener(query -> {
                     List<DocumentSnapshot> docs = query.getDocuments();
                     if (docs.isEmpty()) {
-                        Log.d("EventRepo", "No waiting list entrants");
+                        Log.d(TAG, "No waiting list entrants");
                         if (onSuccess != null) onSuccess.run();
                         return;
                     }
@@ -76,16 +78,16 @@ public class EventRepository {
 
                     batch.commit()
                             .addOnSuccessListener(bv -> {
-                                Log.d("EventRepo", "Invited next entrant: " + nextUserId);
+                                Log.d(TAG, "Invited next entrant: " + nextUserId);
                                 if (onSuccess != null) onSuccess.run();
                             })
                             .addOnFailureListener(e -> {
-                                Log.e("EventRepo", "Failed inviting next entrant", e);
+                                Log.e(TAG, "Failed inviting next entrant", e);
                                 if (onError != null) onError.accept(e);
                             });
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Read waiting list failed", e);
+                    Log.e(TAG, "Read waiting list failed", e);
                     if (onError != null) onError.accept(e);
                 });
     }

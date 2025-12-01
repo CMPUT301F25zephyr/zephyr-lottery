@@ -31,8 +31,6 @@ import java.util.Collections;
 public class EventRepository {
     private static final String TAG = "EventRepo";
 
-    private static final String TAG = "EventRepository";
-
     private final FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     /**
@@ -247,7 +245,9 @@ public class EventRepository {
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Failed to fetch event for waiting list entrants", e);
-     * US02.07.02: Notify all selected entrants and log notifications.
+                });
+    }
+    /* US02.07.02: Notify all selected entrants and log notifications.
      */
     public void notifyAllSelectedEntrants(String eventId,
                                           Consumer<Integer> onComplete,

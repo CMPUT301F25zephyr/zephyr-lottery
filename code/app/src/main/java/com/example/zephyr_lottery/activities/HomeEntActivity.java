@@ -1,6 +1,8 @@
 package com.example.zephyr_lottery.activities;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -24,6 +26,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.example.zephyr_lottery.PendingNotif;
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.auth.FirebaseAuth;
@@ -117,6 +120,7 @@ public class HomeEntActivity extends AppCompatActivity {
 
             scanLauncher.launch(options);
         });
+
     }
 
     @Override
@@ -166,6 +170,26 @@ public class HomeEntActivity extends AppCompatActivity {
                                                 "invitation not removed from database :(",
                                                 Toast.LENGTH_SHORT).show();
                                     });
+                        }
+
+                        // show notifications
+                        ArrayList<String> notifData = profile.getPendingNotifs();
+                        for (int i = 0; i < notifData.size(); i++) {
+                            String[] data = notifData.get(i).split("//");
+                            AlertDialog.Builder builder = new AlertDialog.Builder(HomeEntActivity.this);
+                            builder.setMessage(data[1])
+                                    .setTitle(data[0])
+                                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            dialog.dismiss();
+                                        }
+                                    });
+                            builder.create().show();
+
+                            // remove pending notif
+                            db.collection("accounts").document(currentUserEmail)
+                                    .update("pendingNotifs", FieldValue.arrayRemove(notifData.get(i)));
                         }
 
                     } else {

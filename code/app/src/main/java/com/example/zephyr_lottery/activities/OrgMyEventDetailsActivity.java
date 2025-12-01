@@ -210,6 +210,29 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                                                 "Notifications sent to " + count + " entrant(s).",
                                                 Toast.LENGTH_SHORT
                                         ).show();
+
+                                        CollectionReference entDocRef = db.collection("accounts");
+                                        ArrayList<String> waitingList = event.getEntrants();
+                                        for (int i = 0; i < waitingList.size(); i++) {
+                                            DocumentReference entrant = entDocRef.document(waitingList.get(i));
+                                            entrant.get().addOnCompleteListener(task -> {
+                                                if (task.isSuccessful()) {
+                                                    DocumentSnapshot document = task.getResult();
+                                                    if (document.exists()) {
+                                                        UserProfile profile = document.toObject(UserProfile.class);
+                                                        if (profile != null) {
+                                                            entrant.update("pendingNotifs", FieldValue.arrayUnion(event.getName() + "//" + event.getDescription()))
+                                                                    .addOnSuccessListener(aVoid -> {
+                                                                        Log.d(TAG, "Notified");
+                                                                    })
+                                                                    .addOnFailureListener(err -> {
+                                                                        Log.e(TAG, "Failed to notify, " + err);
+                                                                    });
+                                                        }
+                                                    }
+                                                }
+                                            });
+                                        }
                                     }
                                 },
                                 e -> Toast.makeText(

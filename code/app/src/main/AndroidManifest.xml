@@ -106,8 +106,17 @@
             android:exported="false">
         </activity>
         <activity
+            android:name=".activities.OrgMyEventEntrantsCancelledActivity"
+            android:exported="false">
+        </activity>
+        <activity
+            android:name=".activities.OrgMyEventEntrantsAcceptedActivity"
+            android:exported="false">
+        </activity>
+        <activity
             android:name=".activities.AdmBrowseImagesActivity"
-            android:exported="false" />
+            android:exported="false">
+        </activity>
 
 
         <!-- Services -->

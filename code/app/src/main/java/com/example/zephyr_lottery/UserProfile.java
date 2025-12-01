@@ -15,6 +15,7 @@ public class UserProfile {
     private Boolean receivingNotis;
     private ArrayList<Integer> invitationCodes;
     private String fcmToken;
+    private ArrayList<String> pendingNotifs; // an array containing information for a notification in format of Title // Desc
 
     // empty constructor for firebase
     public UserProfile() {
@@ -36,6 +37,7 @@ public class UserProfile {
         this.type = type;
         this.receivingNotis = false;
         this.invitationCodes = new ArrayList<Integer>();
+        this.pendingNotifs = new ArrayList<String>();
     }
 
     /**
@@ -56,6 +58,7 @@ public class UserProfile {
         this.phone = phone;
         this.receivingNotis = false;
         this.invitationCodes = new ArrayList<Integer>();
+        this.pendingNotifs = new ArrayList<String>();
     }
 
     /**
@@ -78,6 +81,7 @@ public class UserProfile {
         this.phone = phone;
         this.receivingNotis = receivingNotis;
         this.invitationCodes = new ArrayList<Integer>();
+        this.pendingNotifs = new ArrayList<String>();
     }
 
     /**
@@ -163,6 +167,10 @@ public class UserProfile {
             this.invitationCodes = new ArrayList<Integer>();
         }
         this.invitationCodes.add(new_invitation_code);
+    }
+
+    public ArrayList<String> getPendingNotifs() {
+        return pendingNotifs;
     }
 }
 

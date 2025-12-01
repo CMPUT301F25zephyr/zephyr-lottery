@@ -2,6 +2,9 @@ package com.example.zephyr_lottery.models;
 
 import com.google.firebase.Timestamp;
 
+/**
+ * Stores the info of participants in the waiting list.
+ */
 public class WaitingListEntry {
     private String userId;
     private Double latitude;

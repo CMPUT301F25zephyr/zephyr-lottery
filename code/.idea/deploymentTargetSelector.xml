@@ -8,9 +8,6 @@
       <SelectionState runConfigName="Tests in 'com.example.zephyr_lottery'">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="UserProfileActivityInstrumentedTest">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="DeleteTests">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
@@ -21,14 +18,5 @@
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
-    <SelectionState runConfigName="EventJoinLeaveTests">
-      <option name="selectionMode" value="DROPDOWN" />
-    </SelectionState>
-    <SelectionState runConfigName="Tests in 'com.example.zephyr_lottery'">
-      <option name="selectionMode" value="DROPDOWN" />
-    </SelectionState>
-    <SelectionState runConfigName="EventInvitationTest">
-      <option name="selectionMode" value="DROPDOWN" />
-    </SelectionState>
   </component>
 </project>

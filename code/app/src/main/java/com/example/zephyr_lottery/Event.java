@@ -482,8 +482,32 @@ public class Event {
     public void setPosterImage(String posterImage) {
         this.posterImage = posterImage;
     }
+
+    /**
+     * Sets a toggle if geolocation is a requirement for the event
+     * @param v
+     *  A boolean indicating if geolocation is required
+     */
     public void setGeolocationRequired(boolean v) { this.geolocationRequired = v; }
+
+    /**
+     * Sets the latitude of the event
+     * @param v
+     *  A double indicating the latitude
+     */
     public void setEventLatitude(double v) { this.eventLatitude = v; }
+
+    /**
+     * Sets the longitude of the event
+     * @param v
+     *  A double indicating the longitude
+     */
     public void setEventLongitude(double v) { this.eventLongitude = v; }
+
+    /**
+     * Sets the maximum allowed distance from the event to join
+     * @param v
+     *  The maxiumm allowed distance, as a double.
+     */
     public void setAllowedRadiusMeters(double v) { this.allowedRadiusMeters = v; }
 }

@@ -180,7 +180,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         buttonDrawLottery.setEnabled(true);
                     });
         });
-    }
+
 
         // Notify Waiting List button (US02.07.01)
         buttonNotifyWaiting.setOnClickListener(v -> {
@@ -222,46 +222,46 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     .setNegativeButton("Cancel", null)
                     .show();
         });
-    }
 
         // Notify Selected Entrants button
-        buttonNotifySelected.setOnClickListener(v -> {
-            if (eventCode == -1) {
-                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            new AlertDialog.Builder(this)
-                    .setTitle("Notify selected entrants?")
-                    .setMessage("This will send notifications to all selected entrants.")
-                    .setPositiveButton("Notify", (d, w) -> {
-                        String eventId = Integer.toString(eventCode);
-                        repo.notifyAllSelectedEntrants(
-                                eventId,
-                                count -> {
-                                    if (count == 0) {
-                                        Toast.makeText(
-                                                this,
-                                                "There are no selected entrants to notify.",
-                                                Toast.LENGTH_SHORT
-                                        ).show();
-                                    } else {
-                                        Toast.makeText(
-                                                this,
-                                                "Notifications sent to " + count + " entrant(s).",
-                                                Toast.LENGTH_SHORT
-                                        ).show();
-                                    }
-                                },
-                                e -> Toast.makeText(
-                                        this,
-                                        "Failed: " + e.getMessage(),
-                                        Toast.LENGTH_SHORT
-                                ).show()
-                        );
-                    })
-                    .setNegativeButton("Cancel", null)
-                    .show();
-        });
+//        buttonNotifySelected.setOnClickListener(v -> {
+//            if (eventCode == -1) {
+//                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//            new AlertDialog.Builder(this)
+//                    .setTitle("Notify selected entrants?")
+//                    .setMessage("This will send notifications to all selected entrants.")
+//                    .setPositiveButton("Notify", (d, w) -> {
+//                        String eventId = Integer.toString(eventCode);
+//                        eventRepository.notifyAllSelectedEntrants(
+//                                eventId,
+//                                count -> {
+//                                    if (count == 0) {
+//                                        Toast.makeText(
+//                                                this,
+//                                                "There are no selected entrants to notify.",
+//                                                Toast.LENGTH_SHORT
+//                                        ).show();
+//                                    } else {
+//                                        Toast.makeText(
+//                                                this,
+//                                                "Notifications sent to " + count + " entrant(s).",
+//                                                Toast.LENGTH_SHORT
+//                                        ).show();
+//                                    }
+//                                },
+//                                e -> Toast.makeText(
+//                                        this,
+//                                        "Failed: " + e.getMessage(),
+//                                        Toast.LENGTH_SHORT
+//                                ).show()
+//                        );
+//                    })
+//                    .setNegativeButton("Cancel", null)
+//                    .show();
+//        });
+    }
     /**
      * finds users of the winners and updates their pending invitations
      * @param winner_emails

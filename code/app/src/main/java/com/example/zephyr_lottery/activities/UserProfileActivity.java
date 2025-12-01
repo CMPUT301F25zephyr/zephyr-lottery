@@ -483,7 +483,7 @@ public class UserProfileActivity extends AppCompatActivity {
 
     /**
      * Removes user from rejected_entrants arrays in all events
-     * This is the final step before calling onComplete
+     * Then chains to remove from entrants_waitlist
      */
     private void removeUserFromRejectedEntrants(String email, Runnable onComplete) {
         Log.d("UserProfile", "Removing user from rejected_entrants in all events");
@@ -496,9 +496,8 @@ public class UserProfileActivity extends AppCompatActivity {
                     Log.d("UserProfile", "Found " + totalEvents + " events with user as rejected entrant");
 
                     if (totalEvents == 0) {
-                        // No events, all cleanup complete
-                        Log.d("UserProfile", "All event cleanups complete");
-                        onComplete.run();
+                        // No events, proceed to entrants_waitlist
+                        removeUserFromWaitlist(email, onComplete);
                         return;
                     }
 
@@ -512,9 +511,8 @@ public class UserProfileActivity extends AppCompatActivity {
                                     Log.d("UserProfile", "Removed from rejected_entrants in event: " + document.getId());
 
                                     if (processedCount[0] == totalEvents) {
-                                        // All cleanup complete
-                                        Log.d("UserProfile", "All event cleanups complete");
-                                        onComplete.run();
+                                        // All cleanup for rejected_entrants complete, move to waitlist
+                                        removeUserFromWaitlist(email, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
@@ -522,17 +520,135 @@ public class UserProfileActivity extends AppCompatActivity {
                                     processedCount[0]++;
 
                                     if (processedCount[0] == totalEvents) {
-                                        // Continue to deletion even if some fail
-                                        Log.d("UserProfile", "Event cleanup completed with some errors");
-                                        onComplete.run();
+                                        // Continue to waitlist even if some fail
+                                        Log.d("UserProfile", "Rejected entrants cleanup completed with some errors");
+                                        removeUserFromWaitlist(email, onComplete);
                                     }
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
                     Log.e("UserProfile", "Error querying events with user as rejected entrant", e);
-                    // Proceed to deletion even if this fails
-                    Log.d("UserProfile", "Event cleanup completed with errors");
+                    // Proceed to waitlist even if this fails
+                    Log.d("UserProfile", "Rejected entrants cleanup completed with errors");
+                    removeUserFromWaitlist(email, onComplete);
+                });
+    }
+
+    /**
+     * Removes user from entrants_waitlist arrays in all events
+     * Then chains to remove from waitingList subcollection
+     */
+    private void removeUserFromWaitlist(String email, Runnable onComplete) {
+        Log.d("UserProfile", "Removing user from entrants_waitlist in all events");
+
+        db.collection("events")
+                .whereArrayContains("entrants_waitlist", email)
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int totalEvents = querySnapshot.size();
+                    Log.d("UserProfile", "Found " + totalEvents + " events with user in waitlist");
+
+                    if (totalEvents == 0) {
+                        // No events, proceed to waitingList subcollection
+                        removeUserFromWaitingListSubcollection(email, onComplete);
+                        return;
+                    }
+
+                    // Remove user from entrants_waitlist array in each event
+                    int[] processedCount = {0};
+                    for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
+                        document.getReference()
+                                .update("entrants_waitlist", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .addOnSuccessListener(aVoid -> {
+                                    processedCount[0]++;
+                                    Log.d("UserProfile", "Removed from entrants_waitlist in event: " + document.getId());
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // All waitlist processed, move to subcollection
+                                        removeUserFromWaitingListSubcollection(email, onComplete);
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("UserProfile", "Error removing from entrants_waitlist: " + document.getId(), e);
+                                    processedCount[0]++;
+
+                                    if (processedCount[0] == totalEvents) {
+                                        // Continue even if some fail
+                                        removeUserFromWaitingListSubcollection(email, onComplete);
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("UserProfile", "Error querying events with user in waitlist", e);
+                    // Continue to next step even if this fails
+                    removeUserFromWaitingListSubcollection(email, onComplete);
+                });
+    }
+
+    /**
+     * Removes user documents from waitingList subcollections in all events
+     * This is the final cleanup step before deleting the user
+     */
+    private void removeUserFromWaitingListSubcollection(String email, Runnable onComplete) {
+        Log.d("UserProfile", "Removing user from waitingList subcollections");
+
+        db.collection("events")
+                .get()
+                .addOnSuccessListener(querySnapshot -> {
+                    int totalEvents = querySnapshot.size();
+                    Log.d("UserProfile", "Checking " + totalEvents + " events for waitingList documents");
+
+                    if (totalEvents == 0) {
+                        Log.d("UserProfile", "No events found, cleanup complete");
+                        onComplete.run();
+                        return;
+                    }
+
+                    int[] processedEvents = {0};
+                    int[] deletedDocs = {0};
+
+                    for (com.google.firebase.firestore.DocumentSnapshot eventDoc : querySnapshot.getDocuments()) {
+                        String eventId = eventDoc.getId();
+
+                        // Check if this event has a waitingList subcollection with this user
+                        eventDoc.getReference()
+                                .collection("waitingList")
+                                .document(email)
+                                .get()
+                                .addOnSuccessListener(waitlistDoc -> {
+                                    if (waitlistDoc.exists()) {
+                                        // Delete the document
+                                        waitlistDoc.getReference()
+                                                .delete()
+                                                .addOnSuccessListener(aVoid -> {
+                                                    deletedDocs[0]++;
+                                                    Log.d("UserProfile", "Deleted from waitingList in event: " + eventId);
+                                                })
+                                                .addOnFailureListener(e -> {
+                                                    Log.e("UserProfile", "Error deleting from waitingList: " + eventId, e);
+                                                });
+                                    }
+
+                                    processedEvents[0]++;
+                                    if (processedEvents[0] == totalEvents) {
+                                        Log.d("UserProfile", "Removed from " + deletedDocs[0] + " waitingList subcollections");
+                                        onComplete.run();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("UserProfile", "Error checking waitingList in event: " + eventId, e);
+                                    processedEvents[0]++;
+
+                                    if (processedEvents[0] == totalEvents) {
+                                        onComplete.run();
+                                    }
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("UserProfile", "Error querying events for waitingList cleanup", e);
                     onComplete.run();
                 });
     }

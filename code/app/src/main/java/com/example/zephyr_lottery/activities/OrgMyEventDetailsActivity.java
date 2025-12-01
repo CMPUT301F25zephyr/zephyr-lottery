@@ -86,6 +86,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
             intent.putExtra("USER_EMAIL", userEmail);
+
+            //add in arraylists of entrants with statuses
+            intent.putExtra("WAITLIST_ENTRANTS", event.getEntrants_waitlist());
+            intent.putExtra("ACCEPT_ENTRANTS", event.getAccepted_entrants());
+            intent.putExtra("REJECT_ENTRANTS", event.getRejected_entrants());
+            intent.putExtra("PENDING_ENTRANTS", event.getWinners());
+
             startActivity(intent);
         });
 

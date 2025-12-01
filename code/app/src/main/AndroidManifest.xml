@@ -113,6 +113,10 @@
             android:name=".activities.OrgMyEventEntrantsAcceptedActivity"
             android:exported="false">
         </activity>
+        <activity
+            android:name=".activities.AdmBrowseImagesActivity"
+            android:exported="false">
+        </activity>
 
 
         <!-- Services -->

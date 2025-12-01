@@ -46,6 +46,7 @@ public class AddEventActivityInstrumentedTest {
         }
     }
 
+    // Tests event creation (US 02.01.01)
     @Test
     public void testAddEventSavesWithSampleSizeAndCleansUp() throws InterruptedException {
         Intent intent = new Intent(

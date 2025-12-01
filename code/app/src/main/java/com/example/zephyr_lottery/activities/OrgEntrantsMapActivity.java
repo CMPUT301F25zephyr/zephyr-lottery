@@ -13,6 +13,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.models.WaitingListEntry;
 import com.example.zephyr_lottery.repositories.EventRepository;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.mapbox.geojson.Point;
 import com.mapbox.maps.CameraOptions;
 import com.mapbox.maps.MapView;
@@ -70,7 +71,22 @@ public class OrgEntrantsMapActivity extends AppCompatActivity {
 
         eventRepository.getWaitingListWithLocations(
                 eventId,
-                this::addMarkersToMap,
+                snapshots -> {
+                    if (snapshots == null) {
+                        Log.e(TAG, "Received null snapshots list");
+                        return;
+                    }
+
+                    List<WaitingListEntry> entries = new ArrayList<>();
+                    for (DocumentSnapshot doc : snapshots) {
+                        WaitingListEntry entry = doc.toObject(WaitingListEntry.class);
+                        if (entry != null) {
+                            entries.add(entry);
+                        }
+                    }
+
+                    addMarkersToMap(entries);
+                },
                 e -> Log.e(TAG, "Failed to load waiting list", e)
         );
     }

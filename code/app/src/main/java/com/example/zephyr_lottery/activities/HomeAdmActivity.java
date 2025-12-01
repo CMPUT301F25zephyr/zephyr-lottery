@@ -67,5 +67,10 @@ public class HomeAdmActivity extends AppCompatActivity {
         });
 
         // Space to add button to go to images activity
+        images_button = findViewById(R.id.admin_images_button);
+        images_button.setOnClickListener(v -> {
+            Intent intent = new Intent(HomeAdmActivity.this, AdmBrowseImagesActivity.class);
+            startActivity(intent);
+        });
     }
 }

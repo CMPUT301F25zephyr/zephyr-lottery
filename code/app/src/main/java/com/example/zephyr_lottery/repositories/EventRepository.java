@@ -2,7 +2,6 @@ package com.example.zephyr_lottery.repositories;
 
 import android.util.Log;
 
-
 import com.example.zephyr_lottery.models.Participant;
 import com.example.zephyr_lottery.models.WaitingListEntry;
 import com.google.android.gms.tasks.Task;
@@ -25,7 +24,6 @@ import java.util.function.Consumer;
 
 /**
  * This class manages the statuses of participants and the accepting/declining of invitations.
- * Manages participant statuses and invitation logic, and supports bulk notifications.
  */
 public class EventRepository {
 
@@ -44,13 +42,13 @@ public class EventRepository {
      * @return
      *  Returns a Task when completed asynchronously
      */
-
     // Update participant status (accepted/declined)
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
                 .document(eventId)
                 .collection("participants")
                 .document(userId);
+
         Participant p = new Participant(userId, status, null, Timestamp.now());
         return participantRef.set(p, SetOptions.merge());
     }
@@ -66,7 +64,6 @@ public class EventRepository {
      * @param onError
      *  Exception if the invitation is not properly accepted
      */
-
     public void acceptInvitation(String eventId, String userId,
                                  Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CONFIRMED")
@@ -91,7 +88,6 @@ public class EventRepository {
      * @param onError
      *  Exception if the invitation is not properly declined
      */
-
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CANCELLED")
@@ -114,13 +110,13 @@ public class EventRepository {
      * @param onError
      *  Exception if the invitation is not properly sent
      */
-
     public void inviteNextFromWaitingList(String eventId,
                                           Runnable onSuccess,
                                           Consumer<Exception> onError) {
         CollectionReference waitingRef = db.collection("events")
                 .document(eventId)
                 .collection("waitingList");
+
         waitingRef.orderBy("joinedAt", Query.Direction.ASCENDING)
                 .limit(1)
                 .get()
@@ -132,17 +128,22 @@ public class EventRepository {
                         return;
                     }
                     DocumentSnapshot next = docs.get(0);
-                    String nextUserId = next.getId();
+                    String nextUserId = next.getId(); // waitingList docId == userId (recommended)
+
                     WriteBatch batch = db.batch();
+
                     DocumentReference participantRef = db.collection("events")
                             .document(eventId)
                             .collection("participants")
                             .document(nextUserId);
+
                     Participant invited = new Participant(
                             nextUserId, "SELECTED", Timestamp.now(), Timestamp.now()
                     );
+
                     batch.set(participantRef, invited, SetOptions.merge());
-                    batch.delete(next.getReference());
+                    batch.delete(next.getReference()); // remove from waiting list
+
                     batch.commit()
                             .addOnSuccessListener(bv -> {
                                 Log.d("EventRepo", "Invited next entrant: " + nextUserId);
@@ -172,13 +173,13 @@ public class EventRepository {
      * @return
      *  Returns a ListenerRegistration that listens for status changes
      */
-
     public ListenerRegistration listenToParticipantStatus(String eventId, String userId,
                                                           Consumer<String> onStatus) {
         DocumentReference ref = db.collection("events")
                 .document(eventId)
                 .collection("participants")
                 .document(userId);
+
         return ref.addSnapshotListener((snap, error) -> {
             if (error != null) {
                 Log.e("EventRepo", "Listen error", error);
@@ -189,138 +190,6 @@ public class EventRepository {
         });
     }
 
-    /**
-     * US02.07.02: Notify all selected entrants and log notifications.
-     */
-    public void notifyAllSelectedEntrants(String eventId,
-                                          Consumer<Integer> onComplete,
-                                          Consumer<Exception> onError) {
-        CollectionReference participantsRef = db.collection("events")
-                .document(eventId)
-                .collection("participants");
-        participantsRef.whereEqualTo("status", "SELECTED")
-                .get()
-                .addOnSuccessListener(query -> {
-                    int count = query.size();
-                    if (count == 0) {
-                        Log.d("EventRepo", "No selected entrants to notify for event " + eventId);
-                        if (onComplete != null) onComplete.accept(0);
-                        return;
-                    }
-
-                    for (DocumentSnapshot doc : query) {
-                        String userId = doc.getId();
-                        sendNotificationToUser(userId,
-                                "Congratulations! You have been selected for event " + eventId);
-                        // Audit log
-                        logNotificationSent(eventId, userId, "SELECTED", null, null);
-                    }
-
-                    if (onComplete != null) onComplete.accept(count);
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Failed to fetch selected entrants", e);
-                    if (onError != null) onError.accept(e);
-                });
-    }
-
-    /**
-     * US02.07.01: Notify all waiting list entrants and log notifications.
-     */
-    public void notifyAllWaitingListEntrants(String eventId,
-                                             Runnable onSuccess,
-                                             Consumer<Exception> onError) {
-        CollectionReference participantsRef = db.collection("events")
-                .document(eventId)
-                .collection("participants");
-
-        participantsRef.whereEqualTo("status", "PENDING")
-                .get()
-                .addOnSuccessListener(query -> {
-                    if (query.isEmpty()) {
-                        Log.d("EventRepo", "No waiting list entrants to notify for event " + eventId);
-                        if (onSuccess != null) onSuccess.run();
-                        return;
-                    }
-
-                    for (DocumentSnapshot doc : query) {
-                        String userId = doc.getId();
-                        sendNotificationToUser(userId,
-                                "You are on the waiting list for event " + eventId);
-                        // Audit log
-                        logNotificationSent(eventId, userId, "WAITING", null, null);
-                    }
-
-                    if (onSuccess != null) onSuccess.run();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Failed to fetch waiting list entrants", e);
-                    if (onError != null) onError.accept(e);
-                });
-    }
-
-    /**
-     * US02.07.03: Notify all cancelled entrants and log notifications.
-     */
-    public void notifyAllCancelledEntrants(String eventId,
-                                           Runnable onSuccess,
-                                           Consumer<Exception> onError) {
-        CollectionReference participantsRef = db.collection("events")
-                .document(eventId)
-                .collection("participants");
-
-        participantsRef.whereEqualTo("status", "CANCELLED")
-                .get()
-                .addOnSuccessListener(query -> {
-                    if (query.isEmpty()) {
-                        Log.d("EventRepo", "No cancelled entrants to notify for event " + eventId);
-                        if (onSuccess != null) onSuccess.run();
-                        return;
-                    }
-
-                    for (DocumentSnapshot doc : query) {
-                        String userId = doc.getId();
-                        sendNotificationToUser(userId,
-                                "Your participation in event " + eventId + " has been cancelled");
-                        // Audit log
-                        logNotificationSent(eventId, userId, "CANCELLED", null, null);
-                    }
-
-                    if (onSuccess != null) onSuccess.run();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Failed to fetch cancelled entrants", e);
-                    if (onError != null) onError.accept(e);
-                });
-    }
-
-    /**
-     * US03.08.01: Record a notification in an audit trail for admin review.
-     */
-    public void logNotificationSent(String eventId, String userId, String notificationType,
-                                    Runnable onSuccess, Consumer<Exception> onError) {
-        Map<String, Object> logEntry = new HashMap<>();
-        logEntry.put("eventId", eventId);
-        logEntry.put("userId", userId);
-        logEntry.put("notificationType", notificationType);
-        logEntry.put("sentAt", Timestamp.now());
-
-        db.collection("notificationLogs")
-                .add(logEntry)
-                .addOnSuccessListener(docRef -> {
-                    Log.d("EventRepo", "Logged notification: " + docRef.getId());
-                    if (onSuccess != null) onSuccess.run();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("EventRepo", "Failed to log notification", e);
-                    if (onError != null) onError.accept(e);
-                });
-    }
-
-    // Placeholder for actual FCM integration
-    private void sendNotificationToUser(String userId, String message) {
-        Log.d("EventRepo", "Sending notification to " + userId + ": " + message);
-    }
 
     // Waiting-list location logic  (US 02.02.02 map story)
 

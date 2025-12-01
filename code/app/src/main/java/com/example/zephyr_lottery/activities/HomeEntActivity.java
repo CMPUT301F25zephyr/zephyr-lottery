@@ -58,9 +58,6 @@ public class HomeEntActivity extends AppCompatActivity {
             return insets;
         });
 
-        // Request notification permission for Android 13+
-        requestNotificationPermission();
-
         textViewGreeting = findViewById(R.id.tvEntrantGreeting);
         viewEventsButton = findViewById(R.id.btnLatestEvents);
         viewHistoryButton = findViewById(R.id.btnHistory);
@@ -178,28 +175,5 @@ public class HomeEntActivity extends AppCompatActivity {
                     Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show();
                 });
 
-    }
-
-    private void requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                        NOTIFICATION_PERMISSION_CODE);
-            }
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Log.d("HomeEntActivity", "Notification permission granted");
-            } else {
-                Log.d("HomeEntActivity", "Notification permission denied");
-            }
-        }
     }
 }

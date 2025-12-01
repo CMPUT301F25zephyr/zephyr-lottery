@@ -28,8 +28,8 @@ import static org.hamcrest.Matchers.containsString;
 public class HomeEntActivityInstrumentedTest {
 
     // Test credentials
-    private static final String TEST_EMAIL = "test_huy@test.com";
-    private static final String TEST_PASSWORD = "12345678";
+    private static final String TEST_EMAIL = "entrant@gmail.com";
+    private static final String TEST_PASSWORD = "123456";
 
     @Before
     public void setUp() throws InterruptedException {

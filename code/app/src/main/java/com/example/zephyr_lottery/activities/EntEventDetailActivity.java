@@ -36,6 +36,7 @@ import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.zephyr_lottery.repositories.EventRepository;
 
 import android.location.Location;
 
@@ -125,6 +126,8 @@ public class EntEventDetailActivity extends AppCompatActivity {
         db = FirebaseFirestore.getInstance();
         eventsRef = db.collection("events");
         docRef = eventsRef.document(eventHash);
+
+        eventRepository = new EventRepository();
 
         loadEventDetails();
 
@@ -238,6 +241,13 @@ public class EntEventDetailActivity extends AppCompatActivity {
                             int newCount = currentSize + 1;
                             entrantNumbers.setText(
                                     "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
+                            );
+
+                            String eventId = docRef.getId();
+                            eventRepository.updateParticipantStatus(
+                                    eventId,
+                                    finalUserEmail,
+                                    "PENDING"
                             );
                         })
                         .addOnFailureListener(e -> {

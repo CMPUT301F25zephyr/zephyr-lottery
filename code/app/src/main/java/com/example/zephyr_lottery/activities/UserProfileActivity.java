@@ -109,7 +109,6 @@ public class UserProfileActivity extends AppCompatActivity {
 
         // Delete account button functionality
         btnDeleteAccount.setOnClickListener(v -> {
-            // TODO: Implement delete account functionality
             showDeleteAccountDialog();
         });
     }

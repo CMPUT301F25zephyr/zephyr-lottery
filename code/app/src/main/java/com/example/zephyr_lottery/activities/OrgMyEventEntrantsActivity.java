@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -27,6 +29,7 @@ import com.example.zephyr_lottery.UserProfile;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -35,6 +38,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 public class OrgMyEventEntrantsActivity extends AppCompatActivity {
 
@@ -113,6 +117,72 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
                         System.out.println(entrantArrayList);
                         nameArrayAdapter = new ArrayAdapter<String>(this, R.layout.org_my_event_entrantslist_activity, R.id.entrants_item, entrantArrayList);
                         nameListView.setAdapter(nameArrayAdapter);
+
+                        nameListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                                DocumentReference docRef = eventsRef.document(Integer.toString(getIntent().getIntExtra("EVENT_CLICKED_CODE", -1)));
+                                docRef.get().addOnSuccessListener(currentEvent -> {
+                                    String finalUserEmail = entrantArrayList.get(position).split(":")[0];
+                                    if (!currentEvent.exists()) {
+                                        Toast.makeText(
+                                                OrgMyEventEntrantsActivity.this,
+                                                "Event not found.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                        return;
+                                    }
+
+                                    List<String> entrantsList = (List<String>) currentEvent.get("entrants");
+                                    if (entrantsList == null) {
+                                        entrantsList = new ArrayList<>();
+                                    } else {
+                                        entrantsList = new ArrayList<>(entrantsList);
+                                        entrantsList.remove(null);
+                                    }
+
+                                    if (!entrantsList.contains(finalUserEmail)) {
+                                        Toast.makeText(
+                                                OrgMyEventEntrantsActivity.this,
+                                                "The selected user is not on the waiting list.",
+                                                Toast.LENGTH_LONG
+                                        ).show();
+                                        return;
+                                    }
+
+                                    List<String> cancelledEntrantsList = (List<String>) currentEvent.get("cancelled_entrants");
+                                    if (cancelledEntrantsList == null) {
+                                        cancelledEntrantsList = new ArrayList<>();
+                                    } else {
+                                        cancelledEntrantsList = new ArrayList<>(cancelledEntrantsList);
+                                        cancelledEntrantsList.remove(null);
+                                    }
+
+                                    Long limitLong = currentEvent.getLong("limit");
+                                    String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
+                                    int currentSize = entrantsList.size();
+
+                                    docRef.update("entrants", FieldValue.arrayRemove(finalUserEmail))
+                                            .addOnSuccessListener(aVoid -> {
+                                                Toast.makeText(
+                                                        OrgMyEventEntrantsActivity.this,
+                                                        "The user has been removed from the waiting list.",
+                                                        Toast.LENGTH_LONG
+                                                ).show();
+                                                docRef.update("cancelled_entrants", FieldValue.arrayUnion(finalUserEmail));
+                                            })
+                                            .addOnFailureListener(e -> {
+                                                Log.e("EntEventDetail", "Error removing entrant", e);
+                                                Toast.makeText(
+                                                        OrgMyEventEntrantsActivity.this,
+                                                        "Failed to remove. Please try again.",
+                                                        Toast.LENGTH_LONG
+                                                ).show();
+                                            });
+                                });
+
+                            }
+                        });
                     }
                 }
             }
@@ -121,6 +191,8 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
         //buttons initialization
         export_csv_button = findViewById(R.id.button_exportcsv);
         my_entrants_back_button = findViewById(R.id.button_back_my_entrants);
+        Button accepted_entrants_button = findViewById(R.id.button_list_accepted);
+        Button cancelled_entrants_button = findViewById(R.id.button_list_cancelled);
         //get things from intent
         eventCode = getIntent().getIntExtra("EVENT_CLICKED_CODE", -1);
         userEmail = getIntent().getStringExtra("USER_EMAIL");
@@ -183,6 +255,30 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
             Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventDetailsActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
+
+        //accepted entrants list
+        accepted_entrants_button.setOnClickListener(view -> {
+            Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsAcceptedActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("WAITLIST_ENTRANTS", waitlist_entrants);
+            intent.putExtra("ACCEPT_ENTRANTS", accepted_entrants);
+            intent.putExtra("REJECT_ENTRANTS", rejected_entrants);
+            intent.putExtra("PENDING_ENTRANTS", pending_entrants);
+            startActivity(intent);
+        });
+
+        //cancelled entrants list
+        cancelled_entrants_button.setOnClickListener(view -> {
+            Intent intent = new Intent(OrgMyEventEntrantsActivity.this, OrgMyEventEntrantsCancelledActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("WAITLIST_ENTRANTS", waitlist_entrants);
+            intent.putExtra("ACCEPT_ENTRANTS", accepted_entrants);
+            intent.putExtra("REJECT_ENTRANTS", rejected_entrants);
+            intent.putExtra("PENDING_ENTRANTS", pending_entrants);
             startActivity(intent);
         });
     }

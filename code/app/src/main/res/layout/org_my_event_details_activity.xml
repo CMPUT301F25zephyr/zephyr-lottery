@@ -115,4 +115,11 @@
         android:text="View Entrants on Map"
         app:layout_constraintBottom_toBottomOf="@+id/scrollView" />
 
+    <Button
+        android:id="@+id/button_view_entrants_map"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Entrants on Map"
+        app:layout_constraintBottom_toBottomOf="@+id/scrollView" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

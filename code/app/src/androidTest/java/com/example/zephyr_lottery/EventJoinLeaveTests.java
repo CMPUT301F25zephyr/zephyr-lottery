@@ -1,8 +1,6 @@
 package com.example.zephyr_lottery;
 
 import android.content.Intent;
-import android.os.CountDownTimer;
-import android.os.Handler;
 import android.util.Log;
 
 import androidx.test.core.app.ActivityScenario;
@@ -19,24 +17,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 @RunWith(AndroidJUnit4.class)
 public class EventJoinLeaveTests {
     private FirebaseFirestore db;
-    private String testEventId;
 
     @Before
     public void setup() {
         db = FirebaseFirestore.getInstance();
-    }
-
-    @After
-    public void cleanup() {
-        if (testEventId != null) {
-            db.collection("events").document(testEventId).delete();
-        }
     }
 
     // Tests if user can successfully join event (US 01.01.01)

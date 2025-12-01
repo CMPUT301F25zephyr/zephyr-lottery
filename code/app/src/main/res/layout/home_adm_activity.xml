@@ -23,29 +23,36 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Browse Events"
-        app:layout_constraintBottom_toTopOf="@+id/admin_profiles_button"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textView_admin_home"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView_admin_home" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/admin_profiles_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Browse Profiles"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/admin_events_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView_admin_home" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/admin_images_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Notification Logs"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:text="Browse Images"
+        app:layout_constraintTop_toBottomOf="@+id/admin_profiles_button"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/admin_profiles_button" />
-        app:layout_constraintTop_toBottomOf="@+id/admin_profiles_button" />
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/admin_notification_logs_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Notification Logs"
+        app:layout_constraintTop_toBottomOf="@+id/admin_images_button"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

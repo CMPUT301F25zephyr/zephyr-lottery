@@ -151,8 +151,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     ).show();
                     return;
                 }
-
-                // ------- 🌍 GEOLOCATION CHECK START -------
+                
                 Boolean geoRequired = currentEvent.getBoolean("geolocationRequired");
 
                 if (geoRequired != null && geoRequired) {

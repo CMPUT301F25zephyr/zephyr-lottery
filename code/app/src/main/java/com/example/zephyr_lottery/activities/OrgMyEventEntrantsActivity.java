@@ -49,6 +49,11 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
     private CollectionReference eventsRef;
     private CollectionReference usersRef;
 
+    private ArrayList<String> waitlist_entrants;
+    private ArrayList<String> accepted_entrants;
+    private ArrayList<String> rejected_entrants;
+    private ArrayList<String> pending_entrants;
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
@@ -63,6 +68,13 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
         String path = "events";
         eventsRef = db.collection(path);
 
+        //get arraylists from intent. used for
+        waitlist_entrants = getIntent().getStringArrayListExtra("WAITLIST_ENTRANTS");
+        accepted_entrants = getIntent().getStringArrayListExtra("ACCEPT_ENTRANTS");
+        rejected_entrants = getIntent().getStringArrayListExtra("REJECT_ENTRANTS");
+        pending_entrants = getIntent().getStringArrayListExtra("PENDING_ENTRANTS");
+
+        //list view display
         eventsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("Firestore", error.toString());
@@ -76,6 +88,28 @@ public class OrgMyEventEntrantsActivity extends AppCompatActivity {
                         ListView nameListView = findViewById(R.id.ListView_entrants);
                         ArrayAdapter<String> nameArrayAdapter;
                         entrantArrayList = (ArrayList<String>) snapshot.get("entrants");
+
+                        //add the status of the entrant to their entry in the list view
+                        if (entrantArrayList != null && !entrantArrayList.isEmpty()) {
+                            for (int i = 0; i <entrantArrayList.size(); i ++) {
+                                String type = "";
+                                String i_email = entrantArrayList.get(i);
+                                if (waitlist_entrants != null && waitlist_entrants.contains(i_email)) {
+                                    type = "waitlisted";
+                                } else if (accepted_entrants != null && accepted_entrants.contains(i_email)) {
+                                    type = "accepted";
+                                } else if (rejected_entrants != null && rejected_entrants.contains(i_email)) {
+                                    type = "rejected";
+                                }  else if (pending_entrants != null && pending_entrants.contains(i_email)) {
+                                    type = "invitation pending";
+                                } else {
+                                    type = "unknown";
+                                }
+
+                                entrantArrayList.set(i, i_email + ": " + type);
+                            }
+                        }
+
                         System.out.println(entrantArrayList);
                         nameArrayAdapter = new ArrayAdapter<String>(this, R.layout.org_my_event_entrantslist_activity, R.id.entrants_item, entrantArrayList);
                         nameListView.setAdapter(nameArrayAdapter);

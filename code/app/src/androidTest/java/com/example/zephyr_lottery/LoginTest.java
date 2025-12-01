@@ -30,6 +30,7 @@ public class LoginTest {
     public ActivityScenarioRule<LoginActivity> scenario = new
             ActivityScenarioRule<LoginActivity>(LoginActivity.class);
 
+    // Tests account creation of organizer (no US, but important)
     @Test
     public void addAccountOrg() throws InterruptedException{
         String unique_email = "sofia" + System.currentTimeMillis() + "@m.com";
@@ -60,6 +61,7 @@ public class LoginTest {
         onView(withId(R.id.textView_orgHome)).check(matches(isDisplayed()));
     }
 
+    // Tests creating an Entrant account (US 01.02.01)
     @Test
     public void addAccountEnt() throws InterruptedException{
         String unique_email = "marielle" + System.currentTimeMillis() + "@m.com";
@@ -88,25 +90,3 @@ public class LoginTest {
         onView(withId(R.id.btnLatestEvents)).check(matches(isDisplayed()));
     }
 }
-
-//@RunWith(AndroidJUnit4.class)
-//@LargeTest
-//public class MainActivityTest {
-//    @Rule
-//    public ActivityScenarioRule<MainActivity> scenario = new
-//            ActivityScenarioRule<MainActivity>(MainActivity.class);
-//
-//    @Test
-//    public void testAddCity(){
-//        // Click on Add City button
-//        onView(withId(R.id.button_add)).perform(click());
-//
-//        // Type "Edmonton" in the editText
-//        onView(withId(R.id.editText_name)).perform(ViewActions.typeText("Edmonton"));
-//
-//        // Click on Confirm
-//        onView(withId(R.id.button_confirm)).perform(click());
-//
-//        // Check if text "Edmonton" is matched with any of the text displayed on the screen
-//        onView(withText("Edmonton")).check(matches(isDisplayed()));
-//    }

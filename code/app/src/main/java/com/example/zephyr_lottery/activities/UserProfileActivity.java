@@ -2,6 +2,7 @@ package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -21,26 +22,20 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.R;
 import com.example.zephyr_lottery.UserProfile;
 import com.example.zephyr_lottery.utils.ValidationUtil;
-import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.EmailAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class UserProfileActivity extends AppCompatActivity {
-    // can be omitted later by creating a separate class for the firebase connection
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
 
     private ImageButton btnBack;
-
-    // Name currently being the same object as username, will be changed later (or just change username to Name altogether)
-    private EditText etName, etPhone, etPassword;
-
-    // Email currently a TextView, since it is being used as a login credential
-    private TextView etEmail;
+    private EditText etName, etPhone, etEmail;
+    private TextView tvAndroidId;
     private CheckBox cbReceiveNotifications;
     private Button btnSave, btnDeleteAccount;
+
+    private String firebaseUid;  // Changed from androidId
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,8 +52,8 @@ public class UserProfileActivity extends AppCompatActivity {
         btnBack = findViewById(R.id.btnBack);
         etName = findViewById(R.id.etName);
         etEmail = findViewById(R.id.etEmail);
+        tvAndroidId = findViewById(R.id.tvAndroidId);
         etPhone = findViewById(R.id.etPhone);
-        etPassword = findViewById(R.id.etPassword);
         cbReceiveNotifications = findViewById(R.id.cbReceiveNotifications);
         btnSave = findViewById(R.id.btnSave);
         btnDeleteAccount = findViewById(R.id.btnDeleteAccount);
@@ -66,40 +61,30 @@ public class UserProfileActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+        // Get Firebase UID from current user
+        if (mAuth.getCurrentUser() != null) {
+            firebaseUid = mAuth.getCurrentUser().getUid();
+        } else {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
-        db.collection("accounts")
-                .document(currentUserEmail)
-                .get()
-                .addOnSuccessListener(documentSnapshot -> {
-                    UserProfile profile = documentSnapshot.toObject(UserProfile.class);
+        // Display Android ID for reference
+        String androidId = getAndroidId();
+        if (tvAndroidId != null) {
+            String displayId = androidId.length() > 12 ?
+                    "Device: " + androidId.substring(0, 12) + "..." :
+                    "Device: " + androidId;
+            tvAndroidId.setText(displayId);
+        }
 
-                    // Use the profile data
-                    String username = profile.getUsername();
-                    String email = profile.getEmail();
-                    String phone = profile.getPhone();
-
-                    etName.setText(username);
-                    etEmail.setText(email);
-
-                    if (phone != null) {
-                        etPhone.setText(phone);
-                    }
-
-                    Boolean receivingNotis = profile.getReceivingNotis();
-
-                    // Load notification preference from Firebase
-                    // Default to false if not set
-                    if (receivingNotis != null) {
-                        cbReceiveNotifications.setChecked(receivingNotis);
-                    } else {
-                        cbReceiveNotifications.setChecked(false);
-                    }
-                });
+        // Load profile data
+        loadProfile();
 
         // Back button functionality
         btnBack.setOnClickListener(v -> {
-            finish(); // Close this activity and return to previous screen
+            finish();
         });
 
         // Save button functionality
@@ -109,22 +94,91 @@ public class UserProfileActivity extends AppCompatActivity {
 
         // Delete account button functionality
         btnDeleteAccount.setOnClickListener(v -> {
-            // TODO: Implement delete account functionality
             showDeleteAccountDialog();
         });
+    }
+
+    private String getAndroidId() {
+        String id = Settings.Secure.getString(
+                getContentResolver(),
+                Settings.Secure.ANDROID_ID
+        );
+
+        if (id == null || id.isEmpty()) {
+            id = "unknown_" + System.currentTimeMillis();
+            Log.w("UserProfile", "Android ID not available, using fallback");
+        }
+
+        return id;
+    }
+
+    private void loadProfile() {
+        // Use Firebase UID as document key
+        db.collection("accounts")
+                .document(firebaseUid)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        // Load profile data
+                        String username = documentSnapshot.getString("username");
+                        String email = documentSnapshot.getString("email");
+                        String phone = documentSnapshot.getString("phone");
+                        Boolean receivingNotis = documentSnapshot.getBoolean("receivingNotis");
+
+                        // Set data to views
+                        if (username != null) {
+                            etName.setText(username);
+                        }
+
+                        if (email != null) {
+                            etEmail.setText(email);
+                        }
+
+                        if (phone != null) {
+                            etPhone.setText(phone);
+                        }
+
+                        // Load notification preference
+                        if (receivingNotis != null) {
+                            cbReceiveNotifications.setChecked(receivingNotis);
+                        } else {
+                            cbReceiveNotifications.setChecked(false);
+                        }
+                    } else {
+                        Toast.makeText(this, "Profile not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(this, "Failed to load profile: " + e.getMessage(),
+                            Toast.LENGTH_SHORT).show();
+                    Log.e("UserProfile", "Error loading profile", e);
+                });
     }
 
     private void saveUserProfile() {
         // Get the edited values
         String newUsername = etName.getText().toString().trim();
+        String newEmail = etEmail.getText().toString().trim();
         String newPhone = ValidationUtil.sanitize(etPhone.getText().toString());
-        String password = etPassword.getText().toString().trim();
         boolean receiveNotifications = cbReceiveNotifications.isChecked();
 
         // Basic validation
         if (newUsername.isEmpty()) {
             etName.setError("Name is required");
             etName.requestFocus();
+            return;
+        }
+
+        if (newUsername.length() < 3) {
+            etName.setError("Username must be at least 3 characters");
+            etName.requestFocus();
+            return;
+        }
+
+        // Validate email (optional)
+        if (!newEmail.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
+            etEmail.setError("Please enter a valid email address");
+            etEmail.requestFocus();
             return;
         }
 
@@ -136,49 +190,17 @@ public class UserProfileActivity extends AppCompatActivity {
             return;
         }
 
-        // Validate password
-        if (password.isEmpty()) {
-            etPassword.setError("Password is required to confirm changes");
-            etPassword.requestFocus();
-            return;
-        }
-
-        // Verify password before making changes
-        verifyPasswordAndUpdate(newUsername, newPhone, receiveNotifications, password);
+        // Update profile
+        updateProfile(newUsername, newEmail, newPhone, receiveNotifications);
     }
 
-    private void verifyPasswordAndUpdate(String newUsername, String newPhone, boolean receiveNotifications, String password) {
-        FirebaseUser user = mAuth.getCurrentUser();
-        String email = user.getEmail();
-
-        // Create credential with email and password
-        AuthCredential credential = EmailAuthProvider.getCredential(email, password);
-
-        // Re-authenticate the user
-        user.reauthenticate(credential)
-                .addOnSuccessListener(aVoid -> {
-                    // Password is correct, proceed with update
-                    updateProfile(newUsername, newPhone, receiveNotifications);
-                })
-                .addOnFailureListener(e -> {
-                    // Password is incorrect
-                    etPassword.setError("Incorrect password");
-                    etPassword.requestFocus();
-                    Toast.makeText(UserProfileActivity.this,
-                            "Incorrect password. Please try again.",
-                            Toast.LENGTH_SHORT).show();
-                    Log.e("UserProfile", "Password verification failed", e);
-                });
-    }
-
-    private void updateProfile(String newUsername, String newPhone, boolean receiveNotifications) {
-        String currentUserEmail = mAuth.getCurrentUser().getEmail();
-
-        // Update the fields in Firestore
+    private void updateProfile(String newUsername, String newEmail, String newPhone, boolean receiveNotifications) {
+        // Update the fields in Firestore using Firebase UID
         db.collection("accounts")
-                .document(currentUserEmail)
+                .document(firebaseUid)
                 .update(
                         "username", newUsername,
+                        "email", newEmail,
                         "phone", newPhone,
                         "receivingNotis", receiveNotifications
                 )
@@ -187,10 +209,7 @@ public class UserProfileActivity extends AppCompatActivity {
                             "Profile updated successfully!",
                             Toast.LENGTH_SHORT).show();
 
-                    // Clear password field for security
-                    etPassword.setText("");
-
-                    finish(); // Return to previous screen
+                    finish();
                 })
                 .addOnFailureListener(e -> {
                     Toast.makeText(UserProfileActivity.this,
@@ -201,446 +220,295 @@ public class UserProfileActivity extends AppCompatActivity {
     }
 
     private void showDeleteAccountDialog() {
-        // create an AlertDialog with password input
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Delete Account");
         builder.setMessage("Are you sure you want to delete your account? This action cannot be undone.\n\n" +
                 "Type \"I want to delete my account\" to confirm:");
 
-        // create a LinearLayout to hold both input fields
         android.widget.LinearLayout layout = new android.widget.LinearLayout(this);
         layout.setOrientation(android.widget.LinearLayout.VERTICAL);
         layout.setPadding(50, 20, 50, 20);
 
-        // create EditText for confirmation phrase
         final EditText confirmationInput = new EditText(this);
         confirmationInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT);
         confirmationInput.setHint("Type: I want to delete my account");
         confirmationInput.setPadding(20, 20, 20, 20);
         layout.addView(confirmationInput);
 
-        // add spacing between fields
-        android.widget.Space space = new android.widget.Space(this);
-        space.setMinimumHeight(30);
-        layout.addView(space);
-
-        // create EditText for password input
-        final EditText passwordInput = new EditText(this);
-        passwordInput.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        passwordInput.setHint("Enter your password");
-        passwordInput.setPadding(20, 20, 20, 20);
-        layout.addView(passwordInput);
-
         builder.setView(layout);
 
-        // delete button
         builder.setPositiveButton("Delete Account", (dialog, which) -> {
             String confirmationText = confirmationInput.getText().toString().trim();
-            String password = passwordInput.getText().toString().trim();
 
-            // validate confirmation phrase
             if (!confirmationText.equals("I want to delete my account")) {
                 Toast.makeText(this,
                         "Please type the exact phrase: I want to delete my account",
                         Toast.LENGTH_LONG).show();
-                // reshow the dialog
                 showDeleteAccountDialog();
                 return;
             }
 
-            // validate password
-            if (password.isEmpty()) {
-                Toast.makeText(this, "Password is required", Toast.LENGTH_SHORT).show();
-                // reshow the dialog
-                showDeleteAccountDialog();
-                return;
-            }
-
-            // both validations passed, proceed with deletion
-            deleteUserProfile(password);
+            deleteUserProfile();
         });
 
-        // cancel button
         builder.setNegativeButton("Cancel", (dialog, which) -> {
             dialog.dismiss();
         });
 
-        // show the dialog
         AlertDialog dialog = builder.create();
         dialog.show();
 
-        // color delete button red
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(
+                getResources().getColor(android.R.color.holo_red_dark));
     }
 
-    /**
-     * Deletes the user account from Firebase Auth and Firestore
-     * Requires password verification for security
-     *
-     * @param password User's password for verification
-     */
-    private void deleteUserProfile(String password) {
-        FirebaseUser user = mAuth.getCurrentUser();
+    private void deleteUserProfile() {
+        Log.d("UserProfile", "Attempting to delete account for UID: " + firebaseUid);
 
-        if (user == null) {
-            Toast.makeText(this, "No user logged in", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String email = user.getEmail();
-        Log.d("UserProfile", "Attempting to delete account for: " + email);
-
-        // create credential with email and password
-        AuthCredential credential = EmailAuthProvider.getCredential(email, password);
-
-        // re-authenticate the user before deletion (required by Firebase)
-        user.reauthenticate(credential)
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("UserProfile", "Re-authentication successful, proceeding with deletion");
-
-                    // Step 1: delete Firestore document
-                    deleteFirestoreData(email, user);
-                })
-                .addOnFailureListener(e -> {
-                    // password is incorrect
-                    Log.e("UserProfile", "Re-authentication failed", e);
-                    Toast.makeText(this,
-                            "Incorrect password. Account not deleted.",
-                            Toast.LENGTH_LONG).show();
-                    showDeleteAccountDialog();
-                });
-    }
-
-    /**
-     * deletes user data from Firestore and removes user from all events
-     * then proceeds to delete Firebase Auth account
-     */
-    private void deleteFirestoreData(String email, FirebaseUser user) {
-        Log.d("UserProfile", "Starting comprehensive data deletion for: " + email);
-
-        // step 1: remove user from all events (both entrants and selectedEntrants)
-        removeUserFromAllEvents(email, () -> {
-            // step 2: delete user's Firestore document
-            deleteUserDocument(email, user);
+        // Get Android ID to remove from events
+        getAndroidIdFromProfile(() -> {
+            deleteFirestoreData();
         });
     }
 
-    /**
-     * Removes user from all events where they are an entrant
-     * Then chains to remove from winners, accepted, and rejected arrays
-     */
-    private void removeUserFromAllEvents(String email, Runnable onComplete) {
+    private void getAndroidIdFromProfile(Runnable onComplete) {
+        db.collection("accounts")
+                .document(firebaseUid)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        String androidId = documentSnapshot.getString("androidId");
+                        if (androidId != null) {
+                            // Remove from events using Android ID
+                            removeUserFromAllEvents(androidId, onComplete);
+                        } else {
+                            // No Android ID, just delete document
+                            onComplete.run();
+                        }
+                    } else {
+                        onComplete.run();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("UserProfile", "Error getting Android ID", e);
+                    onComplete.run();
+                });
+    }
+
+    private void deleteFirestoreData() {
+        Log.d("UserProfile", "Starting comprehensive data deletion for UID: " + firebaseUid);
+        deleteUserDocument();
+    }
+
+    private void removeUserFromAllEvents(String androidId, Runnable onComplete) {
         Log.d("UserProfile", "Removing user from entrants in all events");
 
         db.collection("events")
-                .whereArrayContains("entrants", email)
+                .whereArrayContains("entrants", androidId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
                     Log.d("UserProfile", "Found " + totalEvents + " events with user as entrant");
 
                     if (totalEvents == 0) {
-                        // No events, move to next step
-                        removeUserFromWinners(email, onComplete);
+                        removeUserFromWinners(androidId, onComplete);
                         return;
                     }
 
-                    // Remove user from entrants array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
-                                .update("entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .update("entrants", com.google.firebase.firestore.FieldValue.arrayRemove(androidId))
                                 .addOnSuccessListener(aVoid -> {
                                     processedCount[0]++;
-                                    Log.d("UserProfile", "Removed from entrants in event: " + document.getId());
-
                                     if (processedCount[0] == totalEvents) {
-                                        // All entrants processed, move to winners
-                                        removeUserFromWinners(email, onComplete);
+                                        removeUserFromWinners(androidId, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error removing from entrants: " + document.getId(), e);
                                     processedCount[0]++;
-
                                     if (processedCount[0] == totalEvents) {
-                                        // Continue even if some fail
-                                        removeUserFromWinners(email, onComplete);
+                                        removeUserFromWinners(androidId, onComplete);
                                     }
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events with user as entrant", e);
-                    // Continue to next step even if this fails
-                    removeUserFromWinners(email, onComplete);
+                    Log.e("UserProfile", "Error querying events", e);
+                    removeUserFromWinners(androidId, onComplete);
                 });
     }
 
-    /**
-     * Removes user from winners arrays in all events
-     * Then chains to remove from accepted_entrants
-     */
-    private void removeUserFromWinners(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from winners in all events");
-
+    private void removeUserFromWinners(String androidId, Runnable onComplete) {
         db.collection("events")
-                .whereArrayContains("winners", email)
+                .whereArrayContains("winners", androidId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
-                    Log.d("UserProfile", "Found " + totalEvents + " events with user as winner");
 
                     if (totalEvents == 0) {
-                        // No events, proceed to accepted_entrants
-                        removeUserFromAcceptedEntrants(email, onComplete);
+                        removeUserFromAcceptedEntrants(androidId, onComplete);
                         return;
                     }
 
-                    // Remove user from winners array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
-                                .update("winners", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .update("winners", com.google.firebase.firestore.FieldValue.arrayRemove(androidId))
                                 .addOnSuccessListener(aVoid -> {
                                     processedCount[0]++;
-                                    Log.d("UserProfile", "Removed from winners in event: " + document.getId());
-
                                     if (processedCount[0] == totalEvents) {
-                                        // All winners processed, move to accepted_entrants
-                                        removeUserFromAcceptedEntrants(email, onComplete);
+                                        removeUserFromAcceptedEntrants(androidId, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error removing from winners: " + document.getId(), e);
                                     processedCount[0]++;
-
                                     if (processedCount[0] == totalEvents) {
-                                        // Continue even if some fail
-                                        removeUserFromAcceptedEntrants(email, onComplete);
+                                        removeUserFromAcceptedEntrants(androidId, onComplete);
                                     }
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events with user as winner", e);
-                    // Continue to next step even if this fails
-                    removeUserFromAcceptedEntrants(email, onComplete);
+                    removeUserFromAcceptedEntrants(androidId, onComplete);
                 });
     }
 
-    /**
-     * Removes user from accepted_entrants arrays in all events
-     * Then chains to remove from rejected_entrants
-     */
-    private void removeUserFromAcceptedEntrants(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from accepted_entrants in all events");
-
+    private void removeUserFromAcceptedEntrants(String androidId, Runnable onComplete) {
         db.collection("events")
-                .whereArrayContains("accepted_entrants", email)
+                .whereArrayContains("accepted_entrants", androidId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
-                    Log.d("UserProfile", "Found " + totalEvents + " events with user as accepted entrant");
 
                     if (totalEvents == 0) {
-                        // No events, proceed to rejected_entrants
-                        removeUserFromRejectedEntrants(email, onComplete);
+                        removeUserFromRejectedEntrants(androidId, onComplete);
                         return;
                     }
 
-                    // Remove user from accepted_entrants array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
-                                .update("accepted_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .update("accepted_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(androidId))
                                 .addOnSuccessListener(aVoid -> {
                                     processedCount[0]++;
-                                    Log.d("UserProfile", "Removed from accepted_entrants in event: " + document.getId());
-
                                     if (processedCount[0] == totalEvents) {
-                                        // All accepted_entrants processed, move to rejected_entrants
-                                        removeUserFromRejectedEntrants(email, onComplete);
+                                        removeUserFromRejectedEntrants(androidId, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error removing from accepted_entrants: " + document.getId(), e);
                                     processedCount[0]++;
-
                                     if (processedCount[0] == totalEvents) {
-                                        // Continue even if some fail
-                                        removeUserFromRejectedEntrants(email, onComplete);
+                                        removeUserFromRejectedEntrants(androidId, onComplete);
                                     }
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events with user as accepted entrant", e);
-                    // Continue to next step even if this fails
-                    removeUserFromRejectedEntrants(email, onComplete);
+                    removeUserFromRejectedEntrants(androidId, onComplete);
                 });
     }
 
-    /**
-     * Removes user from rejected_entrants arrays in all events
-     * Then chains to remove from entrants_waitlist
-     */
-    private void removeUserFromRejectedEntrants(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from rejected_entrants in all events");
-
+    private void removeUserFromRejectedEntrants(String androidId, Runnable onComplete) {
         db.collection("events")
-                .whereArrayContains("rejected_entrants", email)
+                .whereArrayContains("rejected_entrants", androidId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
-                    Log.d("UserProfile", "Found " + totalEvents + " events with user as rejected entrant");
 
                     if (totalEvents == 0) {
-                        // No events, proceed to entrants_waitlist
-                        removeUserFromWaitlist(email, onComplete);
+                        removeUserFromWaitlist(androidId, onComplete);
                         return;
                     }
 
-                    // Remove user from rejected_entrants array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
-                                .update("rejected_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .update("rejected_entrants", com.google.firebase.firestore.FieldValue.arrayRemove(androidId))
                                 .addOnSuccessListener(aVoid -> {
                                     processedCount[0]++;
-                                    Log.d("UserProfile", "Removed from rejected_entrants in event: " + document.getId());
-
                                     if (processedCount[0] == totalEvents) {
-                                        // All cleanup for rejected_entrants complete, move to waitlist
-                                        removeUserFromWaitlist(email, onComplete);
+                                        removeUserFromWaitlist(androidId, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error removing from rejected_entrants: " + document.getId(), e);
                                     processedCount[0]++;
-
                                     if (processedCount[0] == totalEvents) {
-                                        // Continue to waitlist even if some fail
-                                        Log.d("UserProfile", "Rejected entrants cleanup completed with some errors");
-                                        removeUserFromWaitlist(email, onComplete);
+                                        removeUserFromWaitlist(androidId, onComplete);
                                     }
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events with user as rejected entrant", e);
-                    // Proceed to waitlist even if this fails
-                    Log.d("UserProfile", "Rejected entrants cleanup completed with errors");
-                    removeUserFromWaitlist(email, onComplete);
+                    removeUserFromWaitlist(androidId, onComplete);
                 });
     }
 
-    /**
-     * Removes user from entrants_waitlist arrays in all events
-     * Then chains to remove from waitingList subcollection
-     */
-    private void removeUserFromWaitlist(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from entrants_waitlist in all events");
-
+    private void removeUserFromWaitlist(String androidId, Runnable onComplete) {
         db.collection("events")
-                .whereArrayContains("entrants_waitlist", email)
+                .whereArrayContains("entrants_waitlist", androidId)
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
-                    Log.d("UserProfile", "Found " + totalEvents + " events with user in waitlist");
 
                     if (totalEvents == 0) {
-                        // No events, proceed to waitingList subcollection
-                        removeUserFromWaitingListSubcollection(email, onComplete);
+                        removeUserFromWaitingListSubcollection(androidId, onComplete);
                         return;
                     }
 
-                    // Remove user from entrants_waitlist array in each event
                     int[] processedCount = {0};
                     for (com.google.firebase.firestore.DocumentSnapshot document : querySnapshot.getDocuments()) {
                         document.getReference()
-                                .update("entrants_waitlist", com.google.firebase.firestore.FieldValue.arrayRemove(email))
+                                .update("entrants_waitlist", com.google.firebase.firestore.FieldValue.arrayRemove(androidId))
                                 .addOnSuccessListener(aVoid -> {
                                     processedCount[0]++;
-                                    Log.d("UserProfile", "Removed from entrants_waitlist in event: " + document.getId());
-
                                     if (processedCount[0] == totalEvents) {
-                                        // All waitlist processed, move to subcollection
-                                        removeUserFromWaitingListSubcollection(email, onComplete);
+                                        removeUserFromWaitingListSubcollection(androidId, onComplete);
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error removing from entrants_waitlist: " + document.getId(), e);
                                     processedCount[0]++;
-
                                     if (processedCount[0] == totalEvents) {
-                                        // Continue even if some fail
-                                        removeUserFromWaitingListSubcollection(email, onComplete);
+                                        removeUserFromWaitingListSubcollection(androidId, onComplete);
                                     }
                                 });
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events with user in waitlist", e);
-                    // Continue to next step even if this fails
-                    removeUserFromWaitingListSubcollection(email, onComplete);
+                    removeUserFromWaitingListSubcollection(androidId, onComplete);
                 });
     }
 
-    /**
-     * Removes user documents from waitingList subcollections in all events
-     * This is the final cleanup step before deleting the user
-     */
-    private void removeUserFromWaitingListSubcollection(String email, Runnable onComplete) {
-        Log.d("UserProfile", "Removing user from waitingList subcollections");
-
+    private void removeUserFromWaitingListSubcollection(String androidId, Runnable onComplete) {
         db.collection("events")
                 .get()
                 .addOnSuccessListener(querySnapshot -> {
                     int totalEvents = querySnapshot.size();
-                    Log.d("UserProfile", "Checking " + totalEvents + " events for waitingList documents");
 
                     if (totalEvents == 0) {
-                        Log.d("UserProfile", "No events found, cleanup complete");
                         onComplete.run();
                         return;
                     }
 
                     int[] processedEvents = {0};
-                    int[] deletedDocs = {0};
 
                     for (com.google.firebase.firestore.DocumentSnapshot eventDoc : querySnapshot.getDocuments()) {
-                        String eventId = eventDoc.getId();
-
-                        // Check if this event has a waitingList subcollection with this user
                         eventDoc.getReference()
                                 .collection("waitingList")
-                                .document(email)
+                                .document(androidId)
                                 .get()
                                 .addOnSuccessListener(waitlistDoc -> {
                                     if (waitlistDoc.exists()) {
-                                        // Delete the document
-                                        waitlistDoc.getReference()
-                                                .delete()
-                                                .addOnSuccessListener(aVoid -> {
-                                                    deletedDocs[0]++;
-                                                    Log.d("UserProfile", "Deleted from waitingList in event: " + eventId);
-                                                })
-                                                .addOnFailureListener(e -> {
-                                                    Log.e("UserProfile", "Error deleting from waitingList: " + eventId, e);
-                                                });
+                                        waitlistDoc.getReference().delete();
                                     }
 
                                     processedEvents[0]++;
                                     if (processedEvents[0] == totalEvents) {
-                                        Log.d("UserProfile", "Removed from " + deletedDocs[0] + " waitingList subcollections");
                                         onComplete.run();
                                     }
                                 })
                                 .addOnFailureListener(e -> {
-                                    Log.e("UserProfile", "Error checking waitingList in event: " + eventId, e);
                                     processedEvents[0]++;
-
                                     if (processedEvents[0] == totalEvents) {
                                         onComplete.run();
                                     }
@@ -648,66 +516,46 @@ public class UserProfileActivity extends AppCompatActivity {
                     }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error querying events for waitingList cleanup", e);
                     onComplete.run();
                 });
     }
 
-    /**
-     * deletes the user's document from accounts collection
-     */
-    private void deleteUserDocument(String email, FirebaseUser user) {
+    private void deleteUserDocument() {
         Log.d("UserProfile", "Deleting user document from accounts collection");
 
+        // Delete document using Firebase UID
         db.collection("accounts")
-                .document(email)
+                .document(firebaseUid)
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     Log.d("UserProfile", "Firestore document deleted successfully");
 
-                    // delete Firebase Auth account
-                    deleteFirebaseAuthAccount(user);
+                    // Delete Firebase Auth account
+                    if (mAuth.getCurrentUser() != null) {
+                        mAuth.getCurrentUser().delete()
+                                .addOnSuccessListener(aVoid2 -> {
+                                    Toast.makeText(this, "Account deleted successfully",
+                                            Toast.LENGTH_LONG).show();
+                                    navigateToSplash();
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e("UserProfile", "Error deleting auth", e);
+                                    mAuth.signOut();
+                                    navigateToSplash();
+                                });
+                    } else {
+                        navigateToSplash();
+                    }
                 })
                 .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error deleting Firestore document", e);
-                    Toast.makeText(this,
-                            "Failed to delete user data: " + e.getMessage(),
-                            Toast.LENGTH_LONG).show();
-
-                    // Even if Firestore deletion fails, try to delete Auth account
-                    deleteFirebaseAuthAccount(user);
-                });
-    }
-
-    /**
-     * deletes the Firebase Auth account
-     * then navigates back to login screen
-     */
-    private void deleteFirebaseAuthAccount(FirebaseUser user) {
-        user.delete()
-                .addOnSuccessListener(aVoid -> {
-                    Log.d("UserProfile", "Firebase Auth account deleted successfully");
-                    Toast.makeText(this,
-                            "Account deleted successfully",
-                            Toast.LENGTH_LONG).show();
-
-                    // navigate to login/signup screen
-                    navigateToLogin();
-                })
-                .addOnFailureListener(e -> {
-                    Log.e("UserProfile", "Error deleting Firebase Auth account", e);
-                    Toast.makeText(this,
-                            "Failed to delete account: " + e.getMessage(),
+                    Log.e("UserProfile", "Error deleting document", e);
+                    Toast.makeText(this, "Failed to delete: " + e.getMessage(),
                             Toast.LENGTH_LONG).show();
                 });
     }
 
-    /**
-     * navigates to the login screen after account deletion
-     * clears the activity stack so user can't go back
-     */
-    private void navigateToLogin() {
-        Intent intent = new Intent(this, LoginActivity.class);
+    private void navigateToSplash() {
+        Intent intent = new Intent(this, SplashActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();

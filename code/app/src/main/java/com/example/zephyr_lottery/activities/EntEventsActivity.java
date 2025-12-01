@@ -21,6 +21,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -35,7 +36,7 @@ public class EntEventsActivity extends AppCompatActivity {
     private Button back_latest_event_button;
     private ListView eventListView;
     private ArrayList<Event> eventArrayList;
-    private ArrayList<Event> allEventsList; // Keep original unfiltered list
+    private ArrayList<Event> allEventsList;
     private ArrayAdapter<Event> eventArrayAdapter;
     private ArrayList<Event> eventList;
     private EventArrayAdapter eventAdapter;
@@ -50,9 +51,11 @@ public class EntEventsActivity extends AppCompatActivity {
     private Double filterPriceMin = null;
     private Double filterPriceMax = null;
 
-    //databases
+    // Firebase
     private FirebaseFirestore db;
+    private FirebaseAuth mAuth;
     private CollectionReference eventsRef;
+    private String firebaseUid;
 
     private ActivityResultLauncher<Intent> filterActivityLauncher;
 
@@ -68,12 +71,22 @@ public class EntEventsActivity extends AppCompatActivity {
         });
 
         db = FirebaseFirestore.getInstance();
+        mAuth = FirebaseAuth.getInstance();
         eventsRef = db.collection("events");
 
-        //set the list view to be the arraylist of events.
+        // Get Firebase UID
+        if (mAuth.getCurrentUser() != null) {
+            firebaseUid = mAuth.getCurrentUser().getUid();
+        } else {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Set the list view to be the arraylist of events
         eventListView = findViewById(R.id.ListView_latest_events);
         eventArrayList = new ArrayList<>();
-        allEventsList = new ArrayList<>(); // Initialize full list
+        allEventsList = new ArrayList<>();
         eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
         eventListView.setAdapter(eventArrayAdapter);
         eventList = eventArrayList;
@@ -128,13 +141,13 @@ public class EntEventsActivity extends AppCompatActivity {
                 }
         );
 
-        //listener. updates array when created and when database changes.
+        // Listener: updates array when created and when database changes
         eventsRef.addSnapshotListener((value, error) -> {
             if (error != null) {
                 Log.e("Firestore", error.toString());
             }
             if(value != null && !value.isEmpty()){
-                allEventsList.clear(); // Clear the full list
+                allEventsList.clear();
                 for (QueryDocumentSnapshot snapshot : value){
                     String name = snapshot.getString("name");
                     String time = snapshot.getString("time");
@@ -142,7 +155,7 @@ public class EntEventsActivity extends AppCompatActivity {
 
                     Event event = new Event(name, time, organizer_email);
 
-                    //add additional fields if they exist
+                    // Add additional fields if they exist
                     if (snapshot.contains("description")) {
                         event.setDescription(snapshot.getString("description"));
                     }
@@ -159,14 +172,11 @@ public class EntEventsActivity extends AppCompatActivity {
                         event.setPeriod(snapshot.getString("period"));
                     }
 
-                    allEventsList.add(event); // Add to full list
+                    allEventsList.add(event);
                 }
-                applyFilters(); // Apply current filters after loading data
+                applyFilters();
             }
         });
-
-        //get email from intent
-        String user_email = getIntent().getStringExtra("USER_EMAIL");
 
         // Send to event details when clicked
         eventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -174,19 +184,18 @@ public class EntEventsActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Event e = eventArrayList.get(position);
                 Intent intent = new Intent(EntEventsActivity.this, EntEventDetailActivity.class);
-                intent.putExtra("USER_EMAIL", user_email);
+                intent.putExtra("FIREBASE_UID", firebaseUid);
                 intent.putExtra("EVENT", String.valueOf(e.hashCode()));
                 intent.putExtra("FROM_ACTIVITY", "ALL_EVENTS");
                 startActivity(intent);
             }
         });
 
-
-        //listener for button to return to homescreen.
+        // Listener for button to return to homescreen
         back_latest_event_button = findViewById(R.id.button_latest_event_back);
         back_latest_event_button.setOnClickListener(view -> {
             Intent intent = new Intent(EntEventsActivity.this, HomeEntActivity.class);
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("FIREBASE_UID", firebaseUid);
             startActivity(intent);
         });
 
@@ -195,7 +204,7 @@ public class EntEventsActivity extends AppCompatActivity {
         filter_latest_event_button.setOnClickListener(view -> {
             Intent intent = new Intent(EntEventsActivity.this, FilterEventActivity.class);
             intent.putExtra("SOURCE_ACTIVITY", "EntEventsActivity");
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("FIREBASE_UID", firebaseUid);
 
             // Pass existing filter values
             if (filterEventName != null && !filterEventName.isEmpty()) {
@@ -333,7 +342,6 @@ public class EntEventsActivity extends AppCompatActivity {
                 .get()
                 .addOnSuccessListener(query -> {
                     if (eventList == null || eventAdapter == null) {
-                        // Just a safety guard; they *should* be initialized in onCreate.
                         Log.e("EntEventsActivity", "eventList or eventAdapter is null in loadEvents()");
                         return;
                     }
@@ -343,9 +351,6 @@ public class EntEventsActivity extends AppCompatActivity {
                     for (DocumentSnapshot snap : query.getDocuments()) {
                         Event e = snap.toObject(Event.class);
                         if (e == null) continue;
-
-                        // If you have eventId in Event, you can keep this:
-                        // e.setEventId(snap.getId());
 
                         eventList.add(e);
                     }
@@ -357,4 +362,3 @@ public class EntEventsActivity extends AppCompatActivity {
                 );
     }
 }
-

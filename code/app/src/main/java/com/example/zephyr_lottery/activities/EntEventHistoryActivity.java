@@ -8,6 +8,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,6 +24,7 @@ import com.example.zephyr_lottery.R;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class EntEventHistoryActivity extends AppCompatActivity {
     private Button back_latest_event_button;
     private ListView eventListView;
     private ArrayList<Event> eventArrayList;
-    private ArrayList<Event> allEventsList; // keep original unfiltered list
+    private ArrayList<Event> allEventsList;
     private ArrayAdapter<Event> eventArrayAdapter;
 
     // Filter values
@@ -46,10 +48,13 @@ public class EntEventHistoryActivity extends AppCompatActivity {
     private Double filterPriceMin = null;
     private Double filterPriceMax = null;
 
-    //databases
+    // Firebase
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
     private CollectionReference eventsRef;
+    private String firebaseUid;
+    private String androidId;
+    private ListenerRegistration eventsListener;
 
     private ActivityResultLauncher<Intent> filterActivityLauncher;
 
@@ -68,15 +73,24 @@ public class EntEventHistoryActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         eventsRef = db.collection("events");
 
-        //set the list view to be the arraylist of events.
+        // Get Firebase UID
+        if (mAuth.getCurrentUser() != null) {
+            firebaseUid = mAuth.getCurrentUser().getUid();
+        } else {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
+        // Set the list view to be the arraylist of events
         eventListView = findViewById(R.id.ListView_latest_events);
         eventArrayList = new ArrayList<>();
-        allEventsList = new ArrayList<>(); // Initialize full list
+        allEventsList = new ArrayList<>();
         eventArrayAdapter = new EventArrayAdapter(this, eventArrayList);
         eventListView.setAdapter(eventArrayAdapter);
 
-        //get email from intent
-        String user_email = mAuth.getCurrentUser().getEmail();
+        // Fetch Android ID from profile, then load events
+        fetchAndroidIdAndLoadEvents();
 
         // Set up filter activity launcher
         filterActivityLauncher = registerForActivityResult(
@@ -126,61 +140,24 @@ public class EntEventHistoryActivity extends AppCompatActivity {
                 }
         );
 
-        //listener. updates array when created and when database changes.
-        eventsRef.whereArrayContains("entrants", user_email).addSnapshotListener((value, error) -> {
-            if (error != null) {
-                Log.e("Firestore", error.toString());
-            }
-            if(value != null && !value.isEmpty()){
-                allEventsList.clear(); // Clear the full list
-                for (QueryDocumentSnapshot snapshot : value){
-                    String name = snapshot.getString("name");
-                    String time = snapshot.getString("time");
-                    String organizer_email = snapshot.getString("organizer_email");
-
-                    Event event = new Event(name, time, organizer_email);
-
-                    //add additional fields if they exist
-                    if (snapshot.contains("description")) {
-                        event.setDescription(snapshot.getString("description"));
-                    }
-                    if (snapshot.contains("price")) {
-                        event.setPrice(snapshot.getDouble("price").floatValue());
-                    }
-                    if (snapshot.contains("location")) {
-                        event.setLocation(snapshot.getString("location"));
-                    }
-                    if (snapshot.contains("weekday")) {
-                        event.setWeekday(snapshot.getLong("weekday").intValue());
-                    }
-                    if (snapshot.contains("period")) {
-                        event.setPeriod(snapshot.getString("period"));
-                    }
-
-                    allEventsList.add(event); // Add to full list
-                }
-                applyFilters(); // Apply current filters after loading data
-            }
-        });
-
         // Send to event details when clicked
         eventListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Event e = eventArrayList.get(position);
                 Intent intent = new Intent(EntEventHistoryActivity.this, EntEventDetailActivity.class);
-                intent.putExtra("USER_EMAIL", user_email);
+                intent.putExtra("FIREBASE_UID", firebaseUid);
                 intent.putExtra("EVENT", String.valueOf(e.hashCode()));
                 intent.putExtra("FROM_ACTIVITY", "MY_EVENTS");
                 startActivity(intent);
             }
         });
 
-        //listener for button to return to homescreen.
+        // Listener for button to return to homescreen
         back_latest_event_button = findViewById(R.id.button_latest_event_back);
         back_latest_event_button.setOnClickListener(view -> {
             Intent intent = new Intent(EntEventHistoryActivity.this, HomeEntActivity.class);
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("FIREBASE_UID", firebaseUid);
             startActivity(intent);
         });
 
@@ -189,7 +166,7 @@ public class EntEventHistoryActivity extends AppCompatActivity {
         filter_latest_event_button.setOnClickListener(view -> {
             Intent intent = new Intent(EntEventHistoryActivity.this, FilterEventActivity.class);
             intent.putExtra("SOURCE_ACTIVITY", "EntEventHistoryActivity");
-            intent.putExtra("USER_EMAIL", user_email);
+            intent.putExtra("FIREBASE_UID", firebaseUid);
 
             // Pass existing filter values
             if (filterEventName != null && !filterEventName.isEmpty()) {
@@ -219,6 +196,101 @@ public class EntEventHistoryActivity extends AppCompatActivity {
 
             filterActivityLauncher.launch(intent);
         });
+    }
+
+    /**
+     * Fetch Android ID from user profile, then set up events listener
+     */
+    private void fetchAndroidIdAndLoadEvents() {
+        db.collection("accounts")
+                .document(firebaseUid)
+                .get()
+                .addOnSuccessListener(documentSnapshot -> {
+                    if (documentSnapshot.exists()) {
+                        androidId = documentSnapshot.getString("androidId");
+
+                        if (androidId != null && !androidId.isEmpty()) {
+                            Log.d("EntEventHistory", "Fetched Android ID: " + androidId);
+                            setupEventsListener();
+                        } else {
+                            Log.e("EntEventHistory", "Android ID is null or empty");
+                            Toast.makeText(this, "Profile error: No device ID", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Log.e("EntEventHistory", "Profile not found");
+                        Toast.makeText(this, "Profile not found", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("EntEventHistory", "Error fetching profile", e);
+                    Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show();
+                });
+    }
+
+    /**
+     * Set up listener for events where user is an entrant (using Android ID)
+     */
+    private void setupEventsListener() {
+        if (androidId == null || androidId.isEmpty()) {
+            Log.e("EntEventHistory", "Cannot setup listener: Android ID is null");
+            return;
+        }
+
+        // Query events using Android ID (event arrays now contain Android IDs)
+        eventsListener = eventsRef.whereArrayContains("entrants", androidId)
+                .addSnapshotListener((value, error) -> {
+                    if (error != null) {
+                        Log.e("Firestore", "Error listening to events", error);
+                        return;
+                    }
+
+                    if (value != null && !value.isEmpty()) {
+                        allEventsList.clear();
+
+                        for (QueryDocumentSnapshot snapshot : value) {
+                            String name = snapshot.getString("name");
+                            String time = snapshot.getString("time");
+                            String organizer_email = snapshot.getString("organizer_email");
+
+                            Event event = new Event(name, time, organizer_email);
+
+                            // Add additional fields if they exist
+                            if (snapshot.contains("description")) {
+                                event.setDescription(snapshot.getString("description"));
+                            }
+                            if (snapshot.contains("price")) {
+                                event.setPrice(snapshot.getDouble("price").floatValue());
+                            }
+                            if (snapshot.contains("location")) {
+                                event.setLocation(snapshot.getString("location"));
+                            }
+                            if (snapshot.contains("weekday")) {
+                                event.setWeekday(snapshot.getLong("weekday").intValue());
+                            }
+                            if (snapshot.contains("period")) {
+                                event.setPeriod(snapshot.getString("period"));
+                            }
+
+                            allEventsList.add(event);
+                        }
+
+                        applyFilters();
+                    } else {
+                        // No events found
+                        allEventsList.clear();
+                        applyFilters();
+                    }
+                });
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Remove listener when activity is destroyed
+        if (eventsListener != null) {
+            eventsListener.remove();
+            Log.d("EntEventHistory", "Events listener removed");
+        }
     }
 
     /**

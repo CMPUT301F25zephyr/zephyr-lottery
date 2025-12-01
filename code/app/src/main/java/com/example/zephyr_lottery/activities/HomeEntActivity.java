@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,7 +44,7 @@ public class HomeEntActivity extends AppCompatActivity {
 
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
-    private String userEmail;
+    private String androidId;  // Changed from userEmail
     private ArrayList<Integer> incoming_invitations;
     private ActivityResultLauncher<ScanOptions> scanLauncher;
 
@@ -70,24 +71,27 @@ public class HomeEntActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
-        // Load username from Firebase,
-        //loadUsername_checkAccount();
+        // Get Android ID - either from intent or get it directly
+        androidId = getIntent().getStringExtra("ANDROID_ID");
+        if (androidId == null || androidId.isEmpty()) {
+            androidId = getAndroidId();
+        }
 
         editProfileButton.setOnClickListener(v -> {
             Intent intent = new Intent(HomeEntActivity.this, UserProfileActivity.class);
+            intent.putExtra("ANDROID_ID", androidId);
             startActivity(intent);
         });
 
         viewHistoryButton.setOnClickListener(v -> {
-            // TODO: add view history view
             Intent intent = new Intent(HomeEntActivity.this, EntEventHistoryActivity.class);
-            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("ANDROID_ID", androidId);
             startActivity(intent);
         });
 
         viewEventsButton.setOnClickListener(v -> {
             Intent intent = new Intent(HomeEntActivity.this, EntEventsActivity.class);
-            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("ANDROID_ID", androidId);
             startActivity(intent);
         });
 
@@ -98,7 +102,7 @@ public class HomeEntActivity extends AppCompatActivity {
 
                 //switch to details activity and pass in the hashcode of the QR code
                 Intent intent = new Intent(HomeEntActivity.this, EntEventDetailActivity.class);
-                intent.putExtra("USER_EMAIL", mAuth.getCurrentUser().getEmail());
+                intent.putExtra("ANDROID_ID", androidId);
                 intent.putExtra("EVENT", event_code);
                 intent.putExtra("FROM_ACTIVITY", "HOME_ENT");
                 startActivity(intent);
@@ -127,58 +131,80 @@ public class HomeEntActivity extends AppCompatActivity {
         loadUsername_checkAccount();
     }
 
-    private void loadUsername_checkAccount() {
-        String currentUserEmail = mAuth.getCurrentUser().getEmail();
+    private String getAndroidId() {
+        String id = Settings.Secure.getString(
+                getContentResolver(),
+                Settings.Secure.ANDROID_ID
+        );
 
+        if (id == null || id.isEmpty()) {
+            id = "unknown_" + System.currentTimeMillis();
+            Log.w("HomeEntActivity", "Android ID not available, using fallback");
+        }
+
+        return id;
+    }
+
+    private void loadUsername_checkAccount() {
+        // Get Firebase UID instead of email
+        if (mAuth.getCurrentUser() == null) {
+            Toast.makeText(this, "Not authenticated", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        String firebaseUid = mAuth.getCurrentUser().getUid();
+
+        // Query using Firebase UID as document key
         db.collection("accounts")
-                .document(currentUserEmail)
+                .document(firebaseUid)
                 .get()
                 .addOnSuccessListener(documentSnapshot -> {
-                    UserProfile profile = documentSnapshot.toObject(UserProfile.class);
+                    if (documentSnapshot.exists()) {
+                        // Get username
+                        String username = documentSnapshot.getString("username");
 
-                    if (profile != null) {
-                        // Use the profile data
-                        String username = profile.getUsername();
-                        String userEmail = profile.getEmail();
-                        textViewGreeting.setText("Greetings, " + username);
+                        if (username != null && !username.isEmpty()) {
+                            textViewGreeting.setText("Greetings, " + username);
+                        } else {
+                            textViewGreeting.setText("Hello, User");
+                        }
 
-                        //get any event invitations from database meant for this user
-                        incoming_invitations = profile.getInvitationCodes();
+                        // Get Android ID from profile
+                        String profileAndroidId = documentSnapshot.getString("androidId");
 
-                        //if we have any event invitations, we start the invitation activity
+                        // Get any event invitations
+                        incoming_invitations = (ArrayList<Integer>) documentSnapshot.get("invitationCodes");
+
                         if (incoming_invitations != null && !incoming_invitations.isEmpty()) {
                             Intent intent = new Intent(HomeEntActivity.this, EventInvitationActivity.class);
-                            intent.putExtra("USER_EMAIL", mAuth.getCurrentUser().getEmail());
+                            intent.putExtra("FIREBASE_UID", firebaseUid);
 
-                            //get code of the event and pass into activity
                             int invitation_code = incoming_invitations.get(incoming_invitations.size() - 1);
-                            incoming_invitations.remove(incoming_invitations.size() - 1);
                             intent.putExtra("EVENT_CODE", Integer.toString(invitation_code));
 
-                            //remove the invitation from database as well.
-                            db.collection("accounts").document(currentUserEmail)
-                                .update("invitationCodes", FieldValue.arrayRemove(invitation_code))
+                            // Remove invitation using Firebase UID
+                            db.collection("accounts").document(firebaseUid)
+                                    .update("invitationCodes", FieldValue.arrayRemove(invitation_code))
                                     .addOnSuccessListener(aVoid -> {
-                                        //start activity after invitation removed.
                                         startActivity(intent);
                                     })
                                     .addOnFailureListener(e -> {
                                         Toast.makeText(HomeEntActivity.this,
-                                                "invitation not removed from database :(",
+                                                "Invitation not removed from database",
                                                 Toast.LENGTH_SHORT).show();
+                                        Log.e("HomeEntActivity", "Error removing invitation", e);
                                     });
                         }
-
                     } else {
                         textViewGreeting.setText("Hello, User");
+                        Log.w("HomeEntActivity", "Profile not found");
                     }
                 })
                 .addOnFailureListener(e -> {
-                    // Handle error - show default greeting
                     textViewGreeting.setText("Hello, User");
                     Toast.makeText(this, "Failed to load profile", Toast.LENGTH_SHORT).show();
+                    Log.e("HomeEntActivity", "Error loading profile", e);
                 });
-
     }
 
     private void requestNotificationPermission() {

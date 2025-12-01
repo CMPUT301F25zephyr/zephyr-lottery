@@ -231,7 +231,19 @@ public class EntEventDetailActivity extends AppCompatActivity {
                                 + (winners_list != null ? winners_list.size() : 0);
 
                 Long limitLong = currentEvent.getLong("limit");
-                String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
+                int limitValue;
+                if (limitLong != null) {
+                    limitValue = limitLong.intValue();
+                } else {
+                    limitValue = -1;
+                }
+
+                String limitDisplay;
+                if (limitValue == -1) {
+                    limitDisplay = "infinite";
+                } else {
+                    limitDisplay = String.valueOf(limitValue);
+                }
 
                 int currentSize = num_entrants;
 
@@ -306,15 +318,23 @@ public class EntEventDetailActivity extends AppCompatActivity {
 
         Long limitLong = currentEvent.getLong("limit");
         boolean hasLimit = limitLong != null;
-        int limitValue = hasLimit ? limitLong.intValue() : 0;
+        int limitValue = hasLimit ? limitLong.intValue() : -1;
 
-        if (hasLimit && num_entrants >= limitValue) {
-            Toast.makeText(this,
-                    "This event is full.", Toast.LENGTH_LONG).show();
-            return;
+        if (limitValue != -1) { //if -1, the limit is infinite.
+            if (hasLimit && num_entrants >= limitValue) {
+                Toast.makeText(this,
+                        "This event is full.", Toast.LENGTH_LONG).show();
+                return;
+            }
         }
+        String limitDisplay_old = "";
+        if (limitValue == -1){
+            limitDisplay_old = "infinite";
+        } else {
+            limitDisplay_old = hasLimit ? String.valueOf(limitValue) : "?";
+        }
+        String limitDisplay = limitDisplay_old;
 
-        String limitDisplay = hasLimit ? String.valueOf(limitValue) : "?";
 
         docRef.update("entrants", FieldValue.arrayUnion(finalUserEmail))
                 .addOnSuccessListener(aVoid -> {
@@ -368,7 +388,20 @@ public class EntEventDetailActivity extends AppCompatActivity {
                             + (winners != null ? winners.size() : 0);
 
             Long limitLong = currentEvent.getLong("limit");
-            String limitDisplay = limitLong != null ? limitLong.toString() : "?";
+            int limitValue;
+            if (limitLong != null) {
+                limitValue = limitLong.intValue();
+            } else {
+                limitValue = -1;
+            }
+
+            String limitDisplay;
+            if (limitValue == -1) {
+                limitDisplay = "infinite";
+            } else {
+                limitDisplay = String.valueOf(limitValue);
+            }
+            entrantNumbers.setText("Current Entrants: " + entrantCount + "/" + limitDisplay + " slots");
             entrantNumbers.setText("Current Entrants: " + entrantCount + "/" + limitDisplay + " slots");
 
             Long sampleSizeLong = currentEvent.getLong("sampleSize");

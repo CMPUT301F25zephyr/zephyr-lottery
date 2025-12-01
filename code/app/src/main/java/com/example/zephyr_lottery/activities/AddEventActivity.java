@@ -126,13 +126,13 @@ public class AddEventActivity extends AppCompatActivity {
             String event_period = ((EditText) findViewById(R.id.add_event_period)).getText().toString();
             String base64_image = bitmap_to_base64(image_bitmap); //if no image added, image_bitmap = null
 
-            int event_limit = 0;
+            int event_limit = -1;
             String limitText = ((EditText) findViewById(R.id.add_event_ent_limit)).getText().toString();
             if (!limitText.isEmpty()) {
                 try {
                     event_limit = Integer.parseInt(limitText);
                 } catch (NumberFormatException e) {
-                    event_limit = 0;
+                    event_limit = -1;
                 }
             }
 

@@ -99,6 +99,9 @@
             android:name=".activities.AdmEventDetailActivity"
             android:exported="false" />
         <activity
+            android:name=".activities.FilterEventActivity"
+            android:exported="false" />
+        <activity
             android:name=".activities.OrgEditEventActivity"
             android:exported="false">
         </activity>

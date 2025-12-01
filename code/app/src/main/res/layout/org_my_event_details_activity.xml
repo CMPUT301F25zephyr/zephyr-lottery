@@ -16,8 +16,10 @@
         android:fillViewport="true"
         app:layout_constraintBottom_toTopOf="@+id/button_draw_lottery"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_notify_waiting">
 
         <LinearLayout
             android:id="@+id/org_myeventdetails_linlayout"
@@ -48,12 +50,29 @@
     </ScrollView>
 
     <!-- Row 1: Draw Lottery + View Entrants -->
+        </LinearLayout>
+    </ScrollView>
+
+
+    <Button
+        android:id="@+id/button_notify_waiting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Notify Waiting List"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/scrollView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/button_draw_lottery" />
+
     <Button
         android:id="@+id/button_draw_lottery"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Draw Lottery"
         app:layout_constraintTop_toBottomOf="@+id/scrollView"
+        app:layout_constraintTop_toBottomOf="@id/button_notify_waiting"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_edit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button_entrants" />
 
@@ -64,6 +83,9 @@
         android:text="View Entrants"
         app:layout_constraintTop_toBottomOf="@+id/scrollView"
         app:layout_constraintStart_toEndOf="@+id/button_draw_lottery"
+        app:layout_constraintTop_toBottomOf="@id/button_notify_waiting"
+        app:layout_constraintBottom_toTopOf="@+id/button_generate_qr"
+        app:layout_constraintStart_toEndOf="@id/button_draw_lottery"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Row 2: Chosen Entrants -->
@@ -84,6 +106,10 @@
         android:text="Notify Waiting List"
         app:layout_constraintTop_toBottomOf="@+id/button_chosen_entrants"
         app:layout_constraintStart_toStartOf="parent"
+        android:text="Generate QR"
+        app:layout_constraintTop_toBottomOf="@+id/button_entrants"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
+        app:layout_constraintStart_toEndOf="@id/button_org_event_details_edit"
         app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Row 4: Notify Selected Entrants -->
@@ -124,6 +150,27 @@
         app:layout_constraintTop_toBottomOf="@+id/button_view_entrants_map"
         app:layout_constraintStart_toEndOf="@+id/button_org_event_details_edit"
         app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/button_draw_lottery"
+        app:layout_constraintBottom_toTopOf="@+id/button_org_event_details_back"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/button_generate_qr" />
+
+    <Button
+        android:id="@+id/button_org_event_details_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Back"
+        app:layout_constraintTop_toBottomOf="@id/button_org_event_details_edit"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+        android:id="@+id/button_view_entrants_map"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="View Entrants on Map"
+        app:layout_constraintBottom_toBottomOf="@+id/scrollView" />
 
     <!-- Row 7: Back -->
     <Button

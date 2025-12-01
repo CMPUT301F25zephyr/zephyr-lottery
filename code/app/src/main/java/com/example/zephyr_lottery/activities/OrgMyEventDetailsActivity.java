@@ -17,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.appcompat.app.AlertDialog;
+import com.example.zephyr_lottery.repositories.EventRepository;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
@@ -52,6 +54,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private int eventCode;
     private String userEmail;
     private Event event;
+    private final EventRepository eventRepository = new EventRepository();
 
     // Repository used for US02.07.01 / US02.07.02
     private final EventRepository eventRepository = new EventRepository();
@@ -116,6 +119,21 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         });
 
         // View entrants on map
+        viewMapButton.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String eventId = Integer.toString(eventCode);
+
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEntrantsMapActivity.class);
+            intent.putExtra("EVENT_ID", eventId);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+
+        // View entrants on map: pass Firestore document ID as a String
         viewMapButton.setOnClickListener(v -> {
             if (eventCode == -1) {
                 Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
@@ -269,6 +287,86 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         });
     }
 
+        // Notify Waiting List button (US02.07.01)
+        buttonNotifyWaiting.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Notify waiting list entrants?")
+                    .setMessage("This will send notifications to all entrants on the waiting list.")
+                    .setPositiveButton("Notify", (dialog, which) -> {
+                        String eventId = Integer.toString(eventCode);
+
+                        eventRepository.notifyAllWaitingListEntrants(
+                                eventId,
+                                count -> {
+                                    if (count == 0) {
+                                        Toast.makeText(
+                                                this,
+                                                "There are no waiting list entrants to notify.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    } else {
+                                        Toast.makeText(
+                                                this,
+                                                "Notifications sent to " + count + " entrant(s).",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                },
+                                e -> Toast.makeText(
+                                        this,
+                                        "Failed: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+    }
+
+        // Notify Selected Entrants button
+        buttonNotifySelected.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            new AlertDialog.Builder(this)
+                    .setTitle("Notify selected entrants?")
+                    .setMessage("This will send notifications to all selected entrants.")
+                    .setPositiveButton("Notify", (d, w) -> {
+                        String eventId = Integer.toString(eventCode);
+                        repo.notifyAllSelectedEntrants(
+                                eventId,
+                                count -> {
+                                    if (count == 0) {
+                                        Toast.makeText(
+                                                this,
+                                                "There are no selected entrants to notify.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    } else {
+                                        Toast.makeText(
+                                                this,
+                                                "Notifications sent to " + count + " entrant(s).",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                },
+                                e -> Toast.makeText(
+                                        this,
+                                        "Failed: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
     /**
      * finds users of the winners and updates their pending invitations
      * @param winner_emails

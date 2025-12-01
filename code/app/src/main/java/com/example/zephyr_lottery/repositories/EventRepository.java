@@ -2,7 +2,6 @@ package com.example.zephyr_lottery.repositories;
 
 import android.util.Log;
 
-
 import com.example.zephyr_lottery.models.Participant;
 import com.example.zephyr_lottery.models.WaitingListEntry;
 import com.google.android.gms.tasks.Task;
@@ -28,7 +27,6 @@ import java.util.Collections;
 
 /**
  * This class manages the statuses of participants and the accepting/declining of invitations.
- * Manages participant statuses and invitation logic, and supports bulk notifications.
  */
 public class EventRepository {
     private static final String TAG = "EventRepo";
@@ -48,13 +46,13 @@ public class EventRepository {
      * @return
      *  Returns a Task when completed asynchronously
      */
-
     // Update participant status (accepted/declined)
     public Task<Void> updateParticipantStatus(String eventId, String userId, String status) {
         DocumentReference participantRef = db.collection("events")
                 .document(eventId)
                 .collection("participants")
                 .document(userId);
+
         Participant p = new Participant(userId, status, null, Timestamp.now());
         return participantRef.set(p, SetOptions.merge());
     }
@@ -70,7 +68,6 @@ public class EventRepository {
      * @param onError
      *  Exception if the invitation is not properly accepted
      */
-
     public void acceptInvitation(String eventId, String userId,
                                  Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CONFIRMED")
@@ -95,7 +92,6 @@ public class EventRepository {
      * @param onError
      *  Exception if the invitation is not properly declined
      */
-
     public void declineInvitation(String eventId, String userId,
                                   Runnable onSuccess, Consumer<Exception> onError) {
         updateParticipantStatus(eventId, userId, "CANCELLED")
@@ -118,13 +114,13 @@ public class EventRepository {
      * @param onError
      *  Exception if the invitation is not properly sent
      */
-
     public void inviteNextFromWaitingList(String eventId,
                                           Runnable onSuccess,
                                           Consumer<Exception> onError) {
         CollectionReference waitingRef = db.collection("events")
                 .document(eventId)
                 .collection("waitingList");
+
         waitingRef.orderBy("joinedAt", Query.Direction.ASCENDING)
                 .limit(1)
                 .get()
@@ -136,17 +132,22 @@ public class EventRepository {
                         return;
                     }
                     DocumentSnapshot next = docs.get(0);
-                    String nextUserId = next.getId();
+                    String nextUserId = next.getId(); // waitingList docId == userId (recommended)
+
                     WriteBatch batch = db.batch();
+
                     DocumentReference participantRef = db.collection("events")
                             .document(eventId)
                             .collection("participants")
                             .document(nextUserId);
+
                     Participant invited = new Participant(
                             nextUserId, "SELECTED", Timestamp.now(), Timestamp.now()
                     );
+
                     batch.set(participantRef, invited, SetOptions.merge());
-                    batch.delete(next.getReference());
+                    batch.delete(next.getReference()); // remove from waiting list
+
                     batch.commit()
                             .addOnSuccessListener(bv -> {
                                 Log.d(TAG, "Invited next entrant: " + nextUserId);
@@ -176,13 +177,13 @@ public class EventRepository {
      * @return
      *  Returns a ListenerRegistration that listens for status changes
      */
-
     public ListenerRegistration listenToParticipantStatus(String eventId, String userId,
                                                           Consumer<String> onStatus) {
         DocumentReference ref = db.collection("events")
                 .document(eventId)
                 .collection("participants")
                 .document(userId);
+
         return ref.addSnapshotListener((snap, error) -> {
             if (error != null) {
                 Log.e("EventRepo", "Listen error", error);

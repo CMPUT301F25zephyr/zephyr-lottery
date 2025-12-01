@@ -385,13 +385,19 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         eventImage.setImageBitmap(image_bitmap);
                     }
 
+                    String limitstr = "";
+                    if (limit == -1) {
+                        limitstr = "infinite";
+                    } else{
+                        limitstr = Integer.toString(limit);
+                    }
                     String text = ""
                             + "Name: " + name + "\n"
                             + "Time: " + time + " (" + weekday + ")\n"
                             + "Location: " + location + "\n"
                             + "Price: " + price + "\n"
                             + "Registration period: " + period + "\n"
-                            + "Entrant limit: " + limit + "\n"
+                            + "Entrant limit: " + limitstr + "\n"
                             + "Sample size (lottery winners): " + sampleSize + "\n"
                             + "\nDescription:\n" + description;
 

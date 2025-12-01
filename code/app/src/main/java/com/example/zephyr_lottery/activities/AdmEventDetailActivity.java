@@ -163,7 +163,8 @@ public class AdmEventDetailActivity extends AppCompatActivity {
             int entrantCount = entrants != null ? entrants.size() : 0;
 
             Long limitLong = currentEvent.getLong("limit");
-            String limitDisplay = limitLong != null ? String.valueOf(limitLong) : "?";
+            int limitValue = (limitLong != null) ? limitLong.intValue() : -1;
+            String limitDisplay = (limitValue == -1) ? "infinite" : String.valueOf(limitValue);
             entrantNumbers.setText("Current Entrants: " + entrantCount + "/" + limitDisplay + " slots");
 
             Long sampleSizeLong = currentEvent.getLong("sampleSize");

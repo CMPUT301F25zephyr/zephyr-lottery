@@ -21,6 +21,10 @@ public class Event {
     private String organizer_email;
     private float price;
     private String location;
+    private boolean geolocationRequired;
+    private double eventLatitude;
+    private double eventLongitude;
+    private double allowedRadiusMeters;
     private String time;
     private int weekday;
     private String period;
@@ -469,6 +473,7 @@ public class Event {
         return posterImage;
     }
 
+
     /**
      * set the poster image of this event to the argument
      * @param posterImage
@@ -477,4 +482,8 @@ public class Event {
     public void setPosterImage(String posterImage) {
         this.posterImage = posterImage;
     }
+    public void setGeolocationRequired(boolean v) { this.geolocationRequired = v; }
+    public void setEventLatitude(double v) { this.eventLatitude = v; }
+    public void setEventLongitude(double v) { this.eventLongitude = v; }
+    public void setAllowedRadiusMeters(double v) { this.allowedRadiusMeters = v; }
 }

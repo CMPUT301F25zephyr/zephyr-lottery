@@ -6,11 +6,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -51,6 +53,12 @@ public class AddEventActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.add_event_activity);
+
+        Switch geoSwitch = findViewById(R.id.switch_geolocation_required);
+        EditText geoLatInput = findViewById(R.id.input_geo_latitude);
+        EditText geoLngInput = findViewById(R.id.input_geo_longitude);
+        EditText geoRadiusInput = findViewById(R.id.input_geo_radius);
+
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -118,13 +126,13 @@ public class AddEventActivity extends AppCompatActivity {
             String event_period = ((EditText) findViewById(R.id.add_event_period)).getText().toString();
             String base64_image = bitmap_to_base64(image_bitmap); //if no image added, image_bitmap = null
 
-            int event_limit = 0;
+            int event_limit = -1;
             String limitText = ((EditText) findViewById(R.id.add_event_ent_limit)).getText().toString();
             if (!limitText.isEmpty()) {
                 try {
                     event_limit = Integer.parseInt(limitText);
                 } catch (NumberFormatException e) {
-                    event_limit = 0;
+                    event_limit = -1;
                 }
             }
 
@@ -166,12 +174,47 @@ public class AddEventActivity extends AppCompatActivity {
             event.setSampleSize(sampleSize);
 
             DocumentReference docRef = eventsRef.document(Integer.toString(event.hashCode()));
+            boolean geoRequired = geoSwitch.isChecked();
+            event.setGeolocationRequired(geoRequired);
+
+            if (geoRequired) {
+                String latStr = geoLatInput.getText().toString();
+                String lngStr = geoLngInput.getText().toString();
+                String radStr = geoRadiusInput.getText().toString();
+
+                if (latStr.isEmpty() || lngStr.isEmpty() || radStr.isEmpty()) {
+                    Toast.makeText(this, "Enter latitude, longitude, and radius.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                try {
+                    double latitude = Double.parseDouble(latStr);
+                    double longitude = Double.parseDouble(lngStr);
+                    double radius = Double.parseDouble(radStr);
+
+                    event.setEventLatitude(latitude);
+                    event.setEventLongitude(longitude);
+                    event.setAllowedRadiusMeters(radius);
+
+                } catch (NumberFormatException e) {
+                    Toast.makeText(this, "Invalid geolocation values.", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+            }
+
             docRef.set(event);
 
             Intent intent = new Intent(AddEventActivity.this, OrgMyEventsActivity.class);
             intent.putExtra("USER_EMAIL", user_email);
             startActivity(intent);
         });
+        geoSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            int visibility = isChecked ? View.VISIBLE : View.GONE;
+            geoLatInput.setVisibility(visibility);
+            geoLngInput.setVisibility(visibility);
+            geoRadiusInput.setVisibility(visibility);
+        });
+
     }
 
     private boolean validFloat(String value) {

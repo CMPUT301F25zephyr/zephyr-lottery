@@ -16,14 +16,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.appcompat.app.AlertDialog;
+import com.example.zephyr_lottery.repositories.EventRepository;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
+import com.example.zephyr_lottery.UserProfile;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
@@ -37,10 +44,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private Button generateQrButton;
     private Button buttonDrawLottery;
     private Button editButton;
+    private Button buttonNotifyWaiting;
+    private Button viewMapButton;
 
     private int eventCode;
     private String userEmail;
     private Event event;
+    private final EventRepository eventRepository = new EventRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,9 +73,11 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         backButton = findViewById(R.id.button_org_event_details_back);
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
+        viewMapButton = findViewById(R.id.button_view_entrants_map);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
         eventImage = findViewById(R.id.imageView_orgEventDetails);
         editButton = findViewById(R.id.button_org_event_details_edit);
+        buttonNotifyWaiting = findViewById(R.id.button_notify_waiting);
 
         loadEventDetails();
 
@@ -78,6 +90,43 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         entrantsButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            intent.putExtra("USER_EMAIL", userEmail);
+
+            //add in arraylists of entrants with statuses
+            intent.putExtra("WAITLIST_ENTRANTS", event.getEntrants_waitlist());
+            intent.putExtra("ACCEPT_ENTRANTS", event.getAccepted_entrants());
+            intent.putExtra("REJECT_ENTRANTS", event.getRejected_entrants());
+            intent.putExtra("PENDING_ENTRANTS", event.getWinners());
+
+            startActivity(intent);
+        });
+
+        // View entrants on map: pass Firestore document ID as a String
+        viewMapButton.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String eventId = Integer.toString(eventCode);
+
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEntrantsMapActivity.class);
+            intent.putExtra("EVENT_ID", eventId);
+            intent.putExtra("USER_EMAIL", userEmail);
+            startActivity(intent);
+        });
+
+        // View entrants on map: pass Firestore document ID as a String
+        viewMapButton.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            String eventId = Integer.toString(eventCode);
+
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEntrantsMapActivity.class);
+            intent.putExtra("EVENT_ID", eventId);
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
@@ -99,25 +148,177 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         buttonDrawLottery.setOnClickListener(v -> {
             ArrayList<String> winners = drawLotteryWinners();
             if (winners.isEmpty()) {
-                Toast.makeText(this, "No entrants to draw from.", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "No entrants to draw from, or all winners already chosen.", Toast.LENGTH_SHORT).show();
                 return;
             }
 
+            //disable button until memory stuff done
+            buttonDrawLottery.setEnabled(false);
+
             //save winners to database, send winners to dialogue
-            event.setChosen_entrants(winners);
             db.collection("events").document(Integer.toString(eventCode))
                     .update("winners", winners)
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();
+
+                        //update local version of winners as well
+                        event.setWinners(winners);
+
+                        //save the invitation to the events chosen
+                        sendInvitations(winners);
+
                         Intent intent = new Intent(OrgMyEventDetailsActivity.this, DrawWinnersPopupActivity.class);
                         intent.putStringArrayListExtra("WINNERS", winners);
                         startActivity(intent);
+
+                        //enable button after memory stuff done
+                        buttonDrawLottery.setEnabled(true);
                     })
                     .addOnFailureListener(e -> {
                         Log.e(TAG, "Failed to save winners", e);
                         Toast.makeText(this, "Failed to save winners", Toast.LENGTH_SHORT).show();
+                        buttonDrawLottery.setEnabled(true);
                     });
         });
+
+
+        // Notify Waiting List button (US02.07.01)
+        buttonNotifyWaiting.setOnClickListener(v -> {
+            if (eventCode == -1) {
+                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            new AlertDialog.Builder(this)
+                    .setTitle("Notify waiting list entrants?")
+                    .setMessage("This will send notifications to all entrants on the waiting list.")
+                    .setPositiveButton("Notify", (dialog, which) -> {
+                        String eventId = Integer.toString(eventCode);
+
+                        eventRepository.notifyAllWaitingListEntrants(
+                                eventId,
+                                count -> {
+                                    if (count == 0) {
+                                        Toast.makeText(
+                                                this,
+                                                "There are no waiting list entrants to notify.",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    } else {
+                                        Toast.makeText(
+                                                this,
+                                                "Notifications sent to " + count + " entrant(s).",
+                                                Toast.LENGTH_SHORT
+                                        ).show();
+                                    }
+                                },
+                                e -> Toast.makeText(
+                                        this,
+                                        "Failed: " + e.getMessage(),
+                                        Toast.LENGTH_SHORT
+                                ).show()
+                        );
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        });
+
+        // Notify Selected Entrants button
+//        buttonNotifySelected.setOnClickListener(v -> {
+//            if (eventCode == -1) {
+//                Toast.makeText(this, "Event not found", Toast.LENGTH_SHORT).show();
+//                return;
+//            }
+//            new AlertDialog.Builder(this)
+//                    .setTitle("Notify selected entrants?")
+//                    .setMessage("This will send notifications to all selected entrants.")
+//                    .setPositiveButton("Notify", (d, w) -> {
+//                        String eventId = Integer.toString(eventCode);
+//                        eventRepository.notifyAllSelectedEntrants(
+//                                eventId,
+//                                count -> {
+//                                    if (count == 0) {
+//                                        Toast.makeText(
+//                                                this,
+//                                                "There are no selected entrants to notify.",
+//                                                Toast.LENGTH_SHORT
+//                                        ).show();
+//                                    } else {
+//                                        Toast.makeText(
+//                                                this,
+//                                                "Notifications sent to " + count + " entrant(s).",
+//                                                Toast.LENGTH_SHORT
+//                                        ).show();
+//                                    }
+//                                },
+//                                e -> Toast.makeText(
+//                                        this,
+//                                        "Failed: " + e.getMessage(),
+//                                        Toast.LENGTH_SHORT
+//                                ).show()
+//                        );
+//                    })
+//                    .setNegativeButton("Cancel", null)
+//                    .show();
+//        });
+    }
+    /**
+     * finds users of the winners and updates their pending invitations
+     * @param winner_emails
+     * the emails of the lottery winners
+     */
+    private void sendInvitations(ArrayList<String> winner_emails){
+        //reference to users database
+        CollectionReference usersRef = db.collection("accounts");
+
+        //go through all emails of winners
+        for (String email : winner_emails) {
+
+            //get user and send invitation
+            DocumentReference doc_ref = usersRef.document(email);
+            doc_ref.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful()) {
+                    //user has been found. now we add to their list of invitations
+                    DocumentSnapshot document = task.getResult();
+
+                    //check for null (like if account has been deleted perhaps?)
+                    if (document.exists()) {
+                        UserProfile profile = document.toObject(UserProfile.class);
+                        if (profile != null) {
+
+                            //add this invitation to the user's invitation codes if it's not already there
+                            doc_ref.update("invitationCodes", FieldValue.arrayUnion(eventCode))
+                                    .addOnSuccessListener(aVoid -> {
+                                        Log.d(TAG, "Invitation sent to " + email);
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        Log.e(TAG, "Failed to send invitation to " + email, e);
+                                    });
+
+                        } else {
+                            Log.e(TAG, "account does not exist for " + email + ":(");
+                        }
+
+                        //remove this user from the entrants_waitlist
+                        db.collection("events").document(Integer.toString(eventCode))
+                                .update("entrants_waitlist", FieldValue.arrayRemove(email))
+                                .addOnSuccessListener(aVoid ->{
+                                    event.getEntrants_waitlist().remove(email);
+                                })
+                                .addOnFailureListener(e -> {
+                                    Log.e(TAG, "user not removed from waitlist!", e);
+                                    Toast.makeText(this, "Failed to remove from waitlist", Toast.LENGTH_SHORT).show();
+                                });
+
+                    } else {
+                        Log.e(TAG, "account not found for: " + email + ":(");
+                    }
+
+                } else {
+                    Log.e("firestore stuff", "error getting user: " + email + "!!!!!!!!! bad!", task.getException());
+                }
+            });
+        }
     }
 
     private void loadEventDetails() {
@@ -186,15 +387,31 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             return winners;
         }
 
-        if (event.getEntrants() == null || event.getEntrants().isEmpty()) {
+        if (event.getEntrants_waitlist() == null || event.getEntrants_waitlist().isEmpty()) {
             return winners;
         }
 
-        ArrayList<String> entrants = new ArrayList<>(event.getEntrants());
-        int sampleSize = event.getSampleSize();
+        ArrayList<String> entrants = new ArrayList<>(event.getEntrants_waitlist());
 
-        if (sampleSize <= 0 || sampleSize > entrants.size()) {
+        List<String> accepted_list = event.getAccepted_entrants();
+        List<String> winners_list = event.getWinners();
+
+        //if accepted list is not null, we subtract it's size from the sample size
+        int accepted_size = !(accepted_list == null) ? accepted_list.size() : 0;
+        //if pending invitations list is not null, subtract it's size from the sample size
+        int pending_size = !(winners_list == null) ? winners_list.size() : 0;
+
+        //calculate sample size: number of participants to roll for.
+        int sampleSize = event.getSampleSize() - accepted_size - pending_size;
+
+        if (sampleSize > entrants.size()) {
             sampleSize = entrants.size();
+        }
+
+        //if sample size is 0 (or below??) then return.
+        if (sampleSize <= 0) {
+            Log.d(TAG, "you already have enough winners");
+            return winners;
         }
 
         Collections.shuffle(entrants);

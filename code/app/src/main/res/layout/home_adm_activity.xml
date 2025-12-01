@@ -42,9 +42,10 @@
         android:id="@+id/admin_images_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Browse Images"
+        android:text="Notification Logs"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/admin_profiles_button" />
         app:layout_constraintTop_toBottomOf="@+id/admin_profiles_button" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -66,6 +66,12 @@ public class HomeAdmActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Space to add button to go to images activity
+        // NEW: Notification logs
+        images_button = findViewById(R.id.admin_images_button);
+        images_button.setOnClickListener(view -> {
+            Intent intent = new Intent(HomeAdmActivity.this, AdmNotificationLogsActivity.class);
+            intent.putExtra("USER_EMAIL", user_email);
+            startActivity(intent);
+        });
     }
 }

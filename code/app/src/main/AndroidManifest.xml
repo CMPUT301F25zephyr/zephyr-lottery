@@ -97,6 +97,7 @@
             android:name=".activities.OrgEditEventActivity"
             android:exported="false">
         </activity>
+        <activity android:name=".activities.AdmNotificationLogsActivity" />
 
 
         <!-- Services -->

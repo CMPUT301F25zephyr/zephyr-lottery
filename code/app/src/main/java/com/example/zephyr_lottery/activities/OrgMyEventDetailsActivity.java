@@ -12,7 +12,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -22,7 +21,8 @@ import com.example.zephyr_lottery.repositories.EventRepository;
 
 import com.example.zephyr_lottery.Event;
 import com.example.zephyr_lottery.R;
-import com.example.zephyr_lottery.repositories.EventRepository;
+import com.example.zephyr_lottery.UserProfile;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
@@ -39,13 +39,10 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
 
     private TextView detailsText;
     private ImageView eventImage;
-
     private Button backButton;
     private Button entrantsButton;
     private Button generateQrButton;
     private Button buttonDrawLottery;
-    private Button buttonNotifySelected;   // Notify Selected Entrants
-    private Button editButton;             // Edit Event Details
     private Button editButton;
     private Button buttonNotifyWaiting;
     private Button viewMapButton;
@@ -54,8 +51,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
     private String userEmail;
     private Event event;
     private final EventRepository eventRepository = new EventRepository();
-
-    private final EventRepository repo = new EventRepository();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,35 +70,37 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         userEmail = getIntent().getStringExtra("USER_EMAIL");
 
         detailsText = findViewById(R.id.text_placeholder);
-        eventImage = findViewById(R.id.imageView_orgEventDetails);
-
         backButton = findViewById(R.id.button_org_event_details_back);
         entrantsButton = findViewById(R.id.button_entrants);
         generateQrButton = findViewById(R.id.button_generate_qr);
         viewMapButton = findViewById(R.id.button_view_entrants_map);
         buttonDrawLottery = findViewById(R.id.button_draw_lottery);
-        buttonNotifySelected = findViewById(R.id.button_notify_selected);
+        eventImage = findViewById(R.id.imageView_orgEventDetails);
         editButton = findViewById(R.id.button_org_event_details_edit);
         buttonNotifyWaiting = findViewById(R.id.button_notify_waiting);
 
         loadEventDetails();
 
-        // Back button
         backButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventsActivity.class);
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
 
-        // Entrants button
         entrantsButton.setOnClickListener(v -> {
             Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgMyEventEntrantsActivity.class);
             intent.putExtra("EVENT_CLICKED_CODE", eventCode);
             intent.putExtra("USER_EMAIL", userEmail);
+
+            //add in arraylists of entrants with statuses
+            intent.putExtra("WAITLIST_ENTRANTS", event.getEntrants_waitlist());
+            intent.putExtra("ACCEPT_ENTRANTS", event.getAccepted_entrants());
+            intent.putExtra("REJECT_ENTRANTS", event.getRejected_entrants());
+            intent.putExtra("PENDING_ENTRANTS", event.getWinners());
+
             startActivity(intent);
         });
 
-        // Generate QR button
         // View entrants on map: pass Firestore document ID as a String
         viewMapButton.setOnClickListener(v -> {
             if (eventCode == -1) {
@@ -126,7 +123,13 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
             startActivity(intent);
         });
 
-        // Draw Lottery button
+        editButton.setOnClickListener(v -> {
+            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEditEventActivity.class);
+            intent.putExtra("USER_EMAIL", userEmail);
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
+            startActivity(intent);
+        });
+
         buttonDrawLottery.setOnClickListener(v -> {
             ArrayList<String> winners = drawLotteryWinners();
             if (winners.isEmpty()) {
@@ -134,17 +137,6 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                 return;
             }
 
-            // NEW: mark each winner as SELECTED in participants/{userId}
-            String eventId = Integer.toString(eventCode);
-            for (String winnerId : winners) {
-                repo.updateParticipantStatus(eventId, winnerId, "SELECTED");
-            }
-
-
-            db.collection("events").document(eventId)
-                    .update("winners", winners)
-                    .addOnSuccessListener(aVoid -> {
-                        Toast.makeText(this, "Winners saved!", Toast.LENGTH_SHORT).show();
             //disable button until memory stuff done
             buttonDrawLottery.setEnabled(false);
 
@@ -173,6 +165,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         buttonDrawLottery.setEnabled(true);
                     });
         });
+    }
 
         // Notify Waiting List button (US02.07.01)
         buttonNotifyWaiting.setOnClickListener(v -> {
@@ -306,13 +299,11 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                         Log.e(TAG, "account not found for: " + email + ":(");
                     }
 
-        // Edit Event button
-        editButton.setOnClickListener(v -> {
-            Intent intent = new Intent(OrgMyEventDetailsActivity.this, OrgEditEventActivity.class);
-            intent.putExtra("USER_EMAIL", userEmail);
-            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
-            startActivity(intent);
-        });
+                } else {
+                    Log.e("firestore stuff", "error getting user: " + email + "!!!!!!!!! bad!", task.getException());
+                }
+            });
+        }
     }
 
     private void loadEventDetails() {
@@ -348,6 +339,7 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
                     int limit = e.getLimit();
                     int sampleSize = e.getSampleSize();
 
+                    //get image from class, convert to bitmap, display image.
                     String image_base64 = e.getPosterImage();
                     if (image_base64 != null) {
                         byte[] decodedBytes = Base64.decode(image_base64, Base64.DEFAULT);
@@ -411,6 +403,8 @@ public class OrgMyEventDetailsActivity extends AppCompatActivity {
         for (int i = 0; i < sampleSize; i++) {
             winners.add(entrants.get(i));
         }
+
+        //tvWinners.setText("Last draw: " + winners.size() + " selected");
 
         return winners;
     }

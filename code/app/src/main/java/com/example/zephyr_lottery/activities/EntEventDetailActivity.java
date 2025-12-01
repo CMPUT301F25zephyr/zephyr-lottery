@@ -34,6 +34,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
@@ -141,6 +142,7 @@ public class EntEventDetailActivity extends AppCompatActivity {
             }
 
             docRef.get().addOnSuccessListener(currentEvent -> {
+
                 if (!currentEvent.exists()) {
                     Toast.makeText(
                             EntEventDetailActivity.this,
@@ -150,104 +152,73 @@ public class EntEventDetailActivity extends AppCompatActivity {
                     return;
                 }
 
-                //add this user to the all entrants arraylist
-                List<String> entrantsList = (List<String>) currentEvent.get("entrants");
-                if (entrantsList == null) {
-                    entrantsList = new ArrayList<>();
-                } else {
-                    entrantsList = new ArrayList<>(entrantsList);
-                    entrantsList.remove(null);
-                }
+                // ------- 🌍 GEOLOCATION CHECK START -------
+                Boolean geoRequired = currentEvent.getBoolean("geolocationRequired");
 
-                //add this user to the pending invitation arraylist
-                List<String> entrantsWaitlist = (List<String>) currentEvent.get("entrants_waitlist");
-                if (entrantsWaitlist == null) {
-                    entrantsWaitlist = new ArrayList<>();
-                } else {
-                    entrantsWaitlist = new ArrayList<>(entrantsWaitlist);
-                    entrantsWaitlist.remove(null);
-                }
+                if (geoRequired != null && geoRequired) {
 
-                if (entrantsList.contains(finalUserEmail)) {
-                    Toast.makeText(
-                            EntEventDetailActivity.this,
-                            "You are already on the waiting list.",
-                            Toast.LENGTH_LONG
-                    ).show();
-                    return;
-                }
+                    Double eventLat = currentEvent.getDouble("eventLatitude");
+                    Double eventLng = currentEvent.getDouble("eventLongitude");
+                    Double radius = currentEvent.getDouble("allowedRadiusMeters");
 
-                List<String> waitlist_list = (List<String>) currentEvent.get("entrants_waitlist");
-                List<String> accepted_list = (List<String>) currentEvent.get("accepted_entrants");
-                List<String> winners_list = (List<String>) currentEvent.get("winners");
-
-                //calculate the number of entrants total.
-                //if waitlist is not null, set it's size to be the number of entrants
-                int num_entrants = (waitlist_list != null ? waitlist_list.size() : 0);
-                //if accepted list is not null, add it's size to number of entrants
-                num_entrants += (accepted_list != null ? accepted_list.size() : 0) ;
-                //if pending invitations list is not null, add it's size to number of entrants
-                num_entrants += (winners_list != null ? winners_list.size() : 0);
-
-                //checking entrant limit
-                Long limitLong = currentEvent.getLong("limit");
-                boolean hasLimit = limitLong != null;
-                int limitValue = 0;
-
-                //return and send toast if the event is already full
-                if (hasLimit) {
-                    limitValue = limitLong.intValue();
-                    if (num_entrants >= limitValue) {
-                        Toast.makeText(EntEventDetailActivity.this,
-                            "This event is full.", Toast.LENGTH_LONG).show();
+                    if (eventLat == null || eventLng == null || radius == null) {
+                        Toast.makeText(
+                                EntEventDetailActivity.this,
+                                "Event geolocation data missing.",
+                                Toast.LENGTH_LONG
+                        ).show();
                         return;
                     }
+
+                    if (ActivityCompat.checkSelfPermission(
+                            this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                        ActivityCompat.requestPermissions(
+                                this,
+                                new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                LOCATION_PERMISSION_REQUEST_CODE
+                        );
+                        return;
+                    }
+
+                    fusedLocationClient.getLastLocation()
+                            .addOnSuccessListener(userLoc -> {
+
+                                if (userLoc == null) {
+                                    Toast.makeText(
+                                            EntEventDetailActivity.this,
+                                            "Cannot determine your location. Enable GPS.",
+                                            Toast.LENGTH_LONG
+                                    ).show();
+                                    return;
+                                }
+
+                                double userLat = userLoc.getLatitude();
+                                double userLng = userLoc.getLongitude();
+
+                                double dist = distanceMeters(userLat, userLng, eventLat, eventLng);
+
+                                if (dist > radius) {
+                                    Toast.makeText(
+                                            EntEventDetailActivity.this,
+                                            "You must be near the event to join ("
+                                                    + (int) dist + "m away, limit " + radius + "m)",
+                                            Toast.LENGTH_LONG
+                                    ).show();
+                                    return;
+                                }
+
+                                // MUST call the wrapper function INSIDE THIS BLOCK
+                                continueRegistrationFlow(currentEvent, finalUserEmail);
+
+                            });
+                    return; // STOP outer join flow until geolocation check finishes
                 }
 
-                int currentSize = num_entrants; // this is needed because of lambda expressions :(
-                String limitDisplay = hasLimit ? String.valueOf(limitValue) : "?";
 
-                docRef.update("entrants", FieldValue.arrayUnion(finalUserEmail))
-                        .addOnSuccessListener(aVoid -> {
-                            Toast.makeText(
-                                    EntEventDetailActivity.this,
-                                    "Joined waiting list.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                            saveWaitingListLocation(eventHash, finalUserEmail);
+                // If no geolocation required → continue normally
+                continueRegistrationFlow(currentEvent, finalUserEmail);
 
-                            //if succeded, we also need to add to entrants_waitlist
-                            docRef.update("entrants_waitlist", FieldValue.arrayUnion(finalUserEmail))
-                                    .addOnSuccessListener(bVoid -> {
-                                        Toast.makeText(
-                                                EntEventDetailActivity.this,
-                                                "Joined waiting list.",
-                                                Toast.LENGTH_LONG
-                                        ).show();
-                                    })
-                                    .addOnFailureListener(e -> {
-                                        Log.e("EntEventDetail", "Error adding entrant to waitlist", e);
-                                        Toast.makeText(
-                                                EntEventDetailActivity.this,
-                                                "Failed to join. Please leave and try again.",
-                                                Toast.LENGTH_LONG
-                                        ).show();
-                                    });
-
-
-                            int newCount = currentSize + 1;
-                            entrantNumbers.setText(
-                                    "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
-                            );
-                        })
-                        .addOnFailureListener(e -> {
-                            Log.e("EntEventDetail", "Error adding entrant", e);
-                            Toast.makeText(
-                                    EntEventDetailActivity.this,
-                                    "Failed to join. Please try again.",
-                                    Toast.LENGTH_LONG
-                            ).show();
-                        });
             });
         });
 
@@ -459,6 +430,93 @@ public class EntEventDetailActivity extends AppCompatActivity {
             }
         });
     }
+    private void continueRegistrationFlow(DocumentSnapshot currentEvent, String finalUserEmail) {
+
+        List<String> entrantsList = (List<String>) currentEvent.get("entrants");
+        if (entrantsList == null) {
+            entrantsList = new ArrayList<>();
+        } else {
+            entrantsList = new ArrayList<>(entrantsList);
+            entrantsList.remove(null);
+        }
+
+        List<String> entrantsWaitlist = (List<String>) currentEvent.get("entrants_waitlist");
+        if (entrantsWaitlist == null) {
+            entrantsWaitlist = new ArrayList<>();
+        } else {
+            entrantsWaitlist = new ArrayList<>(entrantsWaitlist);
+            entrantsWaitlist.remove(null);
+        }
+
+        if (entrantsList.contains(finalUserEmail)) {
+            Toast.makeText(
+                    EntEventDetailActivity.this,
+                    "You are already on the waiting list.",
+                    Toast.LENGTH_LONG
+            ).show();
+            return;
+        }
+
+        List<String> waitlist_list = (List<String>) currentEvent.get("entrants_waitlist");
+        List<String> accepted_list = (List<String>) currentEvent.get("accepted_entrants");
+        List<String> winners_list = (List<String>) currentEvent.get("winners");
+
+        int num_entrants = (waitlist_list != null ? waitlist_list.size() : 0);
+        num_entrants += (accepted_list != null ? accepted_list.size() : 0);
+        num_entrants += (winners_list != null ? winners_list.size() : 0);
+
+        Long limitLong = currentEvent.getLong("limit");
+        boolean hasLimit = limitLong != null;
+        int limitValue = 0;
+
+        if (hasLimit) {
+            limitValue = limitLong.intValue();
+            if (num_entrants >= limitValue) {
+                Toast.makeText(EntEventDetailActivity.this,
+                        "This event is full.", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
+        int currentSize = num_entrants;
+        String limitDisplay = hasLimit ? String.valueOf(limitValue) : "?";
+
+        docRef.update("entrants", FieldValue.arrayUnion(finalUserEmail))
+                .addOnSuccessListener(aVoid -> {
+
+                    saveWaitingListLocation(eventId, finalUserEmail);
+
+                    docRef.update("entrants_waitlist", FieldValue.arrayUnion(finalUserEmail))
+                            .addOnSuccessListener(bVoid -> {
+                                Toast.makeText(
+                                        EntEventDetailActivity.this,
+                                        "Joined waiting list.",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            })
+                            .addOnFailureListener(e -> {
+                                Toast.makeText(
+                                        EntEventDetailActivity.this,
+                                        "Failed to join. Please leave and try again.",
+                                        Toast.LENGTH_LONG
+                                ).show();
+                            });
+
+                    int newCount = currentSize + 1;
+                    entrantNumbers.setText(
+                            "Current Entrants: " + newCount + "/" + limitDisplay + " slots"
+                    );
+                })
+                .addOnFailureListener(e -> {
+                    Toast.makeText(
+                            EntEventDetailActivity.this,
+                            "Failed to join. Please try again.",
+                            Toast.LENGTH_LONG
+                    ).show();
+                });
+
+    }
+
     /**
      * Save the entrant's approximate join location into:
      *   events/{eventId}/waitingList/{userEmail}
@@ -501,4 +559,17 @@ public class EntEventDetailActivity extends AppCompatActivity {
                         Log.e(TAG, "Failed to get device location", e)
                 );
     }
+    private double distanceMeters(double lat1, double lon1, double lat2, double lon2) {
+        double R = 6371000; // meters
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
 }

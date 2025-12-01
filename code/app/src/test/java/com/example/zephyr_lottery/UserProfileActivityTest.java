@@ -4,6 +4,7 @@ import com.example.zephyr_lottery.utils.ValidationUtil;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
+// Tests profile input restrictions (US 01.02.01)
 public class UserProfileActivityTest {
 
     @Test

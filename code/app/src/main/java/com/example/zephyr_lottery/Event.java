@@ -389,6 +389,24 @@ public class Event {
     }
 
     /**
+     * Obtain the chosen entrants (alias for winners)
+     * @return
+     * The chosen entrants as an ArrayList of Strings
+     */
+    public ArrayList<String> getChosen_entrants() {
+        return getWinners();
+    }
+
+    /**
+     * Set the chosen entrants (alias for winners)
+     * @param chosen_entrants
+     * The new list of chosen entrants
+     */
+    public void setChosen_entrants(ArrayList<String> chosen_entrants) {
+        setWinners(chosen_entrants);
+    }
+
+    /**
      * Obtain the list of entrants who rejected invitation
      * @return
      * list of entrants who rejected invitation as an ArrayList of Strings

@@ -2,6 +2,7 @@ package com.example.zephyr_lottery.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -17,10 +18,13 @@ import com.example.zephyr_lottery.EventArrayAdapter;
 import com.example.zephyr_lottery.R;
 import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
 public class OrgMyEventsActivity extends AppCompatActivity {
+
+    private static final String TAG = "OrgMyEvents";
 
     private FirebaseFirestore db;
     private CollectionReference eventsRef;
@@ -30,7 +34,10 @@ public class OrgMyEventsActivity extends AppCompatActivity {
     private Button addEventButton;
     private Button filterButton;
 
-    private ArrayList<Event> myEventsList;
+    private final ArrayList<Event> myEventsList = new ArrayList<>();
+    // Parallel list of Firestore document IDs for each event in myEventsList
+    private final ArrayList<String> eventIdList = new ArrayList<>();
+
     private EventArrayAdapter myEventsAdapter;
 
     private String userEmail;
@@ -57,20 +64,25 @@ public class OrgMyEventsActivity extends AppCompatActivity {
         addEventButton = findViewById(R.id.button_my_event_add_event);
         filterButton = findViewById(R.id.button_my_event_filter);
 
-        myEventsList = new ArrayList<>();
         myEventsAdapter = new EventArrayAdapter(this, myEventsList);
         myEventsListView.setAdapter(myEventsAdapter);
 
-        loadMyEvents();
+        listenForEvents();
 
         myEventsListView.setOnItemClickListener((parent, view, position, id) -> {
-            Event clicked = myEventsList.get(position);
-            if (clicked == null) return;
+            if (position < 0 || position >= eventIdList.size()) return;
 
-            String eventId = Integer.toString(clicked.hashCode());
+            String eventId = eventIdList.get(position);
+            int eventCode;
+            try {
+                eventCode = Integer.parseInt(eventId);
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "Invalid event ID: " + eventId, Toast.LENGTH_SHORT).show();
+                return;
+            }
 
             Intent intent = new Intent(OrgMyEventsActivity.this, OrgMyEventDetailsActivity.class);
-            intent.putExtra("EVENT_CLICKED_CODE", Integer.parseInt(eventId));
+            intent.putExtra("EVENT_CLICKED_CODE", eventCode);
             intent.putExtra("USER_EMAIL", userEmail);
             startActivity(intent);
         });
@@ -92,35 +104,33 @@ public class OrgMyEventsActivity extends AppCompatActivity {
         );
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        loadMyEvents();
-    }
+    /**
+     * Listen to all events in Firestore and keep the list updated.
+     */
+    private void listenForEvents() {
+        eventsRef.addSnapshotListener((value, error) -> {
+            if (error != null) {
+                Log.e(TAG, "Failed to listen for events", error);
+                Toast.makeText(this, "Failed to load events", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (value == null) {
+                return;
+            }
 
-    private void loadMyEvents() {
-        myEventsList.clear();
-        myEventsAdapter.notifyDataSetChanged();
+            myEventsList.clear();
+            eventIdList.clear();
 
-        if (userEmail == null || userEmail.isEmpty()) {
-            Toast.makeText(this, "Organizer email missing", Toast.LENGTH_SHORT).show();
-            return;
-        }
+            for (QueryDocumentSnapshot doc : value) {
+                Event e = doc.toObject(Event.class);
+                if (e != null) {
+                    myEventsList.add(e);
+                    eventIdList.add(doc.getId());
+                }
+            }
 
-        eventsRef.whereEqualTo("organizer_email", userEmail)
-                .get()
-                .addOnSuccessListener(querySnapshot -> {
-                    myEventsList.clear();
-                    for (var doc : querySnapshot.getDocuments()) {
-                        Event e = doc.toObject(Event.class);
-                        if (e != null) {
-                            myEventsList.add(e);
-                        }
-                    }
-                    myEventsAdapter.notifyDataSetChanged();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, "Failed to load events", Toast.LENGTH_SHORT).show()
-                );
+            Log.d(TAG, "Loaded " + myEventsList.size() + " events");
+            myEventsAdapter.notifyDataSetChanged();
+        });
     }
 }

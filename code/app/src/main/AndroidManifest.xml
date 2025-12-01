@@ -15,6 +15,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Zephyr_lottery">
+
         <activity
             android:name=".activities.LoginActivity"
             android:exported="true">
@@ -26,60 +27,46 @@
 
         <activity
             android:name=".activities.HomeOrgActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.HomeAdmActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.HomeEntActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.EntEventsActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.AdmProfilesActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.OrgMyEventsActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.AddEventActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.OrgMyEventDetailsActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.QRCodeOrgActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.EventInvitationActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.EntEventDetailActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.AdmEventsActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.UserProfileActivity"
-            android:exported="true">
-        </activity>
+            android:exported="true" />
         <activity
             android:name=".activities.OrgMyEventEntrantsActivity"
-            android:exported="false">
-        </activity>
+            android:exported="false" />
         <activity
             android:name=".activities.EntEventHistoryActivity"
             android:exported="false" />
@@ -89,15 +76,16 @@
         <activity
             android:name=".activities.DrawWinnersPopupActivity"
             android:theme="@style/Theme.AppCompat.Dialog"
-            android:exported="false"/>
+            android:exported="false" />
         <activity
             android:name=".activities.AdmEventDetailActivity"
             android:exported="false" />
         <activity
             android:name=".activities.OrgEditEventActivity"
-            android:exported="false">
-        </activity>
-
+            android:exported="false" />
+        <activity
+            android:name=".activities.OrgMyEventChosenEntrantsActivity"
+            android:exported="false" />
 
         <!-- Services -->
         <service
@@ -107,7 +95,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
 
     </application>
 
